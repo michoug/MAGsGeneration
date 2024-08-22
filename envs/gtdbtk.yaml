@@ -1,0 +1,8 @@
+name: gtdbtk
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - gtdbtk=2.3
+  - mash=2.2.2

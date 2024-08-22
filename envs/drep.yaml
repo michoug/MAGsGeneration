@@ -1,0 +1,14 @@
+name: drep
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+  - au-eoed
+dependencies:
+  - fastani=1.33=h0fdf51a_0
+  - mash=2.3=ha9a2dd8_3
+  - mummer=3.23=pl5321h1b792b2_13
+  - prodigal=2.6.3=hec16e2b_4
+  - python=3.8
+  - pip:
+    - drep==3.4.2
