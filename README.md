@@ -1,4 +1,4 @@
-# FertilityIslands (MAG analyses)
+# MAGs Generation Pipeline
 
 ## Pipeline description
 
