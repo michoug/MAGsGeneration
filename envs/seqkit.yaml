@@ -3,5 +3,5 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - seqkit=2.4
+  - seqkit=2.8
 

@@ -8,4 +8,4 @@ dependencies:
   - perl-file-slurp
   - perl-list-moreutils
   - prodigal=2.6.3
-  - pyrodigal=2.0
+  - pyrodigal=3.5

@@ -26,6 +26,11 @@ def count_mags(wildcards):
     return expand(os.path.join(RESULTS_DIR,"mgthermometer/proportion_{mags}.txt"),
         mags=glob_wildcards(os.path.join(ck_output, '{mags}.fna')).mags)
 
+def count_mags_prots(wildcards):
+    ck_output = checkpoints.countGenome.get(**wildcards).output[0]
+    return expand(os.path.join(RESULTS_DIR,"Bins/Annotation/{mags}.faa"),
+        mags=glob_wildcards(os.path.join(ck_output, '{mags}.fna')).mags)
+
 
 ###############
 # PRODIGAL
@@ -53,6 +58,13 @@ rule mgthermometer_run:
         "perl {input.script} {output.protein} {output.proportion} && "
         "date) 2> {log.err} > {log.out}"
 
+rule prepare4egg:
+    input:
+        count_mags_prots
+    output:
+        temp(os.path.join(RESULTS_DIR, "Bins/Annotation/files.txt"))
+    shell:
+        "ls {input} > {output}"
 
 rule concatResults:
     input:

@@ -1,30 +1,71 @@
 
 rule mags_generation:
     input:
+        expand(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample = SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "TempReads/{sample_2}.paired.bcsp"), sample_2 = SAMPLES_2),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES)
     output:
         touch("status/mags_generation.done")
 
-
-rule metabat2_mapping:
+rule filter_length:
     input:
-        expand(os.path.join(RESULTS_DIR,"Bam/{{sample}}/{{sample}}_{sample_2}.bam"), sample_2 = SAMPLES_2)
+        os.path.join(ASSEMBLY_DIR,"{sample}.fa")
     output:
-        os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_metabat_cov.txt")
+        os.path.join(RESULTS_DIR,"Assembly/{sample}_filter.fasta")
     conda:
-        os.path.join(ENV_DIR, "metabat.yaml")
+        os.path.join(ENV_DIR, "seqkit.yaml")
     threads:
-        config["metabat2"]["threads"]
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.err.log")
+        config["filter_length"]["threads"]
     message:
-        "Running the first part of metabat2 to estimate the coverage"
+        "Remove contigs less than 1.5kb"
     shell:
-        "(date && jgi_summarize_bam_contig_depths --outputDepth {output} {input} && "
+        "seqkit seq -j {threads} --remove-gaps -o {output} -m 1499 {input}"
+
+rule mapping_index:
+    input:
+        readsF=expand(os.path.join(READS_DIR, "{sample_2}_1_val_1.fq.gz"),sample_2 = SAMPLES_2),
+        readsR=expand(os.path.join(READS_DIR, "{sample_2}_2_val_2.fq.gz"),sample_2 = SAMPLES_2),
+        files=os.path.join(WORK_DIR,"config/sample_list.txt")
+    output:
+        folder=directory(os.path.join(RESULTS_DIR, "TempReads/")),
+        bcsp=temp(expand(os.path.join(RESULTS_DIR, "TempReads/{sample_2}.paired.bcsp"),sample_2 = SAMPLES_2))
+    params:
+        expand("{sample_2}", sample_2 = SAMPLES_2)
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/fairy.index.err.log"),
+        err=os.path.join(RESULTS_DIR, "logs/fairy.index.out.log")
+    threads:
+        config["fairy"]["threads"]
+    conda:
+        os.path.join(ENV_DIR, "fairy.yaml")
+    message:
+        "Mapping: Fairy index for assembly mapping"
+    shell:
+        """
+        (date 
+        fairy sketch -1 {input.readsF} -2 {input.readsR} -d {output.folder} -t {threads} --lS {input.files}
+        date) 2> {log.err} > {log.out}
+        """
+
+rule fairy_mapping:
+    input:
+        bcsp=rules.mapping_index.output.bcsp,
+        cont=rules.filter_length.output
+    output:
+        os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_cov.txt")
+    conda:
+        os.path.join(ENV_DIR, "fairy.yaml")
+    threads:
+        config["fairy"]["threads"]
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/fairy_mapping/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/fairy_mapping/{sample}.err.log")
+    message:
+        "Run Fairy to estimate the coverage"
+    shell:
+        "(date && fairy coverage {input.bcsp} {input.cont} -t {threads} -o {output} && "
         "date) 2> {log.err} > {log.out}"
 
 
@@ -32,7 +73,7 @@ rule metabat2:
     priority: 20
     input:
         contig=rules.filter_length.output,
-        cov=rules.metabat2_mapping.output
+        cov=rules.fairy_mapping.output
     output:
         directory(os.path.join(RESULTS_DIR,"Bins/{sample}/Metabat/"))
     conda:
@@ -49,49 +90,6 @@ rule metabat2:
         "date) 2> {log.err} > {log.out}"
 
 
-rule concoct_prepare:
-    input:
-        contig=rules.filter_length.output,
-        bam=expand(os.path.join(RESULTS_DIR,"Bam/{{sample}}/{{sample}}_{sample_2}.bam"), sample_2 = SAMPLES_2)
-    output:
-        bed=os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_10k.bed"),
-        cont=os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_10k.fa"),
-        cov=os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_concoct_cov.txt")
-    conda:
-        os.path.join(ENV_DIR, "concoct.yaml")
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.err.log")
-    message:
-        "Preparing files for Concoct"
-    shell:
-        "(date && cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
-        "concoct_coverage_table.py {output.bed} {input.bam} > {output.cov} && [[ -s {output.cov} ]] && "
-        "date) 2> {log.err} > {log.out}"
-
-
-rule concoct:
-    priority: 20
-    input:
-        contig=rules.concoct_prepare.output.cont,
-        cov=rules.concoct_prepare.output.cov
-    output:
-        os.path.join(RESULTS_DIR,"Bins/{sample}/Concoct/concoct_clustering_merged.csv")
-    conda:
-        os.path.join(ENV_DIR, "concoct.yaml")
-    threads:
-        config["concoct"]["threads"]
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.err.log")
-    message:
-        "Running concoct to obtain bins"
-    shell:
-        "(date && concoct --composition_file {input.contig} --coverage_file {input.cov} -b $(dirname {output})/concoct -t {threads} && "
-        "merge_cutup_clustering.py $(dirname {output})/concoct_clustering_gt1000.csv > {output} && "
-        "date) 2> {log.err} > {log.out}"
-
-
 rule metabinner_install:
     output:
         dbs=directory(os.path.join(DB_DIR, "MetaBinner"))
@@ -104,25 +102,26 @@ rule metabinner_install:
 
 rule metabinner_coverage:
     input:
-        expand(os.path.join(RESULTS_DIR,"Bam/{{sample}}/{{sample}}_{sample_2}.bam"), sample_2 = SAMPLES_2)
+        rules.fairy_mapping.output
     output:
-        temp=temp(os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_metabinner_temp.txt")),
-        final=os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_metabinner_cov.txt")
-    conda:
-        os.path.join(ENV_DIR, "metabat.yaml")
+        os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_metabinner_cov.txt")
     threads:
         config["metabinner"]["threads"]
+    params:
+        config["metabinner"]["length"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log")
     message:
         "Running the first part of metabinner to estimate the coverage"
-    shell:
-        """
-        (date && jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input} && 
-        cat {output.temp} | awk '{{if ($2>{config[metabinner][length]}) print $0 }}' | cut -f -1,4- > {output.final} && 
-        date) 2> {log.err} > {log.out}
-        """
+    run:
+        import pandas as pd
+        df = pd.read_csv(input[0], sep = '\t')
+        df_filtered = df.loc[:, ~df.columns.str.endswith('var')]
+        df_filtered = df_filtered[df_filtered['contigLen'] > {params}]
+        df_filtered = df_filtered.drop(columns=['contigLen'])
+        df_filtered.to_csv(output[0], sep='\t', index=False)
+        
 
 
 rule metabinner_prepare:
@@ -152,7 +151,7 @@ rule metabinner:
     priority: 20
     input:
         cont=rules.metabinner_prepare.output.cont,
-        cov=rules.metabinner_coverage.output.final,
+        cov=rules.metabinner_coverage.output,
         kmer=rules.metabinner_prepare.output.kmer,    
         path=rules.metabinner_install.output.dbs
     output:
@@ -175,7 +174,7 @@ rule metabinner:
 rule rosella:
     input:
         cont=rules.filter_length.output,
-        cov=rules.metabat2_mapping.output
+        cov=rules.fairy_mapping.output
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png")
     conda:
@@ -188,5 +187,5 @@ rule rosella:
     message:
         "Running Rosella"
     shell:
-        "(date && rosella recover -i {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
+        "(date && rosella recover -C {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
         "&& date) 2> {log.err} > {log.out}"

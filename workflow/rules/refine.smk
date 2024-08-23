@@ -14,7 +14,7 @@ rule refine_all:
 rule rosella_ref:
     input:
         cont=rules.filter_length.output,
-        cov=rules.metabat2_mapping.output,
+        cov=rules.fairy_mapping.output,
         check=rules.checkm2.output,
         bins=rules.dasTool_run.output
     output:

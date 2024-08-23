@@ -5,28 +5,29 @@
 # ORDER of STEPS: ["checkm", "dereplicate", "drep_checkm", "coverage", "gtdbtk", "eggnog", "metabolic", "mgthermometer"]
 #
 # steps: ["checkm", "dereplicate", "gtdbtk", "eggnog", "coverage", "metabolic", "mgthermometer"]  # "mdmcleaner" will be run prior to these steps
-steps: ["coverage_subset","mags_generation","dastool","checkm","refine_all","dereplicate","coverage","gtdbtk","mgthermometer","eggnog"]
+steps: ["mags_generation"]
+#,"dastool","checkm","refine_all","dereplicate","coverage","gtdbtk","mgthermometer","eggnog"]
 # ,"eggnog","metabolic","mgthermometer"]  for testing purposes
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
 # Directory where the workflow exists
-work_dir: "/scratch/gmichoud/FertilityIslandMAGs"
+work_dir: "/scratch/gmichoud/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/gmichoud/FertilityIsland/Assembly"
+assembly_dir: "/scratch/gmichoud/Test/Assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/FertilityIsland/mags_all"  
+results_dir: "/scratch/gmichoud/Test/mags_all"  
 
 # Directory for all the conda environments
-env_dir: "/scratch/gmichoud/FertilityIslandMAGs/envs" 
+env_dir: "/scratch/gmichoud/MAGsGeneration/envs" 
 
 # Directory for databases
 db_dir: "/scratch/gmichoud/DB"
 
 # Directory for trimmed reads
-reads_dir: "/scratch/gmichoud/FertilityIsland/Trim"
+reads_dir: "/scratch/gmichoud/Test/Trim"
 
 # Number of cpus or threads to use
 threads: 28
@@ -37,21 +38,18 @@ threads: 28
 filter_length:
   threads: 4
 
-filter_n_reads:
-    threads: 7
-    read_p: 0.1
 
 #################
 # Coverage
-mapping:
+fairy:
   threads: 6
 
+mapping:
+  threads: 6
+  
 #################
 # Binning
 metabat2:
-  threads: 14
-
-concoct:
   threads: 14
 
 metabinner:
