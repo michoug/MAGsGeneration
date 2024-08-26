@@ -13,7 +13,7 @@ rule refine_all:
 
 rule rosella_ref:
     input:
-        cont=rules.filter_length.output,
+        cont=rules.filter_length.output.out,
         cov=rules.fairy_mapping.output,
         check=rules.checkm2.output,
         bins=rules.dasTool_run.output

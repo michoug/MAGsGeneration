@@ -38,7 +38,7 @@ rule dasTool_run:
         metabat=rules.prepare_dasTool.output.metabatout,
         metabinner=rules.prepare_dasTool.output.metabinnerout,
         rosella=rules.prepare_dasTool.output.rosellaout,
-        cont=rules.filter_length.output
+        cont=rules.filter_length.output.out
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/das_DASTool_summary.tsv")
     conda:

@@ -4,7 +4,7 @@ rule mags_generation:
         expand(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "TempReads/{sample_2}.paired.bcsp"), sample_2 = SAMPLES_2),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
+        # expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES)
     output:
         touch("status/mags_generation.done")
@@ -13,7 +13,8 @@ rule filter_length:
     input:
         os.path.join(ASSEMBLY_DIR,"{sample}.fa")
     output:
-        os.path.join(RESULTS_DIR,"Assembly/{sample}_filter.fasta")
+        out = os.path.join(RESULTS_DIR,"Assembly/{sample}_filter.fasta"),
+        other = temp(os.path.join(RESULTS_DIR,"Assembly/{sample}_filter_name.fasta"))
     conda:
         os.path.join(ENV_DIR, "seqkit.yaml")
     threads:
@@ -21,7 +22,7 @@ rule filter_length:
     message:
         "Remove contigs less than 1.5kb"
     shell:
-        "seqkit seq -j {threads} --remove-gaps -o {output} -m 1499 {input}"
+        "seqkit seq -j {threads} --remove-gaps -o {output.other} -m 1500 {input} && perl -pe \"s/ .*//g\" {output.other} > {output.out}"
 
 rule mapping_index:
     input:
@@ -30,9 +31,7 @@ rule mapping_index:
         files=os.path.join(WORK_DIR,"config/sample_list.txt")
     output:
         folder=directory(os.path.join(RESULTS_DIR, "TempReads/")),
-        bcsp=temp(expand(os.path.join(RESULTS_DIR, "TempReads/{sample_2}.paired.bcsp"),sample_2 = SAMPLES_2))
-    params:
-        expand("{sample_2}", sample_2 = SAMPLES_2)
+        bcsp=expand(os.path.join(RESULTS_DIR, "TempReads/{sample_2}.paired.bcsp"),sample_2 = SAMPLES_2)
     log:
         out=os.path.join(RESULTS_DIR, "logs/fairy.index.err.log"),
         err=os.path.join(RESULTS_DIR, "logs/fairy.index.out.log")
@@ -52,7 +51,7 @@ rule mapping_index:
 rule fairy_mapping:
     input:
         bcsp=rules.mapping_index.output.bcsp,
-        cont=rules.filter_length.output
+        cont=rules.filter_length.output.out
     output:
         os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_cov.txt")
     conda:
@@ -72,7 +71,7 @@ rule fairy_mapping:
 rule metabat2:
     priority: 20
     input:
-        contig=rules.filter_length.output,
+        contig=rules.filter_length.output.out,
         cov=rules.fairy_mapping.output
     output:
         directory(os.path.join(RESULTS_DIR,"Bins/{sample}/Metabat/"))
@@ -118,15 +117,15 @@ rule metabinner_coverage:
         import pandas as pd
         df = pd.read_csv(input[0], sep = '\t')
         df_filtered = df.loc[:, ~df.columns.str.endswith('var')]
-        df_filtered = df_filtered[df_filtered['contigLen'] > {params}]
-        df_filtered = df_filtered.drop(columns=['contigLen'])
+        df_filtered = df_filtered[df_filtered['contigLen'] > params[0]]
+        df_filtered = df_filtered.drop(columns=['contigLen', 'totalAvgDepth'])
         df_filtered.to_csv(output[0], sep='\t', index=False)
         
 
 
 rule metabinner_prepare:
     input:
-        contig=rules.filter_length.output,
+        contig=rules.filter_length.output.out,
         bin=rules.metabinner_install.output.dbs
     output:
         cont_t=temp(RESULTS_DIR + "/Assembly/{sample}_filter_" + str(config["metabinner"]["length"]) + ".fa"),       
@@ -173,7 +172,7 @@ rule metabinner:
 
 rule rosella:
     input:
-        cont=rules.filter_length.output,
+        cont=rules.filter_length.output.out,
         cov=rules.fairy_mapping.output
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png")
@@ -187,5 +186,7 @@ rule rosella:
     message:
         "Running Rosella"
     shell:
-        "(date && rosella recover -C {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
+        "(date && rm -r $(dirname {output}) && "
+        "rosella recover -C {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
+        # "rosella recover -i {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
         "&& date) 2> {log.err} > {log.out}"

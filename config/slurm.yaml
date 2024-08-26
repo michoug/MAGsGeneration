@@ -22,11 +22,12 @@ mapping:
   nodes: 1
   n: 1
 
-metabat2_mapping:
+fairy_mapping:
   time: "00-05:00:00"
   qos: "serial"
   nodes: 1
   n: 1
+  mem: 10G
 
 metabat2:
   time: "00-05:00:00"
@@ -35,19 +36,19 @@ metabat2:
   n: 1
   explicit: ""
 
-concoct_prepare:
-  time: "00-08:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
+# concoct_prepare:
+#   time: "00-08:00:00"
+#   qos: "serial"
+#   nodes: 1
+#   n: 1
+#   explicit: ""
 
-concoct: 
-  time: "01-00:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
+# concoct: 
+#   time: "01-00:00:00"
+#   qos: "serial"
+#   nodes: 1
+#   n: 1
+#   explicit: ""
 
 metabinner_prepare:
   time: "00-02:00:00"
