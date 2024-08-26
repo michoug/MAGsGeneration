@@ -4,14 +4,14 @@ rule mags_generation:
         expand(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "TempReads/{sample_2}.paired.bcsp"), sample_2 = SAMPLES_2),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample = SAMPLES),
-        # expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES)
     output:
         touch("status/mags_generation.done")
 
 rule filter_length:
     input:
-        os.path.join(ASSEMBLY_DIR,"{sample}.fa")
+        os.path.join(RESULTS_DIR, "Assembly/{sample}.fa")
     output:
         out = os.path.join(RESULTS_DIR,"Assembly/{sample}_filter.fasta"),
         other = temp(os.path.join(RESULTS_DIR,"Assembly/{sample}_filter_name.fasta"))
@@ -26,8 +26,8 @@ rule filter_length:
 
 rule mapping_index:
     input:
-        readsF=expand(os.path.join(READS_DIR, "{sample_2}_1_val_1.fq.gz"),sample_2 = SAMPLES_2),
-        readsR=expand(os.path.join(READS_DIR, "{sample_2}_2_val_2.fq.gz"),sample_2 = SAMPLES_2),
+        readsF=expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample_2}_1.fq.gz"),sample_2 = SAMPLES_2),
+        readsR=expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample_2}_2.fq.gz"),sample_2 = SAMPLES_2),
         files=os.path.join(WORK_DIR,"config/sample_list.txt")
     output:
         folder=directory(os.path.join(RESULTS_DIR, "TempReads/")),

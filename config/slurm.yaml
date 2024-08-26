@@ -10,13 +10,43 @@ __default__:
   job-name: "binning.{rule}"
 
 
-mapping_index:
+trimming:
+  time: "00-03:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+indexHuman:
+  time: "00-01:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+mappingHuman:
   time: "00-08:00:00"
   qos: "serial"
   nodes: 1
   n: 1
 
-mapping:
+removeHuman:
+  time: "00-05:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+getfinalreads:
+  time: "00-05:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+assembly:
+  time: "00-12:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+mapping_index:
   time: "00-08:00:00"
   qos: "serial"
   nodes: 1
@@ -35,20 +65,6 @@ metabat2:
   nodes: 1
   n: 1
   explicit: ""
-
-# concoct_prepare:
-#   time: "00-08:00:00"
-#   qos: "serial"
-#   nodes: 1
-#   n: 1
-#   explicit: ""
-
-# concoct: 
-#   time: "01-00:00:00"
-#   qos: "serial"
-#   nodes: 1
-#   n: 1
-#   explicit: ""
 
 metabinner_prepare:
   time: "00-02:00:00"
@@ -111,18 +127,6 @@ rosella_ref:
   nodes: 1
   n: 1
   explicit: ""
-
-mdmcleaner_db:
-  time: "00-08:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-mdmcleaner:
-  time: "00-08:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
 
 checkmBeforeDrep:
   time: "04:00:00"

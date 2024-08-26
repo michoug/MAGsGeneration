@@ -1,4 +1,4 @@
-336R_mg
-337R_mg
-338R_mg
-339R_mg
+iceDNA_Arolla_S42
+iceDNA_PetitCombin_S41
+iceDNA_Valsorey_S44
+iceDNA_Zinal_S43

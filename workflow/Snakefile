@@ -21,6 +21,20 @@ include:
 # List of (main) targets to be created
 TARGETS = []
 
+if "trim_reads" in STEPS:
+    include:
+        "rules/trim_reads.smk"
+    TARGETS += [
+        "status/trimming.done"
+    ]
+
+if "assembly_all" in STEPS:
+    include:
+        "rules/assembly.smk"
+    TARGETS += [
+        "status/assembly.done"
+    ]
+
 if "mags_generation" in STEPS:
     include:
         "rules/mags_generation.smk"

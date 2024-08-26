@@ -37,7 +37,7 @@ workdir:
 
 ##############################
 # Relevant directories
-ASSEMBLY_DIR=config["assembly_dir"]
+# ASSEMBLY_DIR=config["assembly_dir"]
 DB_DIR=config["db_dir"]
 ENV_DIR=config["env_dir"]
 WORK_DIR=config["work_dir"]

@@ -5,7 +5,9 @@
 # ORDER of STEPS: ["checkm", "dereplicate", "drep_checkm", "coverage", "gtdbtk", "eggnog", "metabolic", "mgthermometer"]
 #
 # steps: ["checkm", "dereplicate", "gtdbtk", "eggnog", "coverage", "metabolic", "mgthermometer"]  # "mdmcleaner" will be run prior to these steps
-steps: ["mags_generation","dastool","checkm","refine_all","dereplicate","coverage","gtdbtk","mgthermometer","eggnog"]
+steps: ["trim_reads","assembly_all"]
+#,"mags_generation"]
+#,"dastool","checkm","refine_all","dereplicate","coverage","gtdbtk","mgthermometer","eggnog"]
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
@@ -13,10 +15,10 @@ steps: ["mags_generation","dastool","checkm","refine_all","dereplicate","coverag
 work_dir: "/scratch/gmichoud/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/gmichoud/Test/Assembly"
+# assembly_dir: "/scratch/gmichoud/GlacierIceTemp/Assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/Test/mags_all"  
+results_dir: "/scratch/gmichoud/GlacierIceTemp/mags_all"  
 
 # Directory for all the conda environments
 env_dir: "/scratch/gmichoud/MAGsGeneration/envs" 
@@ -25,7 +27,7 @@ env_dir: "/scratch/gmichoud/MAGsGeneration/envs"
 db_dir: "/scratch/gmichoud/DB"
 
 # Directory for trimmed reads
-reads_dir: "/scratch/gmichoud/Test/Trim"
+reads_dir: "/scratch/gmichoud/GlacierIceTemp/Reads"
 
 # Number of cpus or threads to use
 threads: 28
@@ -36,6 +38,20 @@ threads: 28
 filter_length:
   threads: 4
 
+trimming:
+  threads: 4
+
+indexHuman:
+  threads: 10
+
+mappingHuman:
+  threads: 10
+
+removeHuman:
+  threads: 10
+
+getfinalreads:
+  threads: 10
 
 #################
 # Coverage
