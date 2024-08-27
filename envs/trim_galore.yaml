@@ -1,7 +1,7 @@
+name: galah
 channels:
-  - conda-forge
   - bioconda
+  - conda-forge
   - defaults
 dependencies:
-  - seqkit=2.4
-
+  - trim-galore=0.6.10

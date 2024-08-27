@@ -7,8 +7,67 @@ __default__:
   n: 1
   cpus-per-task: 1
   explicit: ""
-  job-name: "binning.{rule}"
+  job-name: "{rule}"
 
+aemb_coverage:
+  time: "00-00:10:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+aemb_check:
+  time: "00-00:10:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+rename_refine:
+  time: "00-00:10:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+metabinner_coverage:
+  time: "00-00:10:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+trimming:
+  time: "00-03:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+indexHuman:
+  time: "00-01:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+mappingHuman:
+  time: "00-08:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+removeHuman:
+  time: "00-05:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+getfinalreads:
+  time: "00-05:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+assembly:
+  time: "00-12:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
 
 mapping_index:
   time: "00-08:00:00"
@@ -16,34 +75,15 @@ mapping_index:
   nodes: 1
   n: 1
 
-mapping:
-  time: "00-08:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-metabat2_mapping:
+fairy_mapping:
   time: "00-05:00:00"
   qos: "serial"
   nodes: 1
   n: 1
+  mem: 10G
 
 metabat2:
   time: "00-05:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
-
-concoct_prepare:
-  time: "00-08:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
-
-concoct: 
-  time: "01-00:00:00"
   qos: "serial"
   nodes: 1
   n: 1
@@ -72,6 +112,13 @@ metabinner:
   explicit: ""
 
 rosella:
+  time: "00-08:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+  explicit: ""
+
+vamb:
   time: "00-08:00:00"
   qos: "serial"
   nodes: 1
@@ -110,18 +157,6 @@ rosella_ref:
   nodes: 1
   n: 1
   explicit: ""
-
-mdmcleaner_db:
-  time: "00-08:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-mdmcleaner:
-  time: "00-08:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
 
 checkmBeforeDrep:
   time: "04:00:00"

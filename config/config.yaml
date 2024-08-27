@@ -5,28 +5,27 @@
 # ORDER of STEPS: ["checkm", "dereplicate", "drep_checkm", "coverage", "gtdbtk", "eggnog", "metabolic", "mgthermometer"]
 #
 # steps: ["checkm", "dereplicate", "gtdbtk", "eggnog", "coverage", "metabolic", "mgthermometer"]  # "mdmcleaner" will be run prior to these steps
-steps: ["coverage_subset","mags_generation","dastool","checkm","refine_all","dereplicate","coverage","gtdbtk","mgthermometer","eggnog"]
-# ,"eggnog","metabolic","mgthermometer"]  for testing purposes
+steps: ["trim_reads","assembly_all","mags_generation","dastool","checkm","refine_all","dereplicate","coverage","gtdbtk","mgthermometer","eggnog"]
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
 # Directory where the workflow exists
-work_dir: "/scratch/gmichoud/FertilityIslandMAGs"
+work_dir: "/scratch/gmichoud/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/gmichoud/FertilityIsland/Assembly"
+# assembly_dir: "/scratch/gmichoud/GlacierIceGlacierIce/Assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/FertilityIsland/mags_all"  
+results_dir: "/scratch/gmichoud/GlacierIce/mags_all"  
 
 # Directory for all the conda environments
-env_dir: "/scratch/gmichoud/FertilityIslandMAGs/envs" 
+env_dir: "/scratch/gmichoud/MAGsGeneration/envs" 
 
 # Directory for databases
 db_dir: "/scratch/gmichoud/DB"
 
 # Directory for trimmed reads
-reads_dir: "/scratch/gmichoud/FertilityIsland/Trim"
+reads_dir: "/scratch/gmichoud/GlacierIce/Reads"
 
 # Number of cpus or threads to use
 threads: 28
@@ -37,21 +36,32 @@ threads: 28
 filter_length:
   threads: 4
 
-filter_n_reads:
-    threads: 7
-    read_p: 0.1
+trimming:
+  threads: 4
+
+indexHuman:
+  threads: 10
+
+mappingHuman:
+  threads: 10
+
+removeHuman:
+  threads: 10
+
+getfinalreads:
+  threads: 10
 
 #################
 # Coverage
-mapping:
-  threads: 6
+fairy:
+  threads: 20
 
+mapping:
+  threads: 10
+  
 #################
 # Binning
 metabat2:
-  threads: 14
-
-concoct:
   threads: 14
 
 metabinner:
@@ -61,6 +71,11 @@ metabinner:
 dasTool:
   threads: 14
 
+vamb:
+  threads: 14
+
+semibin2:
+  threads: 14
 ################
 # Bins
 bbmap:
@@ -87,15 +102,11 @@ checkm2:
 
 gtdbtk:
   threads: 20
-  path: "/work/river/Databases/GTDBTk/release214"  ###USER INPUT REQUIRED###
+  path: "/work/river/Databases/GTDBTk/release220"  ###USER INPUT REQUIRED###
 
 
 ################
 # Functions
-metabolic:
-  threads: 16
-  db: "/mnt/isilon/projects/ecosystem_biology/databases/gtdbtk/release95"  ###USER INPUT REQUIRED###
-  directory: "/work/projects/nomis/tools/METABOLIC"  ###USER INPUT REQUIRED###
 
 eggnog:
   threads: 16

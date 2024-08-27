@@ -3,6 +3,5 @@ channels:
   - conda-forge
   - defaults
 dependencies:
- - coverm=0.6.1
- - minimap2=2.21
+ - coverm=0.7.0
  - samtools=1.9

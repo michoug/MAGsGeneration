@@ -21,12 +21,18 @@ include:
 # List of (main) targets to be created
 TARGETS = []
 
-# Coverage
-if "coverage_subset" in STEPS:
+if "trim_reads" in STEPS:
     include:
-        "rules/coverage_subset.smk"
+        "rules/trim_reads.smk"
     TARGETS += [
-        "status/coverage_subset.done"
+        "status/trimming.done"
+    ]
+
+if "assembly_all" in STEPS:
+    include:
+        "rules/assembly.smk"
+    TARGETS += [
+        "status/assembly.done"
     ]
 
 if "mags_generation" in STEPS:
@@ -99,12 +105,12 @@ if "gtdbtk" in STEPS:
         "status/gtdbtk.done"
     ]
 
-# METABOLIC
-if "metabolic" in STEPS:
+# MG Thermometer
+if "mgthermometer" in STEPS:
     include:
-        "rules/metabolic.smk"
+        "rules/mgthermometer.smk"
     TARGETS += [
-         "status/metabolic.done"
+        "status/mgthermometer.done"
     ]
 
 # EggNog-Mapper
@@ -115,13 +121,6 @@ if "eggnog" in STEPS:
          "status/eggnog.done"
     ]
 
-# MG Thermometer
-if "mgthermometer" in STEPS:
-    include:
-        "rules/mgthermometer.smk"
-    TARGETS += [
-        "status/mgthermometer.done"
-    ]
 
 # No targets
 if len(TARGETS) == 0:

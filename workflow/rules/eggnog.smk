@@ -10,15 +10,15 @@ rule eggnog_all:
 # Preparing the MAG files
 rule multi_to_single:
     input:
-        fa=os.path.join(RESULTS_DIR, "Bins/Annotation/")
+        rules.prepare4egg.output
     output:
         fixed_fa=os.path.join(RESULTS_DIR, "EggNOG/cat_proteins.faa")
     conda:
-        os.path.join(ENV_DIR, "seqtk.yaml")
+        os.path.join(ENV_DIR, "seqkit.yaml")
     message:
         "Converting multi-line FASTA to single line FASTA files"
     shell:
-        "(date && seqkit seq {input.fa}/*faa > {output.fixed_fa} && date)"
+        "(date && seqkit seq $(dirname {input})/*faa > {output.fixed_fa} && date)"
 
 # Preparing EGGNOG run
 checkpoint prep_eggnog:
@@ -32,7 +32,7 @@ checkpoint prep_eggnog:
     message:
         "Splitting the large concactenated protein file into chunks of 1000000"
     conda:
-        os.path.join(ENV_DIR, "seqtk.yaml")
+        os.path.join(ENV_DIR, "seqkit.yaml")
     shell:
         "(date && seqkit split -s 1000000 -O {output.dir} {input.fa} "
         "&& date) 2> {log.err} > {log.out}"
