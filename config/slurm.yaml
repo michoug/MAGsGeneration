@@ -7,8 +7,31 @@ __default__:
   n: 1
   cpus-per-task: 1
   explicit: ""
-  job-name: "binning.{rule}"
+  job-name: "{rule}"
 
+aemb_coverage:
+  time: "00-00:10:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+aemb_check:
+  time: "00-00:10:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+rename_refine:
+  time: "00-00:10:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+metabinner_coverage:
+  time: "00-00:10:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
 
 trimming:
   time: "00-03:00:00"
@@ -89,6 +112,13 @@ metabinner:
   explicit: ""
 
 rosella:
+  time: "00-08:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+  explicit: ""
+
+vamb:
   time: "00-08:00:00"
   qos: "serial"
   nodes: 1

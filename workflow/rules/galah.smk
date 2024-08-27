@@ -43,5 +43,5 @@ rule galah:
         "Running dRep on all NOMIS MAGs"
     shell:
         "(date && "
-        "galah cluster --genome-fasta-directory {input.bins} -x fna --genome-info {input.check} --min-completeness {params.comp} --max-contamination {params.cont} --output-representative-fasta-directory-copy {output.final} --output-cluster-definition {output.cluster} -t {threads} && "
+        "galah cluster --genome-fasta-directory {input.bins} -x fa --genome-info {input.check} --min-completeness {params.comp} --max-contamination {params.cont} --output-representative-fasta-directory-copy {output.final} --output-cluster-definition {output.cluster} -t {threads} && "
         "date) 2> {log.err} > {log.out}"

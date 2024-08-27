@@ -18,7 +18,7 @@ rule multi_to_single:
     message:
         "Converting multi-line FASTA to single line FASTA files"
     shell:
-        "(date && seqkit seq (dirname {input})/*faa > {output.fixed_fa} && date)"
+        "(date && seqkit seq $(dirname {input})/*faa > {output.fixed_fa} && date)"
 
 # Preparing EGGNOG run
 checkpoint prep_eggnog:

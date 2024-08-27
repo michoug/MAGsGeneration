@@ -15,11 +15,12 @@ rule gtdbtk:
     conda:
         os.path.join(ENV_DIR, "gtdbtk.yaml")
     params:
-        config["gtdbtk"]["path"]
+        db=config["gtdbtk"]["path"],
+        mash_db=os.path.join(DB_DIR, "gtdb_ref_sketch.msh")
     threads:
         config["gtdbtk"]["threads"]
     message:
         "Running GTDB on MAGs"
     shell:
-        "(date && export GTDBTK_DATA_PATH={params} && gtdbtk classify_wf --cpus {threads} -x fna --genome_dir {input} --out_dir {output} --mash_db . && date) &> >(tee {log})"
+        "(date && export GTDBTK_DATA_PATH={params.db} && gtdbtk classify_wf --cpus {threads} -x fa --genome_dir {input} --out_dir {output} --mash_db {params.mash_db} && date) &> >(tee {log})"
 

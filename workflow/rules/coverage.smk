@@ -14,17 +14,17 @@ rule concatenate_mags:
     message:
         "Concatenating all dereplicated MAGS"
     shell:
-        "(date && cat {input}/*.fna > {output} && date)"
+        "(date && cat {input}/*.fa > {output} && date)"
 
 
 rule mapping_all:
     input:
-        read1=os.path.join(READS_DIR, "{sample_2}_1_val_1.fq.gz"),
-        read2=os.path.join(READS_DIR, "{sample_2}_2_val_2.fq.gz"),
+        read1=rules.getfinalreads.output.read1,
+        read2=rules.getfinalreads.output.read2,
         cont=rules.concatenate_mags.output,
         #idx=rules.mapping_index.output
     output:
-        temp(os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample_2}_1_val_1.fq.gz.bam"))
+        temp(os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample_2}_1.fq.gz.bam"))
     threads:
         config["mapping"]["threads"]
     conda:
@@ -42,7 +42,7 @@ rule mapping_all:
 # COVERAGE
 rule coverage:
     input:
-        os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample_2}_1_val_1.fq.gz.bam")
+        os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample_2}_1.fq.gz.bam")
     output:
         final=os.path.join(RESULTS_DIR, "Bins/cat_mags_cov_{sample_2}.txt")
 #        temp=temp(os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_temp.txt")),

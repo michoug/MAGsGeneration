@@ -4,9 +4,9 @@ localrules:
 
 rule refine_all:
     input:
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella_bins.json"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv"))
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done"), sample = SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"), sample = SAMPLES)#,
+        # expand(os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv"))
     output:
         touch("status/refine.done")
 
@@ -18,7 +18,7 @@ rule rosella_ref:
         check=rules.checkm2.output,
         bins=rules.dasTool_run.output
     output:
-        os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella_bins.json")
+        os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done")
     conda:
         os.path.join(ENV_DIR, "rosella.yaml")
     log:
@@ -33,7 +33,8 @@ rule rosella_ref:
     shell:
         """
         (date && 
-        rm -f $(dirname {output})/* && rosella refine --min-bin-size 200000 --checkm-file {input.check} -d $(dirname {input.bins})/das_DASTool_bins --max-contamination 15 -x {params.ext} -i {input.cov} -a {input.cont} --threads {threads} -o $(dirname {output}) && 
+        rm -rf $(dirname {output})/* && rosella refine --min-bin-size 200000 --checkm-results {input.check} -d $(dirname {input.bins})/das_DASTool_bins --max-contamination 15 -x {params.ext} -C {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) && 
+        touch {output} &&
         date) 2> {log.err} > {log.out}
         """
 
@@ -44,19 +45,25 @@ rule rename_refine:
     params:
         sample="{sample}"
     output:
-        list=os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt")
+        list=os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"),
+        list_temp=temp(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list_temp.txt")),
+        bash_temp=temp(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/t.sh"))
     log:
         out=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.err.log")
     shell:
-        "(date && "
-        "rm -f {output.list} && "
-        "for f in $(dirname {input.ref})/*fna; "
-        "do "
-        "name=$(basename $f); "
-        "cp $f $(dirname {output})/{params.sample}_$name; "
-        "echo $(dirname {output})/{params.sample}_$name >> {output.list}; " 
-        "done && date) 2> {log.err} > {log.out}"
+        """
+        (date 
+        rm -f $(dirname {output.list})/*
+        for f in $(dirname {input.ref})/*bins/*fa; 
+        do name=$(basename $f);
+        echo cp $f $(dirname {output.list})/{params.sample}_$name >> {output.list_temp};
+        done && 
+        perl -pe 's/{params.sample}_{params.sample}/{params.sample}/g' {output.list_temp} | perl -pe 's/.*rosella_unbinned.*//g'> {output.bash_temp}
+        bash {output.bash_temp}
+        ls $(dirname {output.list})/*fa >> {output.list}; 
+        date) 2> {log.err} > {log.out}
+        """
 
 rule cp_mags:
     input:
@@ -66,7 +73,7 @@ rule cp_mags:
     message:
         "Copy MAGs to another folder"
     shell:
-        "(date && mkdir {output} && for file in $(dirname {input}); do cp $file/*fna {output}; done && date)"
+        "(date && mkdir {output} && for file in $(dirname {input}); do cp $file/*fa {output}; done && date)"
 
 # Checking bin quality
 rule checkm2_refine:
@@ -90,5 +97,5 @@ rule checkm2_refine:
     shell:
         "(date && "
         "export CHECKM2DB={params.db} && "
-        "checkm2 predict --threads {threads} -x fna --input {input} --output-directory $(dirname {output.tsv}) --force && "
+        "checkm2 predict --threads {threads} -x fa --input {input} --output-directory $(dirname {output.tsv}) --force && "
         "date) 2> {log.err} > {log.out}"

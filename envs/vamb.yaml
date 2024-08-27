@@ -1,0 +1,10 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - gcc=11.4.0
+  - pip
+  - python=3.9.19
+  - pip:
+      - vamb==4.1.3
