@@ -2,3 +2,6 @@ iceDNA_Arolla_S42
 iceDNA_PetitCombin_S41
 iceDNA_Valsorey_S44
 iceDNA_Zinal_S43
+sedDNA_60_S34
+sedDNA_61_S35
+sedDNA_62_S36
