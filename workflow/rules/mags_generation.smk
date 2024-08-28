@@ -6,9 +6,10 @@ rule mags_generation:
         expand(os.path.join(RESULTS_DIR,"Bins/{sample}/aemb/{sample_2}_aemb_cov.txt"), sample = SAMPLES, sample_2 = SAMPLES_2),
         expand(os.path.join(RESULTS_DIR,"Bins/{sample}/aemb/{sample}.txt"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample = SAMPLES),
-        # expand(os.path.join(RESULTS_DIR,"Bins/{sample}/Semibin2/recluster_bins_info.tsv"), sample = SAMPLES)
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES)
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES),
+        # expand(os.path.join(RESULTS_DIR,"Bins/{sample}/vamb_aemb/{sample_2}_aemb_cov.txt"), sample = SAMPLES, sample_2 = SAMPLES_2),
+        # expand(os.path.join(RESULTS_DIR,"Bins/{sample}/vamb_aemb/{sample}.txt"), sample = SAMPLES),
         # expand(os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/vae_clusters_unsplit.tsv"), sample = SAMPLES)
     output:
         touch("status/mags_generation.done")
@@ -192,11 +193,11 @@ rule rosella:
         "rosella recover -C {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
         "&& date) 2> {log.err} > {log.out}"
 
-rule aemb_coverage:
+rule vamb_coverage:
     input:
         rules.metabinner_coverage.output
     output:
-        os.path.join(RESULTS_DIR,"Bins/{sample}/aemb/{sample_2}_aemb_cov.txt")
+        os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/{sample_2}_aemb_cov.txt")
     params:
         name = "{sample_2}"
     run:
@@ -205,47 +206,30 @@ rule aemb_coverage:
         selected_columns = df[['contigName', params[0]]]
         selected_columns.to_csv(output[0], sep='\t', index=False, header=False)
 
-rule aemb_check:
+rule vamb_check:
     input:
-        expand(os.path.join(RESULTS_DIR,"Bins/{sample}/aemb/{sample_2}_aemb_cov.txt"), sample = SAMPLES, sample_2 = SAMPLES_2)
+        expand(os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/{sample_2}_aemb_cov.txt"), sample = SAMPLES, sample_2 = SAMPLES_2)
     output:
         os.path.join(RESULTS_DIR,"Bins/{sample}/aemb/{sample}.txt")
     shell:
         "ls {input} > {output}"
 
-# rule semibin2:
-#     input:
-#         contig=rules.filter_length.output.out,
-#         cov=rules.aemb_check.output
-#     output:
-#         os.path.join(RESULTS_DIR,"Bins/{sample}/Semibin2/recluster_bins_info.tsv")
-#     conda:
-#         os.path.join(ENV_DIR, "semibin.yaml")
-#     threads:
-#         config["semibin2"]["threads"]
-#     log:
-#         out=os.path.join(RESULTS_DIR, "logs/semibin2/{sample}.out.log"),
-#         err=os.path.join(RESULTS_DIR, "logs/semibin2/{sample}.err.log")
-#     shell:
-#         "(date && SemiBin2 single_easy_bin -i {input.contig} -a $(dirname {input.cov})/*_aemb_cov.txt -o $(dirname {output}) -t {threads} && "
-#         "date) 2> {log.err} > {log.out}"
-
 
 ### Will maybe work when version 5 is released...
 
-# rule vamb:
-#     input:
-#         contig=rules.filter_length.output,
-#         cov = rules.aemb_check.output
-#     output:
-#         os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/vae_clusters_unsplit.tsv")
-#     conda:
-#         os.path.join(ENV_DIR, "vamb.yaml")
-#     threads:
-#         config["vamb"]["threads"]
-#     log:
-#         out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
-#         err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log")
-#     shell:
-#         "(date && vamb bin --outdir $(dirname {output}) --fasta {input.contig} --aemb $(dirname {input.cov}) --threads {threads} && "
-#         "date) 2> {log.err} > {log.out}"
+rule vamb:
+    input:
+        contig=rules.filter_length.output,
+        cov = rules.aemb_check.output
+    output:
+        os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/vae_clusters_unsplit.tsv")
+    conda:
+        os.path.join(ENV_DIR, "vamb.yaml")
+    threads:
+        config["vamb"]["threads"]
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log")
+    shell:
+        "(date && vamb bin --outdir $(dirname {output}) --fasta {input.contig} --aemb $(dirname {input.cov}) --threads {threads} && "
+        "date) 2> {log.err} > {log.out}"
