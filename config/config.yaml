@@ -5,7 +5,7 @@
 # ORDER of STEPS: ["checkm", "dereplicate", "drep_checkm", "coverage", "gtdbtk", "eggnog", "metabolic", "mgthermometer"]
 #
 # steps: ["checkm", "dereplicate", "gtdbtk", "eggnog", "coverage", "metabolic", "mgthermometer"]  # "mdmcleaner" will be run prior to these steps
-steps: ["trim_reads","assembly_all","mags_generation"]#,"dastool","checkm","refine_all","dereplicate","coverage","gtdbtk","mgthermometer","eggnog"]
+steps: ["trim_reads","assembly_all","mags_generation","dastool","checkm","refine_all","dereplicate","coverage","gtdbtk","mgthermometer","eggnog"]
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
@@ -54,7 +54,7 @@ getfinalreads:
 #################
 # Coverage
 fairy:
-  threads: 20
+  threads: 10
 
 fairy_aemb:
   threads: 4
@@ -98,20 +98,17 @@ rosella:
 ################
 # Quality & Taxonomy
 checkm2:
-  threads: 20
+  threads: 10
   db: "/work/river/Databases/checkm2/CheckM2_database/uniref100.KO.1.dmnd"  ###USER INPUT REQUIRED###
   extension: "fa"  ###USER INPUT REQUIRED###
-  git_path: "https://github.com/chklovski/checkm2.git"
 
 gtdbtk:
   threads: 20
   path: "/work/river/Databases/GTDBTk/release220"  ###USER INPUT REQUIRED###
-
 
 ################
 # Functions
 
 eggnog:
   threads: 16
-  final_threads: 16
   db: "/work/river/Databases/eggnog-mapper-2.1.2/data/"  ###USER INPUT REQUIRED###

@@ -87,10 +87,10 @@ rule emapper_final:
     conda:
         os.path.join(ENV_DIR, "eggnog.yaml")
     threads:
-        config["eggnog"]["final_threads"]
+        config["eggnog"]["threads"]
     log:
-        out=os.path.join(RESULTS_DIR, "logs/eggnog/final_emapper.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/eggnog/final_emapper.err.log")
+        out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.err.log")
     params:
         db=config["eggnog"]["db"]
     message:
