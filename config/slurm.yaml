@@ -68,6 +68,14 @@ assembly:
   qos: "serial"
   nodes: 1
   n: 1
+  mem: 10G
+
+spades:
+  time: "00-12:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+  mem: 100G
 
 mapping_index:
   time: "00-08:00:00"

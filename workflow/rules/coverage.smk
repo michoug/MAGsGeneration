@@ -1,6 +1,6 @@
 rule coverage_all:
     input:
-        expand(os.path.join(RESULTS_DIR, "Bins/cat_mags_cov_{sample_2}.txt"), sample_2 = SAMPLES_2),
+        expand(os.path.join(RESULTS_DIR, "Bins/cat_mags_cov_{sample}.txt"), sample = SAMPLES),
         os.path.join(RESULTS_DIR, "cat_mags_cov.txt")
     output:
         touch("status/coverage.done")
@@ -15,6 +15,7 @@ rule concatenate_mags:
         "Concatenating all dereplicated MAGS"
     shell:
         "(date && cat {input}/*.fa > {output} && date)"
+    localrule: True
 
 
 rule mapping_all:
@@ -24,16 +25,16 @@ rule mapping_all:
         cont=rules.concatenate_mags.output,
         #idx=rules.mapping_index.output
     output:
-        temp(os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample_2}_1.fq.gz.bam"))
+        temp(os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample}_1.fq.gz.bam"))
     threads:
         config["mapping"]["threads"]
     conda:
         os.path.join(ENV_DIR, "coverm.yaml")
     log:
-        out=os.path.join(RESULTS_DIR, "logs/mapping/{sample_2}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/mapping/{sample_2}.err.log")
+        out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}.err.log")
     message:
-        "Running coverm to produce sorted bams for: {wildcards.sample_2}"
+        "Running coverm to produce sorted bams for: {wildcards.sample}"
     shell:
         "(date && "
         "TMPDIR=. coverm make -r {input.cont} -t {threads} -o $(dirname {output}) --discard-unmapped -c {input.read1} {input.read2} && "
@@ -42,9 +43,9 @@ rule mapping_all:
 # COVERAGE
 rule coverage:
     input:
-        os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample_2}_1.fq.gz.bam")
+        os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample}_1.fq.gz.bam")
     output:
-        final=os.path.join(RESULTS_DIR, "Bins/cat_mags_cov_{sample_2}.txt")
+        final=os.path.join(RESULTS_DIR, "Bins/cat_mags_cov_{sample}.txt")
 #        temp=temp(os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_temp.txt")),
 #        final=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_cov.txt")
     conda:
@@ -54,8 +55,8 @@ rule coverage:
     priority: 
         50
     log:
-        out=os.path.join(RESULTS_DIR, "logs/coverage/coverage_{sample_2}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/coverage/coverage_{sample_2}.err.log")
+        out=os.path.join(RESULTS_DIR, "logs/coverage/coverage_{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/coverage/coverage_{sample}.err.log")
     message:
         "Estimating coverage for concatenated MAGs"
     shell:
@@ -64,7 +65,7 @@ rule coverage:
 
 rule concat_coverage:
     input:
-        files = expand(os.path.join(RESULTS_DIR, "Bins/cat_mags_cov_{sample_2}.txt"), sample_2 = SAMPLES_2),
+        files = expand(os.path.join(RESULTS_DIR, "Bins/cat_mags_cov_{sample}.txt"), sample = SAMPLES),
         script=os.path.join(SRC_DIR,"mergeTables.pl")
     output:
         os.path.join(RESULTS_DIR, "cat_mags_cov.txt") 

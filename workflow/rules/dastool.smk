@@ -31,7 +31,7 @@ rule prepare_dasTool:
         perl -pe 's/rosella_(bin|refined)_/{params.value}_rosella_/g' {output.rosellaout} > t2.txt && mv t2.txt {output.rosellaout} && 
         date) 2> {log.err} > {log.out}
         """
-
+    localrule: True
 
 rule dasTool_run:
     input:

@@ -65,6 +65,7 @@ rule prepare4egg:
         temp(os.path.join(RESULTS_DIR, "Bins/Annotation/files.txt"))
     shell:
         "ls {input} > {output}"
+    localrule: True
 
 rule concatResults:
     input:
@@ -73,4 +74,5 @@ rule concatResults:
         os.path.join(RESULTS_DIR, "mgthermometer/table_OGT.txt")
     shell:
         "(date && cat {input} > {output} && date)"
+    localrule: True
 

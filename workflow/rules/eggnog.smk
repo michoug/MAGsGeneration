@@ -78,6 +78,7 @@ rule cat_emapper_out:
         "Cat EggNog-mapper output"
     shell:
         "(date && cat {input} > {output} && date)"
+    localrule: True
 
 rule emapper_final:
     input:

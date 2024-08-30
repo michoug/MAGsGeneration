@@ -53,9 +53,5 @@ STEPS = config["steps"]
 ##############################
 # Input
 SAMPLES = [line.strip() for line in open("config/sample_list.txt").readlines()]
-SAMPLES_2=SAMPLES
+# SAMPLES_2=SAMPLES
 
-# SAMPLES_2 = [line.strip() for line in open("config/rock_list.txt").readlines()]
-#SAMPLES_2 = [line.strip() for line in open("config/all_rock_sediment_samples.txt").readlines()]
-
-# Alternative method: SAMPLES=[line.strip() for line in open("config/all_samples.txt", 'r')]

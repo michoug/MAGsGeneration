@@ -2,16 +2,17 @@
 rule mags_generation:
     input:
         expand(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "TempReads/{sample_2}.paired.bcsp"), sample_2 = SAMPLES_2),
+        expand(os.path.join(RESULTS_DIR, "TempReads/{sample}.paired.bcsp"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES)
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES)
+        # expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES)
     output:
         touch("status/mags_generation.done")
 
+
 rule filter_length:
     input:
-        os.path.join(RESULTS_DIR, "Assembly/{sample}.fa")
+        os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit.fa")
     output:
         out = os.path.join(RESULTS_DIR,"Assembly/{sample}_filter.fasta"),
         other = temp(os.path.join(RESULTS_DIR,"Assembly/{sample}_filter_name.fasta"))
@@ -26,12 +27,12 @@ rule filter_length:
 
 rule mapping_index:
     input:
-        readsF=expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample_2}_1.fq.gz"),sample_2 = SAMPLES_2),
-        readsR=expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample_2}_2.fq.gz"),sample_2 = SAMPLES_2),
+        readsF=expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"),sample = SAMPLES),
+        readsR=expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample}_2.fq.gz"),sample = SAMPLES),
         files=os.path.join(WORK_DIR,"config/sample_list.txt")
     output:
         folder=directory(os.path.join(RESULTS_DIR, "TempReads/")),
-        bcsp=expand(os.path.join(RESULTS_DIR, "TempReads/{sample_2}.paired.bcsp"),sample_2 = SAMPLES_2)
+        bcsp=expand(os.path.join(RESULTS_DIR, "TempReads/{sample}.paired.bcsp"),sample = SAMPLES)
     log:
         out=os.path.join(RESULTS_DIR, "logs/fairy.index.err.log"),
         err=os.path.join(RESULTS_DIR, "logs/fairy.index.out.log")
@@ -132,15 +133,17 @@ rule metabinner_prepare:
         kmer=RESULTS_DIR + "/Bins/{sample}/{sample}_kmer_4_f" + str(config["metabinner"]["length"]) + ".csv"
     conda:
         os.path.join(ENV_DIR, "metabinner.yaml")
+    params:
+        config["metabinner"]["length"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.err.log")
     message:
         "Prepare fasta and kmer file for Metabinner"
     shell:
-        "(date && python {input.bin}/scripts/Filter_tooshort.py {input.contig} {config[metabinner][length]} && "
+        "(date && python {input.bin}/scripts/Filter_tooshort.py {input.contig} {params} && "
         "cp {output.cont_t} {output.cont} && " 
-        "python {input.bin}/scripts/gen_kmer.py {input.contig} {config[metabinner][length]} 4 && "
+        "python {input.bin}/scripts/gen_kmer.py {input.contig} {params} 4 && "
         "cp {output.kmer_t} {output.kmer} && date) 2> {log.err} > {log.out}"
 
 

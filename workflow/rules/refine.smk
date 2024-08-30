@@ -64,6 +64,7 @@ rule rename_refine:
         ls $(dirname {output.list})/*fa >> {output.list}; 
         date) 2> {log.err} > {log.out}
         """
+    localrule: True
 
 rule cp_mags:
     input:
@@ -74,6 +75,7 @@ rule cp_mags:
         "Copy MAGs to another folder"
     shell:
         "(date && mkdir {output} && for file in $(dirname {input}); do cp $file/*fa {output}; done && date)"
+    localrule: True
 
 # Checking bin quality
 rule checkm2_refine:

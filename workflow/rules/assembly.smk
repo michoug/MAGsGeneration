@@ -1,43 +1,32 @@
 rule assembly_all:
     input:
-        expand(os.path.join(RESULTS_DIR, "Assembly/{sample_2}.fa"), sample_2 = SAMPLES_2)
+        expand(os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit.fa"), sample = SAMPLES)
     output:
         touch("status/assembly.done")
 
 
-rule assembly:
+rule assembly_megahit:
     input:
         read1 = rules.getfinalreads.output.read1,
         read2 = rules.getfinalreads.output.read2,
     output:
-        fasta = os.path.join(RESULTS_DIR, "Assembly/{sample_2}/final.contigs.fa")
+        fasta = os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit/final.contigs.fa"),
+        final = os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit.fa")
     conda:
         os.path.join(ENV_DIR, "megahit.yaml")
     params:
-        directory(os.path.join(RESULTS_DIR, "Assembly/{sample_2}"))
+        folder = directory(os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit")), 
+        name = "{sample}"
     threads:
-        config["mapping"]["threads"]
+        config["assembly"]["threads"]
     log:
-        out=os.path.join(RESULTS_DIR, "logs/mapping/{sample_2}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/mapping/{sample_2}.err.log")
+        out=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.err.log")
     shell:
         """
         (date
         rm -rf {params}
-        megahit -1 {input.read1} -2 {input.read2} -o {params} --min-contig-len 1000
+        megahit -1 {input.read1} -2 {input.read2} -o {params.folder} --min-contig-len 1000
+        perl -pe "s/>/>{params.name}_/" {output.fasta} > {output.final}
         date ) 2> {log.err} > {log.out}
-        """
-
-rule assembly_clean:
-    input:
-        rules.assembly.output.fasta
-    output:
-        os.path.join(RESULTS_DIR, "Assembly/{sample_2}.fa")
-    conda:
-        os.path.join(ENV_DIR, "seqkit.yaml")
-    params:
-        "{sample_2}"
-    shell:
-        """
-        perl -pe "s/>/>{params}_/" {input} > {output}
         """

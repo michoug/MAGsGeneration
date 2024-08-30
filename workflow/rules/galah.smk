@@ -18,6 +18,7 @@ rule galah_prepare:
         cat {input.check} | sed '/^Name/d' | awk '{{print $1","$2","$3}}' > {output.temp} &&
         (echo "genome,completeness,contamination" && cat {output.temp}) > {output.final}
         """
+    localrule: True
 
 ## galah cluster --genome-fasta-list genomes_list.txt --genome-info t2.txt --min-completeness 70 --max-contamination 10 --output-representative-fasta-directory-copy final -t 10
 
