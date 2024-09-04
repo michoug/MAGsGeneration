@@ -30,7 +30,7 @@ rule mgthermometer_run:
     localrule: True
     shell:
         "(date && "
-        "perl {input.script} {input.protein} {output.proportion} && "
+        "perl {input.script} {input.fasta} {output.proportion} && "
         "date) 2> {log.err} > {log.out}"
 
 

@@ -37,6 +37,7 @@ rule mapping_all:
         "Running coverm to produce sorted bams for: {wildcards.sample}"
     shell:
         "(date && "
+        "rm -f {output} && "
         "TMPDIR=. coverm make -r {input.cont} -t {threads} -o $(dirname {output}) --discard-unmapped -c {input.read1} {input.read2} && "
         "date) 2> {log.err} > {log.out}"
 
