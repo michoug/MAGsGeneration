@@ -12,13 +12,13 @@ rule galah_prepare:
         final=os.path.join(RESULTS_DIR, "Bins/checkm2BeforeGalah.tsv"),
         temp=temp(os.path.join(RESULTS_DIR, "Bins/checkm2_temp.tsv"))
     message:
-        "Adjusting CheckM output for input to dRep"
+        "Adjusting CheckM output for input to Galah"
+    localrule: True
     shell:
         """
         cat {input.check} | sed '/^Name/d' | awk '{{print $1","$2","$3}}' > {output.temp} &&
         (echo "genome,completeness,contamination" && cat {output.temp}) > {output.final}
         """
-    localrule: True
 
 ## galah cluster --genome-fasta-list genomes_list.txt --genome-info t2.txt --min-completeness 70 --max-contamination 10 --output-representative-fasta-directory-copy final -t 10
 
@@ -41,7 +41,7 @@ rule galah:
     threads:
         config["galah"]["threads"]
     message:
-        "Running dRep on all NOMIS MAGs"
+        "Running Galah on all NOMIS MAGs"
     shell:
         "(date && "
         "galah cluster --genome-fasta-directory {input.bins} -x fa --genome-info {input.check} --min-completeness {params.comp} --max-contamination {params.cont} --output-representative-fasta-directory-copy {output.final} --output-cluster-definition {output.cluster} -t {threads} && "

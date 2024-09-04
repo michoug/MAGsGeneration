@@ -76,9 +76,9 @@ rule cat_emapper_out:
         os.path.join(RESULTS_DIR, "EggNOG/allMAGs.emapper_orthologs")
     message:
         "Cat EggNog-mapper output"
+    localrule: True
     shell:
         "(date && cat {input} > {output} && date)"
-    localrule: True
 
 rule emapper_final:
     input:

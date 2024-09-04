@@ -81,14 +81,12 @@ if "dereplicate" in STEPS:
         "status/dereplicate.done"
     ]
 
-# MDMCleaner
-if "mdmcleaner" in STEPS:
+if "annotations" in STEPS:
     include:
-        "rules/mdmcleaner.smk"
+        "rules/annotations.smk"
     TARGETS += [
-       "status/mdmcleaner.done"
+        "status/annotations.done"
     ]
-
 # Coverage
 if "coverage" in STEPS:
     include:

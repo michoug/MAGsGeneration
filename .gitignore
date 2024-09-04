@@ -21,6 +21,7 @@ status/*
 *status
 *overview_*
 gtdb_ref_sketch.msh
+coverm*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

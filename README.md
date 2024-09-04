@@ -2,7 +2,9 @@
 
 ## Pipeline description
 
-- This pipeline expect contigs samples (`fa` files) in the `assembly_dir` and their respective reads (`_1_val_1.fq.gz` or `_2_val_2.fq.gz` files) in the `reads_dir`.
+- This pipeline expect raw reads (`_R1_001.fastq.gz` or `_R2_001.fastq.gz` files) in the `reads_dir`.
+- The reads are trimmed with trim_galore and human reads are removed with [strobealign](https://github.com/ksahlin/strobealign) and [samtools](https://github.com/samtools/samtools).
+- The trimmed reads are then assembled with [megahit](https://github.com/voutcn/megahit).
 - The coverage is calculated with [fairy](https://github.com/bluenote-1577/fairy) for binning that speeds up the process greatly
 - Bins are generated with [Metabat2](https://bitbucket.org/berkeleylab/metabat), [Metabinner](https://github.com/ziyewang/MetaBinner) and [Rosella](https://github.com/rhysnewell/rosella) per sample.
 - [DAS Tool](https://github.com/cmks/DAS_Tool) is then used to generate a non redudant set of bins per samples.
@@ -45,10 +47,9 @@ conda env create -f requirements.yaml -n "snakemake"
 ```
 
 ### Run Setup
-* Place your preprocessed/trim reads (e.g. `sample_1_val_1.fq.gz` and `sample_2_val_2.fq.gz` files) in a `reads` folder
-* Place the individual assemblies (e.g. `sample.fa`) into an `assembly` folder
+* Place your preprocessed/trim reads (e.g. `sample_R1_001.fastq.gz` and `sample_R2_001.fastq.gz` files) in a `reads` folder
+* Fill the `config/all_samples.txt` file with the name of your samples (e.g. `{sample}_R2_001.fastq.gz`)
 * Modify the `config/config.yaml` file to change the different paths and eventually the different options
-* Modify the `config/all_samples.txt` file to include your samples
 
 ### Without Slurm
 

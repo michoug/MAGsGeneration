@@ -51,6 +51,7 @@ rule rename_refine:
     log:
         out=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.err.log")
+    localrule: True
     shell:
         """
         (date 
@@ -64,7 +65,6 @@ rule rename_refine:
         ls $(dirname {output.list})/*fa >> {output.list}; 
         date) 2> {log.err} > {log.out}
         """
-    localrule: True
 
 rule cp_mags:
     input:
@@ -73,9 +73,9 @@ rule cp_mags:
         directory(os.path.join(RESULTS_DIR, "Bins/renamed_mags"))
     message:
         "Copy MAGs to another folder"
+    localrule: True
     shell:
         "(date && mkdir {output} && for file in $(dirname {input}); do cp $file/*fa {output}; done && date)"
-    localrule: True
 
 # Checking bin quality
 rule checkm2_refine:

@@ -13,9 +13,9 @@ rule concatenate_mags:
         os.path.join(RESULTS_DIR, "concat/cat_mags.fa")
     message:
         "Concatenating all dereplicated MAGS"
+    localrule: True
     shell:
         "(date && cat {input}/*.fa > {output} && date)"
-    localrule: True
 
 
 rule mapping_all:

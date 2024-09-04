@@ -1,10 +1,3 @@
-# Snakefile to run MGThermometer on each MAG
-
-
-# MAGS = glob_wildcards(os.path.join(INPUT_DIR, "{mags}.fna")).mags
-# MAGS = glob_wildcards(os.path.join(RESULTS_DIR, "Bins/finalBins/{mags}.fa")).mags
-
-
 rule mgthermometer:
     input:
         expand(os.path.join(RESULTS_DIR, "mgthermometer/table_OGT.txt"))
@@ -12,36 +5,18 @@ rule mgthermometer:
         touch("status/mgthermometer.done")
 
 
-checkpoint countGenome:
-    input:
-        os.path.join(RESULTS_DIR, "Bins/finalBins")
-    output:
-        temp(directory(os.path.join(RESULTS_DIR, "Bins/tempBins")))
-    shell:
-        "mkdir {output} && cp {input}/*fa {output}/"
-
 
 def count_mags(wildcards):
     ck_output = checkpoints.countGenome.get(**wildcards).output[0]
     return expand(os.path.join(RESULTS_DIR,"mgthermometer/proportion_{mags}.txt"),
         mags=glob_wildcards(os.path.join(ck_output, '{mags}.fa')).mags)
 
-def count_mags_prots(wildcards):
-    ck_output = checkpoints.countGenome.get(**wildcards).output[0]
-    return expand(os.path.join(RESULTS_DIR,"Bins/Annotation/{mags}.faa"),
-        mags=glob_wildcards(os.path.join(ck_output, '{mags}.fa')).mags)
 
-
-###############
-# PRODIGAL
 rule mgthermometer_run:
     input:
-        fasta=os.path.join(RESULTS_DIR, "Bins/tempBins/{mags}.fa"),
+        fasta=os.path.join(RESULTS_DIR, "Bins/Annotation/{mags}.faa"),
         script=os.path.join(SRC_DIR,"getFrequency.pl")
     output:
-        protein = os.path.join(RESULTS_DIR, "Bins/Annotation/{mags}.faa"),
-        gff = os.path.join(RESULTS_DIR, "Bins/Annotation/{mags}.gff"),
-        nucl = os.path.join(RESULTS_DIR, "Bins/Annotation/{mags}.ffn"),
         proportion=os.path.join(RESULTS_DIR, "mgthermometer/proportion_{mags}.txt")
     params:
         prefix="{mags}"
@@ -51,28 +26,20 @@ rule mgthermometer_run:
         out=os.path.join(RESULTS_DIR, "logs/mgthermometer/{mags}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mgthermometer/{mags}.err.log")
     message:
-        "Prodigal annotation and Calculate proportion of IVYWREL for {wildcards.mags}"
+        "Calculate proportion of IVYWREL for {wildcards.mags}"
+    localrule: True
     shell:
         "(date && "
-        "pyrodigal -a {output.protein} -d {output.nucl} -f gff -i {input.fasta} -o {output.gff} && "
-        "perl {input.script} {output.protein} {output.proportion} && "
+        "perl {input.script} {input.protein} {output.proportion} && "
         "date) 2> {log.err} > {log.out}"
 
-rule prepare4egg:
-    input:
-        count_mags_prots
-    output:
-        temp(os.path.join(RESULTS_DIR, "Bins/Annotation/files.txt"))
-    shell:
-        "ls {input} > {output}"
-    localrule: True
 
 rule concatResults:
     input:
         count_mags
     output:
         os.path.join(RESULTS_DIR, "mgthermometer/table_OGT.txt")
+    localrule: True
     shell:
         "(date && cat {input} > {output} && date)"
-    localrule: True
 

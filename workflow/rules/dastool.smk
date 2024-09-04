@@ -22,6 +22,7 @@ rule prepare_dasTool:
         err=os.path.join(RESULTS_DIR, "logs/prepare_dasTool/{sample}.err.log")
     message:
         "Preparing files for DasTool"
+    localrule: True
     shell:
         """
         (date && Fasta_to_Contig2Bin.sh -e fa -i {input.metabat} > {output.metabatout} && 
@@ -31,7 +32,6 @@ rule prepare_dasTool:
         perl -pe 's/rosella_(bin|refined)_/{params.value}_rosella_/g' {output.rosellaout} > t2.txt && mv t2.txt {output.rosellaout} && 
         date) 2> {log.err} > {log.out}
         """
-    localrule: True
 
 rule dasTool_run:
     input:
