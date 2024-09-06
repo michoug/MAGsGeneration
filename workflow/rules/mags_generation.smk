@@ -7,7 +7,7 @@ rule mags_generation:
         # expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
         # expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES),
         # expand(os.path.join(RESULTS_DIR,"Bins/{sample}/vamb_aemb/{sample}.txt"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/vae_clusters_unsplit.tsv"), sample = SAMPLES)
+        expand(os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/Vamb_Results/vae_clusters_unsplit.tsv"), sample = SAMPLES)
     output:
         touch("status/mags_generation.done")
 
@@ -234,7 +234,7 @@ rule vamb:
         contig=rules.filter_length.output.out,
         cov = rules.vamb_coverage.output
     output:
-        os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/vae_clusters_unsplit.tsv")
+        os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/Vamb_Results/vae_clusters_unsplit.tsv")
     conda:
         os.path.join(ENV_DIR, "vamb.yaml")
     threads:
@@ -243,5 +243,7 @@ rule vamb:
         out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log")
     shell:
-        "(date && vamb bin default --outdir $(dirname {output}) --fasta {input.contig} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} && "
+        "(date && "
+        "rm -r $(dirname {output}) && "
+        "vamb bin default --outdir $(dirname {output}) --fasta {input.contig} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} && "
         "date) 2> {log.err} > {log.out}"
