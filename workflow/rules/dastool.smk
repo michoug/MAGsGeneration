@@ -7,12 +7,14 @@ rule dastool:
 rule prepare_dasTool:
     input:
         metabat=rules.metabat2.output,
-        metabinner=rules.metabinner.output,
-        rosella=rules.rosella.output
+        # metabinner=rules.metabinner.output,
+        rosella=rules.rosella.output,
+        vamb=rules.vamb.output
     output:
         metabatout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabat_das.tsv"),
-        metabinnerout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabinner_das.tsv"),
-        rosellaout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/rosella_das.tsv")
+        # metabinnerout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabinner_das.tsv"),
+        rosellaout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/rosella_das.tsv"),
+        vambout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/vamb_das.tsv")
     params:
         value="{sample}"
     conda: 
@@ -26,17 +28,20 @@ rule prepare_dasTool:
     shell:
         """
         (date && Fasta_to_Contig2Bin.sh -e fa -i {input.metabat} > {output.metabatout} && 
-        perl -pe 's/metabat./{params.value}_metabat_/g' {output.metabatout} > t.txt && mv t.txt {output.metabatout} && 
-        perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout} && 
+        perl -pe 's/metabat./{params.value}_metabat_/g' {output.metabatout} > $(dirname {output.metabatout})/t.txt && mv $(dirname {output.metabatout})/t.txt {output.metabatout} && 
         Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.rosella}) >  {output.rosellaout} && 
-        perl -pe 's/rosella_(bin|refined)_/{params.value}_rosella_/g' {output.rosellaout} > t2.txt && mv t2.txt {output.rosellaout} && 
+        perl -pe 's/rosella_(bin|refined)_/{params.value}_rosella_/g' {output.rosellaout} > $(dirname {output.metabatout})/t2.txt && mv $(dirname {output.metabatout})/t2.txt {output.rosellaout} && 
+        Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.vamb})/bins > {output.vambout} &&
+        perl -pe 's/\t/\t{params.value}_vamb_/g' {output.vambout} > $(dirname {output.metabatout})/t3.txt && mv $(dirname {output.metabatout})/t3.txt {output.vambout} &&
         date) 2> {log.err} > {log.out}
         """
+        # perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout} && 
 
 rule dasTool_run:
     input:
         metabat=rules.prepare_dasTool.output.metabatout,
-        metabinner=rules.prepare_dasTool.output.metabinnerout,
+        # metabinner=rules.prepare_dasTool.output.metabinnerout,
+        vamb = rules.prepare_dasTool.output.vambout,
         rosella=rules.prepare_dasTool.output.rosellaout,
         cont=rules.filter_length.output.out
     output:
@@ -53,6 +58,6 @@ rule dasTool_run:
     shell:
         """
         (date && 
-        DAS_Tool -i {input.metabat},{input.metabinner},{input.rosella} --score_threshold -42 -l metabat,metabinner,rosella -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
+        DAS_Tool -i {input.metabat},{input.vamb},{input.rosella} --score_threshold -42 -l metabat,vamb,rosella -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
         date) 2> {log.err} > {log.out}        
         """

@@ -1,5 +1,7 @@
+iceDNA_Arolla_S42
 iceDNA_PetitCombin_S41
 iceDNA_Valsorey_S44
+iceDNA_Zinal_S43
 sedDNA_51_S25
 sedDNA_52_S26
 sedDNA_53_S27
@@ -9,6 +11,9 @@ sedDNA_56_S30
 sedDNA_57_S31
 sedDNA_58_S32
 sedDNA_59_S33
+sedDNA_60_S34
+sedDNA_61_S35
+sedDNA_62_S36
 sedDNA_81_S37
 sedDNA_82_S38
 sedDNA_83_S39

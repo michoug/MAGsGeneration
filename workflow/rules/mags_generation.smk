@@ -4,8 +4,9 @@ rule mags_generation:
         expand(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "TempReads/{sample}.paired.bcsp"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES)
-        # expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES)
+        # expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES),
+        expand(os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/Vamb_Results/vae_clusters_unsplit.tsv"), sample = SAMPLES)
     output:
         touch("status/mags_generation.done")
 
@@ -190,3 +191,58 @@ rule rosella:
         "(date && rm -r $(dirname {output}) && "
         "rosella recover -C {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
         "&& date) 2> {log.err} > {log.out}"
+
+rule vamb_install:
+    output:
+        dbs=directory(os.path.join(DB_DIR, "vamb")),
+        testfile=os.path.join(DB_DIR, "vamb/install.done")
+    conda:
+        os.path.join(ENV_DIR, "vamb.yaml")
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/vamb_install.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/vamb_install.err.log")
+    shell:
+        "(date && rm -rf vamb && "
+        "rm -rf {output.dbs} && "
+        "git clone https://github.com/RasmussenLab/vamb -b master && "
+        "mv vamb $(dirname {output.dbs}) && "
+        "pip install -e {output.dbs} && "
+        "touch {output.testfile} && "
+        "date) 2> {log.err} > {log.out}"
+
+rule vamb_coverage:
+    input:
+        rules.metabinner_coverage.output
+    output:
+        os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/{sample}_aemb_cov.txt")
+    params:
+        name = "{sample}"
+    localrule: True
+    run:
+        import pandas as pd
+        df = pd.read_csv(input[0], sep = '\t')
+        df.rename(columns={"contigName": "contigname"}, inplace=True)
+        df.to_csv(output[0], sep='\t', index=False, header=True)
+
+
+### Will maybe work when version 5 is released...
+
+rule vamb:
+    input:
+        file=rules.vamb_install.output.testfile,
+        contig=rules.filter_length.output.out,
+        cov = rules.vamb_coverage.output
+    output:
+        os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/Vamb_Results/vae_clusters_unsplit.tsv")
+    conda:
+        os.path.join(ENV_DIR, "vamb.yaml")
+    threads:
+        config["vamb"]["threads"]
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log")
+    shell:
+        "(date && "
+        "rm -r $(dirname {output}) && "
+        "vamb bin default --outdir $(dirname {output}) -m 1501 --fasta {input.contig} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} -o && "
+        "date) 2> {log.err} > {log.out}"
