@@ -28,11 +28,11 @@ rule prepare_dasTool:
     shell:
         """
         (date && Fasta_to_Contig2Bin.sh -e fa -i {input.metabat} > {output.metabatout} && 
-        perl -pe 's/metabat./{params.value}_metabat_/g' {output.metabatout} > t.txt && mv t.txt {output.metabatout} && 
+        perl -pe 's/metabat./{params.value}_metabat_/g' {output.metabatout} > $(dirname {output.metabatout})/t.txt && mv $(dirname {output.metabatout})/t.txt {output.metabatout} && 
         Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.rosella}) >  {output.rosellaout} && 
-        perl -pe 's/rosella_(bin|refined)_/{params.value}_rosella_/g' {output.rosellaout} > t2.txt && mv t2.txt {output.rosellaout} && 
+        perl -pe 's/rosella_(bin|refined)_/{params.value}_rosella_/g' {output.rosellaout} > $(dirname {output.metabatout})/t2.txt && mv $(dirname {output.metabatout})/t2.txt {output.rosellaout} && 
         Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.vamb})/bins > {output.vambout} &&
-        perl -pe 's/^/{params.value}_vamb_/g' {output.vambout} > t3.txt && mv t3.txt {output.vambout} &&
+        perl -pe 's/\t/\t{params.value}_vamb_/g' {output.vambout} > $(dirname {output.metabatout})/t3.txt && mv $(dirname {output.metabatout})/t3.txt {output.vambout} &&
         date) 2> {log.err} > {log.out}
         """
         # perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout} && 
