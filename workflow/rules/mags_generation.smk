@@ -5,8 +5,7 @@ rule mags_generation:
         expand(os.path.join(RESULTS_DIR, "TempReads/{sample}.paired.bcsp"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample = SAMPLES),
         # expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
-        # expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES),
-        # expand(os.path.join(RESULTS_DIR,"Bins/{sample}/vamb_aemb/{sample}.txt"), sample = SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/Vamb_Results/vae_clusters_unsplit.tsv"), sample = SAMPLES)
     output:
         touch("status/mags_generation.done")
@@ -245,5 +244,5 @@ rule vamb:
     shell:
         "(date && "
         "rm -r $(dirname {output}) && "
-        "vamb bin default --outdir $(dirname {output}) --fasta {input.contig} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} && "
+        "vamb bin default --outdir $(dirname {output}) -m 1501 --fasta {input.contig} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} -o && "
         "date) 2> {log.err} > {log.out}"
