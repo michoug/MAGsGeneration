@@ -4,7 +4,7 @@ rule mags_generation:
         expand(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "TempReads/{sample}.paired.bcsp"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample = SAMPLES),
-        # expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/Vamb_Results/vae_clusters_unsplit.tsv"), sample = SAMPLES)
     output:

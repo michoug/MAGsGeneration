@@ -7,12 +7,12 @@ rule dastool:
 rule prepare_dasTool:
     input:
         metabat=rules.metabat2.output,
-        # metabinner=rules.metabinner.output,
+        metabinner=rules.metabinner.output,
         rosella=rules.rosella.output,
         vamb=rules.vamb.output
     output:
         metabatout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabat_das.tsv"),
-        # metabinnerout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabinner_das.tsv"),
+        metabinnerout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabinner_das.tsv"),
         rosellaout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/rosella_das.tsv"),
         vambout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/vamb_das.tsv")
     params:
@@ -33,9 +33,9 @@ rule prepare_dasTool:
         perl -pe 's/rosella_(bin|refined)_/{params.value}_rosella_/g' {output.rosellaout} > $(dirname {output.metabatout})/t2.txt && mv $(dirname {output.metabatout})/t2.txt {output.rosellaout} && 
         Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.vamb})/bins > {output.vambout} &&
         perl -pe 's/\t/\t{params.value}_vamb_/g' {output.vambout} > $(dirname {output.metabatout})/t3.txt && mv $(dirname {output.metabatout})/t3.txt {output.vambout} &&
+        perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout} &&
         date) 2> {log.err} > {log.out}
         """
-        # perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout} && 
 
 rule dasTool_run:
     input:
@@ -58,6 +58,6 @@ rule dasTool_run:
     shell:
         """
         (date && 
-        DAS_Tool -i {input.metabat},{input.vamb},{input.rosella} --score_threshold -42 -l metabat,vamb,rosella -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
+        DAS_Tool -i {input.metabat},{input.vamb},{input.metabinner},{input.rosella} --score_threshold -42 -l metabat,vamb,metabinner,rosella -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
         date) 2> {log.err} > {log.out}        
         """
