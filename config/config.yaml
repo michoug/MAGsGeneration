@@ -111,7 +111,7 @@ gtdbtk:
   path: "/work/river/Databases/GTDBTk/release220"  ###USER INPUT REQUIRED###
 
 singlem:
-  threads: 16
+  threads: 8
 ################
 # Functions
 
