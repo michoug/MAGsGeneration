@@ -119,6 +119,12 @@ if "eggnog" in STEPS:
          "status/eggnog.done"
     ]
 
+if "singlem_all" in STEPS:
+    include:
+        "rules/singlem.smk"
+    TARGETS += [
+        "status/singlem.done"
+    ]
 
 # No targets
 if len(TARGETS) == 0:
