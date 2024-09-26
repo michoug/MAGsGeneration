@@ -194,8 +194,8 @@ rule rosella:
 
 rule vamb_install:
     output:
-        dbs=directory(os.path.join(DB_DIR, "vamb")),
-        testfile=os.path.join(DB_DIR, "vamb/install.done")
+        dbs=directory(os.path.join(RESULTS_DIR, "vamb")),
+        testfile=os.path.join(RESULTS_DIR, "vamb/install.done")
     conda:
         os.path.join(ENV_DIR, "vamb.yaml")
     log:
