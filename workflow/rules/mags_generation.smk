@@ -13,7 +13,7 @@ rule mags_generation:
 
 rule filter_length:
     input:
-        os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit.fa")
+        rules.assembly_megahit.output.final
     output:
         out = os.path.join(RESULTS_DIR,"Assembly/{sample}_filter.fasta"),
         other = temp(os.path.join(RESULTS_DIR,"Assembly/{sample}_filter_name.fasta"))

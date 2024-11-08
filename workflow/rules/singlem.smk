@@ -92,7 +92,7 @@ rule singlem_appraise:
         metagenomes=expand(os.path.join(RESULTS_DIR, "SingleM/all/{sample}_otu.tsv"), sample = SAMPLES),
         genomes=os.path.join(RESULTS_DIR, "SingleM/genomes_otu.tsv")
     output:
-        os.path.join(RESULTS_DIR, "SingleM/appraise.tsv")
+        os.path.join(RESULTS_DIR, "SingleM/SingleM_appraise.tsv")
     conda:
         os.path.join(ENV_DIR, "singlem.yaml")
     log:

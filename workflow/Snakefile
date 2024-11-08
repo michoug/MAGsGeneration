@@ -35,6 +35,14 @@ if "assembly_all" in STEPS:
         "status/assembly.done"
     ]
 
+if "contigs_taxonomy" in STEPS:
+    include:
+        "rules/contigs_taxonomy.smk"
+    TARGETS += [
+        "status/taxonomy.done"
+    ]
+
+
 if "mags_generation" in STEPS:
     include:
         "rules/mags_generation.smk"

@@ -40,7 +40,7 @@ rule prepare_dasTool:
 rule dasTool_run:
     input:
         metabat=rules.prepare_dasTool.output.metabatout,
-        # metabinner=rules.prepare_dasTool.output.metabinnerout,
+        metabinner=rules.prepare_dasTool.output.metabinnerout,
         vamb = rules.prepare_dasTool.output.vambout,
         rosella=rules.prepare_dasTool.output.rosellaout,
         cont=rules.filter_length.output.out

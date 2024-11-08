@@ -215,3 +215,8 @@ mgthermometer_run:
   nodes: 1
   n: 1
 
+download_tax_db:
+  time: "00-02:00:00"
+
+taxonomy:
+  time: "00-05:00:00"
