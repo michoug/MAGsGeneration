@@ -5,3 +5,5 @@ channels:
 dependencies:
   - pip
   - python=3.9.19
+  - git-lfs=3.5
+  - numpy=1.21

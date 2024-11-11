@@ -90,7 +90,7 @@ rule removeHuman:
     input:
         rules.mappingHuman.output
     output:
-        temp(os.path.join(RESULTS_DIR, "Trim_Human/{sample}.noHuman.bam"))
+        temp(os.path.join(RESULTS_DIR, "TrimHuman/{sample}.noHuman.bam"))
     conda:
         os.path.join(ENV_DIR, "coverm.yaml")
     threads:

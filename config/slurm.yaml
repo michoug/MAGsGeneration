@@ -6,6 +6,7 @@ __default__:
   nodes: 1
   n: 1
   cpus-per-task: 1
+  mem_mb: 7000
   explicit: ""
   job-name: "{rule}"
 
@@ -120,7 +121,7 @@ rosella:
   n: 1
   explicit: ""
 
-vamb:
+taxvamb:
   time: "00-08:00:00"
   qos: "serial"
   nodes: 1
@@ -215,3 +216,9 @@ mgthermometer_run:
   nodes: 1
   n: 1
 
+download_tax_db:
+  time: "00-02:00:00"
+
+taxonomy:
+  time: "00-05:00:00"
+  mem_mb: 400000
