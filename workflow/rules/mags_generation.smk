@@ -6,7 +6,7 @@ rule mags_generation:
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/Vamb_Results/vae_clusters_unsplit.tsv"), sample = SAMPLES)
+        expand(os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv"), sample = SAMPLES)
     output:
         touch("status/mags_generation.done")
 
@@ -93,12 +93,14 @@ rule metabat2:
 
 rule metabinner_install:
     output:
-        dbs=directory(os.path.join(DB_DIR, "MetaBinner"))
+        dbs=directory(os.path.join(RESULTS_DIR, "DB/MetaBinner"))
+        file = os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done")
     conda:
         os.path.join(ENV_DIR, "metabinner.yaml")
     shell:
         "git clone https://github.com/ziyewang/MetaBinner.git &> /dev/null && "
         "mv MetaBinner $(dirname {output.dbs})"
+        "touch {output.file}"
 
 
 rule metabinner_coverage:
@@ -201,6 +203,7 @@ rule vamb_install:
     log:
         out=os.path.join(RESULTS_DIR, "logs/vamb_install.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/vamb_install.err.log")
+    localrule: True
     shell:
         "(date && rm -rf vamb && "
         "rm -rf {output.dbs} && "
@@ -224,16 +227,50 @@ rule vamb_coverage:
         df.rename(columns={"contigName": "contigname"}, inplace=True)
         df.to_csv(output[0], sep='\t', index=False, header=True)
 
+rule vamb_length:
+    input:
+        rules.filter_length.output.out
+    output:
+        temp(os.path.join(RESULTS_DIR,"Assembly/{sample}_filter_vamb.fasta"))
+    conda:
+        os.path.join(ENV_DIR, "seqkit.yaml")
+    threads:
+        config["filter_length"]["threads"]
+    localrule: True
+    message:
+        "Remove contigs less than 1501 bp for Vamb"
+    shell:
+        "seqkit seq -j {threads} --remove-gaps -o {output} -m 1501 {input}"
 
-### Will maybe work when version 5 is released...
+rule vamb_filter:
+    input:
+        rules.taxconverter.output,
+        rules.vamb_length.output
+    output:
+        temp(os.path.join(RESULTS_DIR,"Assembly/{sample}_tax.tsv"))
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/vamb_filter/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/vamb_filter/{sample}.err.log")
+    localrule: True
+    run:
+        import pandas as pd
+        ids = []
+        with open(input[1], 'r') as file:
+            for line in file:
+                if line.startswith('>'):
+                    ids.append(line[1:].strip())
+        df = pd.read_csv(input[0], sep = '\t')
+        filtered_df = df[df.iloc[:, 0].isin(ids)]
+        filtered_df.to_csv(output[0], sep='\t', index=False, header=True)
 
-rule vamb:
+rule taxvamb:
     input:
         file=rules.vamb_install.output.testfile,
-        contig=rules.filter_length.output.out,
+        contig=rules.vamb_length.output,
+        tax=rules.vamb_filter.output,
         cov = rules.vamb_coverage.output
     output:
-        os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/Vamb_Results/vae_clusters_unsplit.tsv")
+        os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv")
     conda:
         os.path.join(ENV_DIR, "vamb.yaml")
     threads:
@@ -244,5 +281,5 @@ rule vamb:
     shell:
         "(date && "
         "rm -r $(dirname {output}) && "
-        "vamb bin default --outdir $(dirname {output}) -m 1501 --fasta {input.contig} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} -o && "
+        "vamb bin taxvamb --outdir $(dirname {output}) -m 1501 --fasta {input.contig} --taxonomy {input.tax} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} -o && "
         "date) 2> {log.err} > {log.out}"

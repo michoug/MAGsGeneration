@@ -6,6 +6,7 @@ __default__:
   nodes: 1
   n: 1
   cpus-per-task: 1
+  mem_mb: 7000
   explicit: ""
   job-name: "{rule}"
 
@@ -220,3 +221,4 @@ download_tax_db:
 
 taxonomy:
   time: "00-05:00:00"
+  mem_mb: 400000

@@ -25,7 +25,7 @@ SMK_CONFIG="config/config.yaml" # USER INPUT REQUIRED
 # slurm config file
 SMK_SLURM="config/slurm.yaml"
 # slurm cluster call
-SMK_CLUSTER="sbatch -q {cluster.qos} {cluster.explicit} -N {cluster.nodes} -n {cluster.n} -c {threads} -t {cluster.time} --job-name={cluster.job-name}"
+SMK_CLUSTER="sbatch -q {cluster.qos} {cluster.explicit} -N {cluster.nodes} --mem {cluster.mem_mb} -n {cluster.n} -c {threads} -t {cluster.time} --job-name={cluster.job-name}"
 
 
 ##############################
