@@ -121,7 +121,7 @@ rosella:
   n: 1
   explicit: ""
 
-vamb:
+taxvamb:
   time: "00-08:00:00"
   qos: "serial"
   nodes: 1

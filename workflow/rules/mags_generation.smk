@@ -93,14 +93,18 @@ rule metabat2:
 
 rule metabinner_install:
     output:
-        dbs=directory(os.path.join(RESULTS_DIR, "DB/MetaBinner"))
+        dbs=directory(os.path.join(RESULTS_DIR, "DB/MetaBinner")),
         file = os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done")
+    localrule: True
     conda:
         os.path.join(ENV_DIR, "metabinner.yaml")
     shell:
-        "git clone https://github.com/ziyewang/MetaBinner.git &> /dev/null && "
-        "mv MetaBinner $(dirname {output.dbs})"
-        "touch {output.file}"
+        """
+        rm -rf MetaBinner
+        git clone https://github.com/ziyewang/MetaBinner.git &> /dev/null
+        mv MetaBinner $(dirname {output.dbs})
+        touch {output.file}
+        """
 
 
 rule metabinner_coverage:
@@ -108,8 +112,7 @@ rule metabinner_coverage:
         rules.fairy_mapping.output
     output:
         os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_metabinner_cov.txt")
-    threads:
-        config["metabinner"]["threads"]
+    localrule: True
     params:
         config["metabinner"]["length"]
     log:
@@ -128,12 +131,13 @@ rule metabinner_coverage:
 rule metabinner_prepare:
     input:
         contig=rules.filter_length.output.out,
-        bin=rules.metabinner_install.output.dbs
+        bin=rules.metabinner_install.output.file
     output:
         cont_t=temp(RESULTS_DIR + "/Assembly/{sample}_filter_" + str(config["metabinner"]["length"]) + ".fa"),       
         cont=RESULTS_DIR + "/Bins/{sample}/{sample}_metabinner_" + str(config["metabinner"]["length"]) +".fa",        
         kmer_t=temp(RESULTS_DIR + "/Assembly/{sample}_filter_kmer_4_f" + str(config["metabinner"]["length"]) + ".csv"),
         kmer=RESULTS_DIR + "/Bins/{sample}/{sample}_kmer_4_f" + str(config["metabinner"]["length"]) + ".csv"
+    localrule: True
     conda:
         os.path.join(ENV_DIR, "metabinner.yaml")
     params:
@@ -144,9 +148,9 @@ rule metabinner_prepare:
     message:
         "Prepare fasta and kmer file for Metabinner"
     shell:
-        "(date && python {input.bin}/scripts/Filter_tooshort.py {input.contig} {params} && "
+        "(date && python $(dirname {input.bin})/scripts/Filter_tooshort.py {input.contig} {params} && "
         "cp {output.cont_t} {output.cont} && " 
-        "python {input.bin}/scripts/gen_kmer.py {input.contig} {params} 4 && "
+        "python $(dirname {input.bin})/scripts/gen_kmer.py {input.contig} {params} 4 && "
         "cp {output.kmer_t} {output.kmer} && date) 2> {log.err} > {log.out}"
 
 
@@ -156,7 +160,7 @@ rule metabinner:
         cont=rules.metabinner_prepare.output.cont,
         cov=rules.metabinner_coverage.output,
         kmer=rules.metabinner_prepare.output.kmer,    
-        path=rules.metabinner_install.output.dbs
+        path=rules.metabinner_install.output.file
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv")
     conda:
@@ -169,7 +173,7 @@ rule metabinner:
     message:
         "Running Metabinner"
     shell:
-        "(date && run_metabinner.sh -a {input.cont} -d {input.cov} -k {input.kmer} -p {input.path} -o $(dirname {output}) -t {threads} -s huge && "
+        "(date && run_metabinner.sh -a {input.cont} -d {input.cov} -k {input.kmer} -p $(dirname {input.path}) -o $(dirname {output}) -t {threads} -s huge && "
         "mv $(dirname {output})/metabinner_res/* $(dirname {output}) && "
         "rm -r $(dirname {output})/metabinner_res/ $(dirname {output})/intermediate_result $(dirname {output})/unitem_profile $(dirname {output})/ensemble_res "
         "&& date) 2> {log.err} > {log.out}"
