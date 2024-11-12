@@ -42,6 +42,7 @@ trimming:
 
 indexHuman:
   time: "00-01:00:00"
+  mem_mb: 40000
   qos: "serial"
   nodes: 1
   n: 1
@@ -49,12 +50,14 @@ indexHuman:
 mappingHuman:
   time: "00-08:00:00"
   qos: "serial"
+  mem_mb: 40000
   nodes: 1
   n: 1
 
 removeHuman:
   time: "00-05:00:00"
   qos: "serial"
+  mem_mb: 20000
   nodes: 1
   n: 1
 
@@ -66,11 +69,18 @@ getfinalreads:
 
 assembly_megahit:
   time: "00-12:00:00"
+  mem_mb: 70000
   qos: "serial"
   nodes: 1
   n: 1
   mem: 10G
 
+mapping:
+  time: "00-02:00:00"
+  qos: "serial"
+  mem_mb: 50000
+  nodes: 1
+  n: 1
 
 mapping_index:
   time: "00-08:00:00"

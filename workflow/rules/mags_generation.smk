@@ -2,11 +2,12 @@
 rule mags_generation:
     input:
         expand(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "TempReads/{sample}.paired.bcsp"), sample = SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"), sample = SAMPLES, number = [125, 150]),
+        expand(os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"), sample = SAMPLES, sample_2 = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv"), sample = SAMPLES)
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv"), sample = SAMPLES)
     output:
         touch("status/mags_generation.done")
 
@@ -26,55 +27,83 @@ rule filter_length:
     shell:
         "seqkit seq -j {threads} --remove-gaps -o {output.other} -m 1500 {input} && perl -pe \"s/ .*//g\" {output.other} > {output.out}"
 
-rule mapping_index:
+rule indexAssembly:
     input:
-        readsF=expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"),sample = SAMPLES),
-        readsR=expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample}_2.fq.gz"),sample = SAMPLES),
-        files=os.path.join(WORK_DIR,"config/sample_list.txt")
+        fa = rules.filter_length.output.out
     output:
-        folder=directory(os.path.join(RESULTS_DIR, "TempReads/")),
-        bcsp=expand(os.path.join(RESULTS_DIR, "TempReads/{sample}.paired.bcsp"),sample = SAMPLES)
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/fairy.index.err.log"),
-        err=os.path.join(RESULTS_DIR, "logs/fairy.index.out.log")
-    threads:
-        config["fairy"]["threads"]
+        os.path.join(RESULTS_DIR,"Assembly/{sample}_filter.fasta.r{number}.sti")
     conda:
-        os.path.join(ENV_DIR, "fairy.yaml")
-    message:
-        "Mapping: Fairy index for assembly mapping"
+        os.path.join(ENV_DIR, "coverm.yaml")
+    threads:
+        10
+    params:
+        numb = "{number}"
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/indexAssembly_{sample}_{number}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/indexAssembly_{sample}_{number}.err.log")
     shell:
         """
         (date 
-        fairy sketch -1 {input.readsF} -2 {input.readsR} -d {output.folder} -t {threads} --lS {input.files}
-        date) 2> {log.err} > {log.out}
+        strobealign --create-index -t {threads} {input.fa} -r {params.numb}
+        date ) 2> {log.err} > {log.out}
+        """
+        
+rule checkIndexAssembyDone:
+    input:
+        expand(os.path.join(RESULTS_DIR,"Assembly/{sample}_filter.fasta.r{number}.sti"), sample = SAMPLES, number = [125, 150])
+    output:
+        touch("status/index.done")
+    localrule:
+        True
+
+rule mapping:
+    input:
+        read1=os.path.join(RESULTS_DIR, "TrimFinal/{sample_2}_1.fq.gz"),
+        read2=os.path.join(RESULTS_DIR, "TrimFinal/{sample_2}_2.fq.gz"),
+        fasta = rules.filter_length.output.out,
+        index = rules.checkIndexAssembyDone.output
+    output:
+        os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam")
+    conda:
+        os.path.join(ENV_DIR, "coverm.yaml")
+    threads:
+        8
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log")
+    shell:
+        """
+        (date
+        rm -f {output}.tmp*
+        strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
+        samtools sort -@ {threads} -o {output}
+        samtools index {output}
+        date ) 2> {log.err} > {log.out}
         """
 
-rule fairy_mapping:
+rule metabat2_mapping:
     input:
-        bcsp=rules.mapping_index.output.bcsp,
-        cont=rules.filter_length.output.out
+        expand(os.path.join(RESULTS_DIR,"BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"), sample_2 = SAMPLES)
     output:
-        os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_cov.txt")
+        os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_metabat_cov.txt")
     conda:
-        os.path.join(ENV_DIR, "fairy.yaml")
+        os.path.join(ENV_DIR, "metabat.yaml")
     threads:
-        config["fairy"]["threads"]
+        config["metabat2"]["threads"]
     log:
-        out=os.path.join(RESULTS_DIR, "logs/fairy_mapping/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/fairy_mapping/{sample}.err.log")
+        out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.err.log")
     message:
-        "Run Fairy to estimate the coverage"
+        "Running the first part of metabat2 to estimate the coverage"
     shell:
-        "(date && fairy coverage {input.bcsp} {input.cont} -t {threads} -o {output} && "
+        "(date && jgi_summarize_bam_contig_depths --outputDepth {output} {input} && "
         "date) 2> {log.err} > {log.out}"
-
 
 rule metabat2:
     priority: 20
     input:
         contig=rules.filter_length.output.out,
-        cov=rules.fairy_mapping.output
+        cov=rules.metabat2_mapping.output
     output:
         directory(os.path.join(RESULTS_DIR,"Bins/{sample}/Metabat/"))
     conda:
@@ -106,28 +135,28 @@ rule metabinner_install:
         touch {output.file}
         """
 
-
 rule metabinner_coverage:
     input:
-        rules.fairy_mapping.output
+        expand(os.path.join(RESULTS_DIR,"BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"), sample_2 = SAMPLES)
     output:
-        os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_metabinner_cov.txt")
-    localrule: True
-    params:
-        config["metabinner"]["length"]
+        temp=temp(os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_metabinner_temp.txt")),
+        final=os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_metabinner_cov.txt")
+    conda:
+        os.path.join(ENV_DIR, "metabat.yaml")
+    threads:
+        config["metabinner"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log")
     message:
         "Running the first part of metabinner to estimate the coverage"
-    run:
-        import pandas as pd
-        df = pd.read_csv(input[0], sep = '\t')
-        df_filtered = df.loc[:, ~df.columns.str.endswith('var')]
-        df_filtered = df_filtered[df_filtered['contigLen'] > params[0]]
-        df_filtered = df_filtered.drop(columns=['contigLen', 'totalAvgDepth'])
-        df_filtered.to_csv(output[0], sep='\t', index=False)
-
+    shell:
+        """
+        (date && jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input} && 
+        cat {output.temp} | awk '{{if ($2>{config[metabinner][length]}) print $0 }}' | cut -f -1,4- > {output.final} && 
+        date) 2> {log.err} > {log.out}
+        """
+    
 rule metabinner_prepare:
     input:
         contig=rules.filter_length.output.out,
@@ -158,7 +187,7 @@ rule metabinner:
     priority: 20
     input:
         cont=rules.metabinner_prepare.output.cont,
-        cov=rules.metabinner_coverage.output,
+        cov=rules.metabinner_coverage.output.final,
         kmer=rules.metabinner_prepare.output.kmer,    
         path=rules.metabinner_install.output.file
     output:
@@ -181,7 +210,7 @@ rule metabinner:
 rule rosella:
     input:
         cont=rules.filter_length.output.out,
-        cov=rules.fairy_mapping.output
+        cov=expand(os.path.join(RESULTS_DIR,"BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"), sample_2 = SAMPLES)
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png")
     conda:
@@ -195,7 +224,7 @@ rule rosella:
         "Running Rosella"
     shell:
         "(date && rm -r $(dirname {output}) && "
-        "rosella recover -C {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
+        "rosella recover -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
         "&& date) 2> {log.err} > {log.out}"
 
 rule vamb_install:
@@ -219,7 +248,7 @@ rule vamb_install:
 
 rule vamb_coverage:
     input:
-        rules.metabinner_coverage.output
+        rules.metabinner_coverage.output.final
     output:
         os.path.join(RESULTS_DIR,"Bins/{sample}/Vamb/{sample}_aemb_cov.txt")
     params:
