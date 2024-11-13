@@ -1,12 +1,10 @@
 # Refine DasTool Bins with rosella
 
-localrules: 
-
 rule refine_all:
     input:
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"), sample = SAMPLES)#,
-        # expand(os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv"))
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"), sample = SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv"))
     output:
         touch("status/refine.done")
 
@@ -92,8 +90,7 @@ rule checkm2_refine:
         config["checkm2"]["threads"]
     params:
         ext=config["checkm2"]["extension"],
-        db=config["checkm2"]["db"],
-        checkm2=os.path.join(SUBMODULES, "bin/checkm2"),
+        db=config["checkm2"]["db"]
     message:
         "Running CheckM2 for directory renamed bins"
     shell:

@@ -4,4 +4,4 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - das_tool=1.1.6
+  - das_tool=1.1.7

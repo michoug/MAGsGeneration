@@ -73,6 +73,7 @@ rule concat_coverage:
     log:
         out=os.path.join(RESULTS_DIR, "logs/concat_coverage.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concat_coverage.err.log")
+    localrule: True
     message:
         "Concatenating the coverage files"
     shell:

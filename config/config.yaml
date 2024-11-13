@@ -5,7 +5,7 @@
 # ORDER of STEPS: ["checkm", "dereplicate", "drep_checkm", "coverage", "gtdbtk", "eggnog", "metabolic", "mgthermometer"]
 #
 
-steps: ["trim_reads","assembly_all","contigs_taxonomy","mags_generation"]#,"dastool","checkm","refine_all","dereplicate"]
+steps: ["trim_reads","assembly_all","contigs_taxonomy","mags_generation","dastool","checkm","refine_all","dereplicate"]
 #,"mags_generation",,"singlem_all"]#,"coverage","annotations","gtdbtk","mgthermometer","eggnog"]
 
 ############################################################

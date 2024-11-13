@@ -1,7 +1,5 @@
 # Running CheckM on the bins
 
-localrules: 
-
 rule checkm_all:
     input:
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/checkm2/quality_report.tsv"), sample = SAMPLES)

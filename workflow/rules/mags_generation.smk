@@ -341,7 +341,6 @@ rule concoct_prepare:
         "concoct_coverage_table.py {output.bed} {input.bam} > {output.cov} && [[ -s {output.cov} ]] && "
         "date) 2> {log.err} > {log.out}"
 
-
 rule concoct:
     input:
         contig=rules.concoct_prepare.output.cont,

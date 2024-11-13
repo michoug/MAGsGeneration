@@ -10,14 +10,15 @@ rule prepare_dasTool:
         metabinner=rules.metabinner.output,
         rosella=rules.rosella.output,
         taxvamb=rules.taxvamb.output,
-        comebine=rules.combine_bins.output,
-        concoct=rules.concoct.output
+        concoct=rules.concoct.output,
+        comebin=rules.comebin.output
     output:
         metabatout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabat_das.tsv"),
         metabinnerout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabinner_das.tsv"),
         rosellaout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/rosella_das.tsv"),
         taxvambout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/taxvamb_das.tsv"),
         concoctout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/concoct_das.tsv"),
+        comebinout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/comebin_das.tsv")
     params:
         value="{sample}"
     conda: 
@@ -38,6 +39,7 @@ rule prepare_dasTool:
         perl -pe 's/\t/\t{params.value}_taxvamb_/g' {output.taxvambout} > $(dirname {output.metabatout})/t3.txt && mv $(dirname {output.metabatout})/t3.txt {output.taxvambout} 
         perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout}
         perl -pe 's/,/\t{params.value}_concoct_/g' {input.concoct} | tail -n +2 > {output.concoctout}
+        perl -pe 's/\tgroup/\t{params.value}_comebin_/g' {input.comebin} > {output.comebinout}
         date) 2> {log.err} > {log.out}
         """
 
@@ -48,6 +50,7 @@ rule dasTool_run:
         taxvamb = rules.prepare_dasTool.output.taxvambout,
         rosella=rules.prepare_dasTool.output.rosellaout,
         concoct=rules.prepare_dasTool.output.concoctout,
+        comebin=rules.prepare_dasTool.output.comebinout,
         cont=rules.filter_length.output.out
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/das_DASTool_summary.tsv")
@@ -63,6 +66,6 @@ rule dasTool_run:
     shell:
         """
         (date && 
-        DAS_Tool -i {input.metabat},{input.taxvamb},{input.metabinner},{input.rosella},{input.concoct} --score_threshold -42 -l metabat,taxvamb,metabinner,rosella,concoct -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
+        DAS_Tool -i {input.metabat},{input.taxvamb},{input.metabinner},{input.rosella},{input.concoct},{input.comebin} --score_threshold -42 -l metabat,taxvamb,metabinner,rosella,concoct,comebin -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
         date) 2> {log.err} > {log.out}        
         """
