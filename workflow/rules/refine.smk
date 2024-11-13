@@ -14,7 +14,7 @@ rule refine_all:
 rule rosella_ref:
     input:
         cont=rules.filter_length.output.out,
-        cov=rules.fairy_mapping.output,
+        cov=expand(os.path.join(RESULTS_DIR,"BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"), sample_2 = SAMPLES),
         check=rules.checkm2.output,
         bins=rules.dasTool_run.output
     output:
@@ -33,7 +33,7 @@ rule rosella_ref:
     shell:
         """
         (date && 
-        rm -rf $(dirname {output})/* && rosella refine --min-bin-size 200000 --checkm-results {input.check} -d $(dirname {input.bins})/das_DASTool_bins --max-contamination 15 -x {params.ext} -C {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) && 
+        rm -rf $(dirname {output})/* && rosella refine --min-bin-size 200000 --checkm-results {input.check} -d $(dirname {input.bins})/das_DASTool_bins --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) && 
         touch {output} &&
         date) 2> {log.err} > {log.out}
         """

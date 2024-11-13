@@ -232,3 +232,11 @@ download_tax_db:
 taxonomy:
   time: "00-05:00:00"
   mem_mb: 400000
+
+comebin:
+  time: "00-10:00:00"
+  mem_mb: 140000
+
+concoct:
+  time: "00-12:00:00"
+  mem_mb: 140000

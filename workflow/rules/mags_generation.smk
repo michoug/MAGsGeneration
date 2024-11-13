@@ -7,7 +7,9 @@ rule mags_generation:
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv"), sample = SAMPLES)
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv"), sample = SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"), sample = SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"), sample = SAMPLES)
     output:
         touch("status/mags_generation.done")
 
@@ -52,9 +54,11 @@ rule checkIndexAssembyDone:
     input:
         expand(os.path.join(RESULTS_DIR,"Assembly/{sample}_filter.fasta.r{number}.sti"), sample = SAMPLES, number = [125, 150])
     output:
-        touch("status/index.done")
+        os.path.join(RESULTS_DIR,"Assembly/index.done")
     localrule:
         True
+    shell:
+        "touch {output}"
 
 rule mapping:
     input:
@@ -316,3 +320,68 @@ rule taxvamb:
         "rm -r $(dirname {output}) && "
         "vamb bin taxvamb --outdir $(dirname {output}) -m 1501 --fasta {input.contig} --taxonomy {input.tax} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} -o && "
         "date) 2> {log.err} > {log.out}"
+
+rule concoct_prepare:
+    input:
+        contig=rules.filter_length.output.out,
+        bam=expand(os.path.join(RESULTS_DIR,"BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"), sample_2 = SAMPLES)
+    output:
+        bed=os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_10k.bed"),
+        cont=os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_10k.fa"),
+        cov=os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_concoct_cov.txt")
+    conda:
+        os.path.join(ENV_DIR, "concoct.yaml")
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.err.log")
+    message:
+        "Preparing files for Concoct"
+    shell:
+        "(date && rm -f {output.bed} {output.cont} {output.cov} && cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
+        "concoct_coverage_table.py {output.bed} {input.bam} > {output.cov} && [[ -s {output.cov} ]] && "
+        "date) 2> {log.err} > {log.out}"
+
+
+rule concoct:
+    input:
+        contig=rules.concoct_prepare.output.cont,
+        cov=rules.concoct_prepare.output.cov
+    output:
+        os.path.join(RESULTS_DIR,"Bins/{sample}/Concoct/concoct_clustering_merged.csv")
+    conda:
+        os.path.join(ENV_DIR, "concoct.yaml")
+    threads:
+        20
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.err.log")
+    message:
+        "Running concoct to obtain bins"
+    shell:
+        "(date && concoct --composition_file {input.contig} --coverage_file {input.cov} -b $(dirname {output})/concoct -t {threads} && "
+        "merge_cutup_clustering.py $(dirname {output})/concoct_clustering_gt1000.csv > {output} && "
+        "date) 2> {log.err} > {log.out}"
+
+rule comebin:
+    input:
+        cont=rules.filter_length.output.out,
+        tmp=os.path.join(RESULTS_DIR,"Bins/{sample}/{sample}_metabat_cov.txt") # To make sure that the bam files are there
+    output:
+        os.path.join(RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv")
+    conda:
+        os.path.join(ENV_DIR, "comebin.yaml")
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/comebin/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/comebin/{sample}.err.log")
+    params:
+        bam = os.path.join(RESULTS_DIR,"BamFiles/{sample}"),
+        folder = os.path.join(RESULTS_DIR, "Bins/{sample}/Comebin/")
+    threads:
+        20
+    message:
+        "Running Comebin"
+    shell:
+        "(date && "
+        "rm -r {params.folder} && "
+        "run_comebin.sh -a {input.cont} -o {params.folder} -t {threads} -p {params.bam}"
+        "&& date) 2> {log.err} > {log.out}"
