@@ -29,6 +29,7 @@ checkpoint prep_eggnog:
     log:
         out=os.path.join(RESULTS_DIR, "logs/split/split.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/split/split.err.log")
+    localrule: True
     message:
         "Splitting the large concactenated protein file into chunks of 1000000"
     conda:

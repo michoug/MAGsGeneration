@@ -1,6 +1,6 @@
 rule trim_reads:
     input:
-        expand(os.path.join(DB_DIR, "hg38.fa.gz.r{number}.sti"), number = [125, 150]),
+        expand(os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"), number = [125, 150]),
         expand(os.path.join(RESULTS_DIR, "Trim/{sample}_R1_001_val_1.fq.gz"), sample = SAMPLES),
         expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"), sample = SAMPLES)
     output:
@@ -27,7 +27,7 @@ rule trimming:
 
 rule downloadHuman:
     output:
-        os.path.join(DB_DIR,"hg38.fa.gz")
+        os.path.join(RESULTS_DIR, "DB/hg38.fa.gz")
     shell:
         """
         wget -O {output} ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
@@ -37,7 +37,7 @@ rule indexHuman:
     input:
         fa = rules.downloadHuman.output
     output:
-        os.path.join(DB_DIR, "hg38.fa.gz.r{number}.sti")
+        os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti")
     conda:
         os.path.join(ENV_DIR, "coverm.yaml")
     threads:
@@ -57,7 +57,7 @@ rule indexHuman:
         
 rule checkIndexDone:
     input:
-        expand(os.path.join(DB_DIR, "hg38.fa.gz.r{number}.sti"), number = [125, 150])
+        expand(os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"), number = [125, 150])
     output:
         touch("status/index.done")
     localrule:

@@ -12,6 +12,7 @@ slurm-*
 **/logs/*
 emappertmp**
 emappertmp*
+test/
 *emappertmp*
 logs*
 **/snakemake_envs/**

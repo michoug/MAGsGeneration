@@ -10,211 +10,30 @@ __default__:
   explicit: ""
   job-name: "{rule}"
 
-aemb_coverage:
-  time: "00-00:10:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
 
-aemb_check:
-  time: "00-00:10:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-rename_refine:
-  time: "00-00:10:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-metabinner_coverage:
-  time: "00-00:10:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
+### trim_reads.smk ###
 
 trimming:
   time: "00-03:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
+  mem_mb: 28000
 
 indexHuman:
   time: "00-01:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
+  mem_mb: 60000
 
 mappingHuman:
   time: "00-08:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
+  mem_mb: 60000
 
 removeHuman:
   time: "00-05:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
+  mem_mb: 60000
 
 getfinalreads:
-  time: "00-05:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-assembly_megahit:
-  time: "00-12:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  mem: 10G
-
-
-mapping_index:
-  time: "00-08:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-fairy_mapping:
-  time: "00-05:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  mem: 10G
-
-metabat2:
-  time: "00-05:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
-
-metabinner_prepare:
-  time: "00-02:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
-
-metabinner_coverage:
-  time: "00-08:00:00"
-  partition: "batch"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
-
-metabinner:
-  time: "01-00:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
-
-rosella:
-  time: "00-08:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
-
-taxvamb:
-  time: "00-08:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
-
-prepare_dasTool:
   time: "00-01:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
+  mem_mb: 60000
 
-dasTool_run:
-  time: "00-12:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
-
-checkm2:
-  time: "00-04:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-checkm2_refine:
-  time: "00-12:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-rosella_ref:
-  time: "01-00:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
-
-checkmBeforeDrep:
-  time: "04:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-galah:
-  time: "00-04:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-mapping_all:
-  time: "00-12:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-coverage:
-  time: "00-02:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-  explicit: ""
-
-gtdbtk:
-  time: "00-12:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-metabolic:
-  time: "01-00:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-emapper:
-  time: "00-12:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-emapper_final:
-  time: "00-12:00:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
-
-mgthermometer_run:
-  time: "00-00:30:00"
-  qos: "serial"
-  nodes: 1
-  n: 1
+### contigs_taxonomy.smk ###
 
 download_tax_db:
   time: "00-02:00:00"
@@ -222,3 +41,115 @@ download_tax_db:
 taxonomy:
   time: "00-05:00:00"
   mem_mb: 400000
+
+### assembly.smk ###
+
+assembly_megahit:
+  time: "00-12:00:00"
+  mem_mb: 70000
+
+### mags_generation.smk ###
+
+filter_length:
+  time: "00-01:00:00"
+  mem_mb: 20000
+
+indexAssembly:
+  time: "00-01:00:00"
+  mem_mb: 60000
+
+mapping:
+  time: "00-02:00:00"
+  mem_mb: 50000
+
+metabat_mapping:
+  time: "00-01:00:00"
+  mem_mb: 50000
+
+metabat2:
+  time: "00-05:00:00"
+  mem_mb: 50000
+
+metabinner_coverage:
+  time: "00-01:00:00"
+  mem_mb: 50000
+
+metabinner:
+  time: "00-06:00:00"
+  mem_mb: 50000
+
+rosella:
+  time: "00-08:00:00"
+  mem_mb: 50000
+
+taxvamb:
+  time: "00-08:00:00"
+  mem_mb: 50000
+
+concoct:
+  time: "00-08:00:00"
+  mem_mb: 90000
+
+comebin:
+  time: "00-10:00:00"
+  mem_mb: 90000
+
+### dastool.smk ###
+
+dasTool_run:
+  time: "00-12:00:00"
+  mem_mb: 90000
+
+### checkm2.smk ###
+
+checkm2:
+  time: "00-04:00:00"
+  mem_mb: 50000
+
+### refine.smk ###
+
+rosella_ref:
+  time: "00-12:00:00"
+  mem_mb: 90000
+
+checkm2_refine:
+  time: "00-04:00:00"
+  mem_mb: 50000
+
+### galah.smk ###
+
+galah:
+  time: "00-02:00:00"
+  mem_mb: 60000
+
+### coverage.smk ###
+
+mapping_all:
+  time: "00-12:00:00"
+  mem_mb: 50000
+
+coverage:
+  time: "00-02:00:00"
+  mem_mb: 50000
+
+### gtdbtk.smk ###
+
+gtdbtk:
+  time: "00-12:00:00"
+  mem_mb: 250000
+
+### annotation.smk ###
+
+annotation:
+  time: "00-01:00:00"
+  mem_mb: 28000
+
+### eggnog.smk ###
+
+emapper:
+  time: "00-12:00:00"
+  mem_mb: 28000
+
+emapper_final:
+  time: "00-12:00:00"
+  mem_mb: 60000

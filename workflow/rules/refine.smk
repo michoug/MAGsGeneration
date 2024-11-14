@@ -1,12 +1,10 @@
 # Refine DasTool Bins with rosella
 
-localrules: 
-
 rule refine_all:
     input:
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"), sample = SAMPLES)#,
-        # expand(os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv"))
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"), sample = SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv"))
     output:
         touch("status/refine.done")
 
@@ -14,7 +12,7 @@ rule refine_all:
 rule rosella_ref:
     input:
         cont=rules.filter_length.output.out,
-        cov=rules.fairy_mapping.output,
+        cov=expand(os.path.join(RESULTS_DIR,"BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"), sample_2 = SAMPLES),
         check=rules.checkm2.output,
         bins=rules.dasTool_run.output
     output:
@@ -33,7 +31,7 @@ rule rosella_ref:
     shell:
         """
         (date && 
-        rm -rf $(dirname {output})/* && rosella refine --min-bin-size 200000 --checkm-results {input.check} -d $(dirname {input.bins})/das_DASTool_bins --max-contamination 15 -x {params.ext} -C {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) && 
+        rm -rf $(dirname {output})/* && rosella refine --min-bin-size 200000 --checkm-results {input.check} -d $(dirname {input.bins})/das_DASTool_bins --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) && 
         touch {output} &&
         date) 2> {log.err} > {log.out}
         """
@@ -92,8 +90,7 @@ rule checkm2_refine:
         config["checkm2"]["threads"]
     params:
         ext=config["checkm2"]["extension"],
-        db=config["checkm2"]["db"],
-        checkm2=os.path.join(SUBMODULES, "bin/checkm2"),
+        db=config["checkm2"]["db"]
     message:
         "Running CheckM2 for directory renamed bins"
     shell:

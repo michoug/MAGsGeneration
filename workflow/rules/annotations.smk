@@ -28,6 +28,7 @@ rule annotation:
         prefix="{mags}"
     conda:
         os.path.join(ENV_DIR, "annotations.yaml")
+    threads: 4
     log:
         out=os.path.join(RESULTS_DIR, "logs/annotations/{mags}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/annotations/{mags}.err.log")
@@ -35,7 +36,7 @@ rule annotation:
         "Prodigal annotation for {wildcards.mags}"
     shell:
         "(date && "
-        "pyrodigal -a {output.protein} -d {output.nucl} -f gff -i {input.fasta} -o {output.gff} && "
+        "pyrodigal -a {output.protein} -j {threads} -d {output.nucl} -f gff -i {input.fasta} -o {output.gff} && "
         "date) 2> {log.err} > {log.out}"
 
 rule prepare4egg:
