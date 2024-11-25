@@ -1,8 +1,12 @@
 rule dastool:
     input:
-       expand(os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/das_DASTool_summary.tsv"), sample = SAMPLES)
+        expand(
+            os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/das_DASTool_summary.tsv"),
+            sample=SAMPLES,
+        ),
     output:
-       touch("status/dastool.done")
+        touch("status/dastool.done"),
+
 
 rule prepare_dasTool:
     input:
@@ -11,21 +15,23 @@ rule prepare_dasTool:
         rosella=rules.rosella.output,
         taxvamb=rules.taxvamb.output,
         concoct=rules.concoct.output,
-        comebin=rules.comebin.output
+        comebin=rules.comebin.output,
     output:
         metabatout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabat_das.tsv"),
-        metabinnerout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabinner_das.tsv"),
+        metabinnerout=os.path.join(
+            RESULTS_DIR, "Bins/{sample}/DasTool/metabinner_das.tsv"
+        ),
         rosellaout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/rosella_das.tsv"),
         taxvambout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/taxvamb_das.tsv"),
         concoctout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/concoct_das.tsv"),
-        comebinout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/comebin_das.tsv")
+        comebinout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/comebin_das.tsv"),
     params:
-        value="{sample}"
-    conda: 
+        value="{sample}",
+    conda:
         os.path.join(ENV_DIR, "dastool.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/prepare_dasTool/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/prepare_dasTool/{sample}.err.log")
+        err=os.path.join(RESULTS_DIR, "logs/prepare_dasTool/{sample}.err.log"),
     message:
         "Preparing files for DasTool"
     localrule: True
@@ -43,24 +49,24 @@ rule prepare_dasTool:
         date) 2> {log.err} > {log.out}
         """
 
+
 rule dasTool_run:
     input:
         metabat=rules.prepare_dasTool.output.metabatout,
         metabinner=rules.prepare_dasTool.output.metabinnerout,
-        taxvamb = rules.prepare_dasTool.output.taxvambout,
+        taxvamb=rules.prepare_dasTool.output.taxvambout,
         rosella=rules.prepare_dasTool.output.rosellaout,
         concoct=rules.prepare_dasTool.output.concoctout,
         comebin=rules.prepare_dasTool.output.comebinout,
-        cont=rules.filter_length.output.out
+        cont=rules.filter_length.output.out,
     output:
-        os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/das_DASTool_summary.tsv")
+        os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/das_DASTool_summary.tsv"),
     conda:
         os.path.join(ENV_DIR, "dastool.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/dasTool/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/dasTool/{sample}.err.log")
-    threads:
-        config["dasTool"]["threads"]
+        err=os.path.join(RESULTS_DIR, "logs/dasTool/{sample}.err.log"),
+    threads: config["dasTool"]["threads"]
     message:
         "Running DasTool"
     shell:

@@ -1,18 +1,19 @@
 # Running EggNog-Mapper on the concatenated bins
 
+
 rule eggnog_all:
     input:
-        expand(os.path.join(RESULTS_DIR, "EggNOG/allMAGs_egg.txt.emapper.annotations"))
+        expand(os.path.join(RESULTS_DIR, "EggNOG/allMAGs_egg.txt.emapper.annotations")),
     output:
-        touch("status/eggnog.done")
+        touch("status/eggnog.done"),
 
 
 # Preparing the MAG files
 rule multi_to_single:
     input:
-        rules.prepare4egg.output
+        rules.prepare4egg.output,
     output:
-        fixed_fa=os.path.join(RESULTS_DIR, "EggNOG/cat_proteins.faa")
+        fixed_fa=os.path.join(RESULTS_DIR, "EggNOG/cat_proteins.faa"),
     conda:
         os.path.join(ENV_DIR, "seqkit.yaml")
     message:
@@ -20,15 +21,16 @@ rule multi_to_single:
     shell:
         "(date && seqkit seq $(dirname {input})/*faa > {output.fixed_fa} && date)"
 
+
 # Preparing EGGNOG run
 checkpoint prep_eggnog:
     input:
-        fa=rules.multi_to_single.output.fixed_fa
+        fa=rules.multi_to_single.output.fixed_fa,
     output:
-        dir=directory(os.path.join(RESULTS_DIR, "EggNOG/split"))
+        dir=directory(os.path.join(RESULTS_DIR, "EggNOG/split")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/split/split.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/split/split.err.log")
+        err=os.path.join(RESULTS_DIR, "logs/split/split.err.log"),
     localrule: True
     message:
         "Splitting the large concactenated protein file into chunks of 1000000"
@@ -41,26 +43,35 @@ checkpoint prep_eggnog:
 
 def aggregate_emapper(wildcards):
     checkpoint_output = checkpoints.prep_eggnog.get(**wildcards).output[0]
-    return expand(os.path.join(RESULTS_DIR, "EggNOG/split/temp/cat_proteins.part_{i}.emapper.seed_orthologs"),
-           i=glob_wildcards(os.path.join(checkpoint_output, "cat_proteins.part_{i}")).i)
+    return expand(
+        os.path.join(
+            RESULTS_DIR,
+            "EggNOG/split/temp/cat_proteins.part_{i}.emapper.seed_orthologs",
+        ),
+        i=glob_wildcards(os.path.join(checkpoint_output, "cat_proteins.part_{i}")).i,
+    )
 
 
 # EGGNOG mapping to annotations
 rule emapper:
     input:
-        os.path.join(RESULTS_DIR, "EggNOG/split/cat_proteins.part_{i}")
+        os.path.join(RESULTS_DIR, "EggNOG/split/cat_proteins.part_{i}"),
     output:
-        hits=os.path.join(RESULTS_DIR, "EggNOG/split/temp/cat_proteins.part_{i}.emapper.hits"),
-        seed=os.path.join(RESULTS_DIR, "EggNOG/split/temp/cat_proteins.part_{i}.emapper.seed_orthologs")
+        hits=os.path.join(
+            RESULTS_DIR, "EggNOG/split/temp/cat_proteins.part_{i}.emapper.hits"
+        ),
+        seed=os.path.join(
+            RESULTS_DIR,
+            "EggNOG/split/temp/cat_proteins.part_{i}.emapper.seed_orthologs",
+        ),
     conda:
         os.path.join(ENV_DIR, "eggnog.yaml")
-    threads:
-        config["eggnog"]["threads"]
+    threads: config["eggnog"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.err.log")
+        err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.err.log"),
     params:
-        db=config["eggnog"]["db"]
+        db=config["eggnog"]["db"],
     message:
         "Running EggNog-mapper on {wildcards.i}"
     shell:
@@ -72,29 +83,29 @@ rule emapper:
 
 rule cat_emapper_out:
     input:
-        aggregate_emapper
+        aggregate_emapper,
     output:
-        os.path.join(RESULTS_DIR, "EggNOG/allMAGs.emapper_orthologs")
+        os.path.join(RESULTS_DIR, "EggNOG/allMAGs.emapper_orthologs"),
     message:
         "Cat EggNog-mapper output"
     localrule: True
     shell:
         "(date && cat {input} > {output} && date)"
 
+
 rule emapper_final:
     input:
-        os.path.join(RESULTS_DIR, "EggNOG/allMAGs.emapper_orthologs")
+        os.path.join(RESULTS_DIR, "EggNOG/allMAGs.emapper_orthologs"),
     output:
-        os.path.join(RESULTS_DIR, "EggNOG/allMAGs_egg.txt.emapper.annotations")
+        os.path.join(RESULTS_DIR, "EggNOG/allMAGs_egg.txt.emapper.annotations"),
     conda:
         os.path.join(ENV_DIR, "eggnog.yaml")
-    threads:
-        config["eggnog"]["threads"]
+    threads: config["eggnog"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.err.log")
+        err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.err.log"),
     params:
-        db=config["eggnog"]["db"]
+        db=config["eggnog"]["db"],
     message:
         "Running EggNog-mapper on All MAGs"
     shell:

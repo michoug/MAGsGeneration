@@ -1,15 +1,18 @@
 # Running METABOLIC on dereplicated MAGS
 rule metabolic_all:
     input:
-        expand(os.path.join(RESULTS_DIR, "metabolic/output"))
+        expand(os.path.join(RESULTS_DIR, "metabolic/output")),
     output:
-        touch("status/metabolic.done")
+        touch("status/metabolic.done"),
 
-localrules: prep_metabolic_bins
+
+localrules:
+    prep_metabolic_bins,
+
 
 # METABOLIC potential of bins
 # NOTE: some adjustments to perl environments made based on here: https://github.com/AnantharamanLab/METABOLIC/issues/27
-#rule prep_metabolic:
+# rule prep_metabolic:
 #    input:
 #        os.path.join(RESULTS_DIR, "Bins/finalBins")
 #    output:
@@ -26,12 +29,13 @@ localrules: prep_metabolic_bins
 #        "awk -F, '{{print $0=$1\",\"$1}}' | awk 'BEGIN{{FS=OFS=\",\"}} {{gsub(\"r1\", \"r2\", $2)}} 1' | "
 #        "sed $'1 i\\\\\\n# Read pairs:' {output.reads}"     # using forward-slashes to get `\\\n`
 
+
 rule prep_metabolic_bins:
     input:
-        fa=os.path.join(RESULTS_DIR, "Bins/finalBins")
+        fa=os.path.join(RESULTS_DIR, "Bins/finalBins"),
     output:
         dir=directory(os.path.join(RESULTS_DIR, "metabolic/input/finalBins")),
-        dummy=os.path.join(RESULTS_DIR, "metabolic/input/rename.done")
+        dummy=os.path.join(RESULTS_DIR, "metabolic/input/rename.done"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabolic/symlink.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabolic/symlink.err.log"),
@@ -42,22 +46,22 @@ rule prep_metabolic_bins:
         "cd {output.dir} && rename -v 'fa' 'fasta' * && "
         "touch {output.dummy} && date) 2> {log.err} > {log.out}"
 
+
 rule metabolic:
     input:
         fa=rules.prep_metabolic_bins.output.dir,
-        dummy=rules.prep_metabolic_bins.output.dummy
+        dummy=rules.prep_metabolic_bins.output.dummy,
     output:
-        directory(os.path.join(RESULTS_DIR, "metabolic/output"))
+        directory(os.path.join(RESULTS_DIR, "metabolic/output")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabolic/metabolic.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabolic/metabolic.err.log")
+        err=os.path.join(RESULTS_DIR, "logs/metabolic/metabolic.err.log"),
     conda:
         os.path.join(ENV_DIR, "metabolic.yaml")
     params:
         gtdbtk=config["metabolic"]["db"],
-        metabolic=config["metabolic"]["directory"]
-    threads:
-        config["metabolic"]["threads"]
+        metabolic=config["metabolic"]["directory"],
+    threads: config["metabolic"]["threads"]
     message:
         "Running METABOLIC-G for all MAGs"
     shell:

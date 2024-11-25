@@ -1,33 +1,42 @@
 # Refine DasTool Bins with rosella
 
+
 rule refine_all:
     input:
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"), sample = SAMPLES),
-        expand(os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv"))
+        expand(
+            os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done"),
+            sample=SAMPLES,
+        ),
+        expand(
+            os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"),
+            sample=SAMPLES,
+        ),
+        expand(os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv")),
     output:
-        touch("status/refine.done")
+        touch("status/refine.done"),
 
 
 rule rosella_ref:
     input:
         cont=rules.filter_length.output.out,
-        cov=expand(os.path.join(RESULTS_DIR,"BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"), sample_2 = SAMPLES),
+        cov=expand(
+            os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
+            sample_2=SAMPLES,
+        ),
         check=rules.checkm2.output,
-        bins=rules.dasTool_run.output
+        bins=rules.dasTool_run.output,
     output:
-        os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done")
+        os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done"),
     conda:
         os.path.join(ENV_DIR, "rosella.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/refine/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/refine/{sample}.err.log")
-    threads:
-        config["rosella"]["threads"]
+        err=os.path.join(RESULTS_DIR, "logs/refine/{sample}.err.log"),
+    threads: config["rosella"]["threads"]
     message:
         "Refine bins with Rosella"
     params:
-        ext=config["checkm2"]["extension"]
+        ext=config["checkm2"]["extension"],
     shell:
         """
         (date && 
@@ -39,16 +48,20 @@ rule rosella_ref:
 
 rule rename_refine:
     input:
-        ref=rules.rosella_ref.output
+        ref=rules.rosella_ref.output,
     params:
-        sample="{sample}"
+        sample="{sample}",
     output:
         list=os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"),
-        list_temp=temp(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list_temp.txt")),
-        bash_temp=temp(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/t.sh"))
+        list_temp=temp(
+            os.path.join(
+                RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list_temp.txt"
+            )
+        ),
+        bash_temp=temp(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/t.sh")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.err.log")
+        err=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.err.log"),
     localrule: True
     shell:
         """
@@ -64,33 +77,37 @@ rule rename_refine:
         date) 2> {log.err} > {log.out}
         """
 
+
 rule cp_mags:
     input:
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"), sample = SAMPLES)
+        expand(
+            os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"),
+            sample=SAMPLES,
+        ),
     output:
-        directory(os.path.join(RESULTS_DIR, "Bins/renamed_mags"))
+        directory(os.path.join(RESULTS_DIR, "Bins/renamed_mags")),
     message:
         "Copy MAGs to another folder"
     localrule: True
     shell:
         "(date && mkdir {output} && for file in $(dirname {input}); do cp $file/*fa {output}; done && date)"
 
+
 # Checking bin quality
 rule checkm2_refine:
     input:
-        os.path.join(RESULTS_DIR, "Bins/renamed_mags")
+        os.path.join(RESULTS_DIR, "Bins/renamed_mags"),
     output:
-        tsv=os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv")
+        tsv=os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv"),
     conda:
         os.path.join(ENV_DIR, "checkm2.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm_refine.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/checkm_refine.err.log")
-    threads:
-        config["checkm2"]["threads"]
+        err=os.path.join(RESULTS_DIR, "logs/checkm_refine.err.log"),
+    threads: config["checkm2"]["threads"]
     params:
         ext=config["checkm2"]["extension"],
-        db=config["checkm2"]["db"]
+        db=config["checkm2"]["db"],
     message:
         "Running CheckM2 for directory renamed bins"
     shell:

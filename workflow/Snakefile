@@ -13,8 +13,9 @@ import pandas as pd
 # can be overwritten by using --configfile <path to config> when calling snakemake
 # configfile:"config/config.yaml"
 
-include:
-    "rules/init.smk"
+
+include: "rules/init.smk"
+
 
 ##############################
 # TARGETS & RULES
@@ -22,122 +23,123 @@ include:
 TARGETS = []
 
 if "trim_reads" in STEPS:
-    include:
-        "rules/trim_reads.smk"
-    TARGETS += [
-        "status/trimming.done"
-    ]
+
+    include: "rules/trim_reads.smk"
+
+    TARGETS += ["status/trimming.done"]
+
 
 if "assembly_all" in STEPS:
-    include:
-        "rules/assembly.smk"
-    TARGETS += [
-        "status/assembly.done"
-    ]
+
+    include: "rules/assembly.smk"
+
+    TARGETS += ["status/assembly.done"]
+
 
 if "contigs_taxonomy" in STEPS:
-    include:
-        "rules/contigs_taxonomy.smk"
-    TARGETS += [
-        "status/taxonomy.done"
-    ]
+
+    include: "rules/contigs_taxonomy.smk"
+
+    TARGETS += ["status/taxonomy.done"]
 
 
 if "mags_generation" in STEPS:
-    include:
-        "rules/mags_generation.smk"
-    TARGETS += [
-        "status/mags_generation.done"
-    ]
+
+    include: "rules/mags_generation.smk"
+
+    TARGETS += ["status/mags_generation.done"]
+
 
 if "dastool" in STEPS:
-    include:
-        "rules/dastool.smk"
-    TARGETS += [
-        "status/dastool.done"
-    ]
+
+    include: "rules/dastool.smk"
+
+    TARGETS += ["status/dastool.done"]
+
 
 # CheckM
 if "checkm" in STEPS:
-    include:
-        "rules/checkm2.smk"
-    TARGETS += [
-        "status/checkm2.done"
-    ]
+
+    include: "rules/checkm2.smk"
+
+    TARGETS += ["status/checkm2.done"]
+
 
 # Refine
 
 if "refine_all" in STEPS:
-    include:
-        "rules/refine.smk"
-    TARGETS += [
-        "status/refine.done"
-    ]
+
+    include: "rules/refine.smk"
+
+    TARGETS += ["status/refine.done"]
+
 
 if "filter_checkm" in STEPS:
-    include:
-        "rules/filter_checkm2.smk"
-    TARGETS += [
-        "status/filter_checkm2.done"
-    ]
+
+    include: "rules/filter_checkm2.smk"
+
+    TARGETS += ["status/filter_checkm2.done"]
+
 
 # Dereplication
 if "dereplicate" in STEPS:
-    include:
-        "rules/galah.smk"
-    TARGETS += [
-        "status/dereplicate.done"
-    ]
+
+    include: "rules/galah.smk"
+
+    TARGETS += ["status/dereplicate.done"]
+
 
 if "annotations" in STEPS:
-    include:
-        "rules/annotations.smk"
-    TARGETS += [
-        "status/annotations.done"
-    ]
+
+    include: "rules/annotations.smk"
+
+    TARGETS += ["status/annotations.done"]
+
+
 # Coverage
 if "coverage" in STEPS:
-    include:
-        "rules/coverage.smk"
-    TARGETS += [
-        "status/coverage.done"
-    ]
 
-# GTDBtk 
+    include: "rules/coverage.smk"
+
+    TARGETS += ["status/coverage.done"]
+
+
+# GTDBtk
 if "gtdbtk" in STEPS:
-    include:
-        "rules/gtdbtk.smk"
-    TARGETS += [
-        "status/gtdbtk.done"
-    ]
+
+    include: "rules/gtdbtk.smk"
+
+    TARGETS += ["status/gtdbtk.done"]
+
 
 # MG Thermometer
 if "mgthermometer" in STEPS:
-    include:
-        "rules/mgthermometer.smk"
-    TARGETS += [
-        "status/mgthermometer.done"
-    ]
+
+    include: "rules/mgthermometer.smk"
+
+    TARGETS += ["status/mgthermometer.done"]
+
 
 # EggNog-Mapper
 if "eggnog" in STEPS:
-    include:
-        "rules/eggnog.smk"
-    TARGETS += [
-         "status/eggnog.done"
-    ]
+
+    include: "rules/eggnog.smk"
+
+    TARGETS += ["status/eggnog.done"]
+
 
 if "singlem_all" in STEPS:
-    include:
-        "rules/singlem.smk"
-    TARGETS += [
-        "status/singlem.done"
-    ]
+
+    include: "rules/singlem.smk"
+
+    TARGETS += ["status/singlem.done"]
+
 
 # No targets
 if len(TARGETS) == 0:
-    raise Exception('You are not serious. Nothing to be done? Really?')
+    raise Exception("You are not serious. Nothing to be done? Really?")
+
 
 rule NOMIS_MAGS:
     input:
-        TARGETS
+        TARGETS,

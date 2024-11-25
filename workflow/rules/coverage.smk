@@ -23,7 +23,6 @@ rule mapping_all:
         read1=rules.getfinalreads.output.read1,
         read2=rules.getfinalreads.output.read2,
         cont=rules.concatenate_mags.output,
-        #idx=rules.mapping_index.output
     output:
         temp(os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample}_1.fq.gz.bam"))
     threads:
