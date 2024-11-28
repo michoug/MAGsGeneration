@@ -9,27 +9,10 @@ rule contigs_taxonomy:
     output:
         touch("status/taxonomy.done"),
 
-
-rule download_tax_db:
-    output:
-        file=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
-        folder=directory(os.path.join(RESULTS_DIR, "DB")),
-        tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
-    threads: 20
-    conda:
-        os.path.join(ENV_DIR, "mmseqs.yaml")
-    shell:
-        '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
-        "mmseqs databases GTDB {output.folder}/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
-
-
 rule taxonomy:
     input:
         fasta=rules.assembly_megahit.output.final,
-        db=rules.download_tax_db.output.folder,
+        file=rules.download_tax_db.output.file
     output:
         taxonomy=os.path.join(
             RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax.tsv"
@@ -48,32 +31,8 @@ rule taxonomy:
         '(date && name=$(echo $(basename {output.taxonomy}) | sed "s/_tax.tsv//g") && '
         "rm -rf $(dirname {output.dbfasta})/* && "
         "mmseqs createdb  {input.fasta} {output.dbfasta} && "
-        "mmseqs taxonomy {output.dbfasta} {input.db}/GTDB_mmseqs $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 && "
+        "mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/GTDB_mmseqs $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 && "
         "mmseqs createtsv {output.dbfasta} $(dirname {output.taxonomy})/$name {output.taxonomy} && date) 2> {log.err} > {log.out}"
-
-
-rule taxconverter_install:
-    output:
-        folder=directory(os.path.join(RESULTS_DIR, "DB/taxconverter")),
-        file=os.path.join(RESULTS_DIR, "DB/taxconverter/taxconverter.done"),
-    conda:
-        os.path.join(ENV_DIR, "vamb.yaml")
-    localrule: True
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/taxconverter_install.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/taxconverter_install.err.log"),
-    shell:
-        """
-        (date
-        rm -rf {output.folder}
-        rm -rf taxconverter
-        git clone https://github.com/RasmussenLab/taxconverter.git
-        mv taxconverter {output.folder}
-        pip install -e {output.folder}
-        unzip {output.folder}/data/lineage.zip -d {output.folder}/data
-        touch {output.file}
-        date) 2> {log.err} > {log.out}
-        """
 
 
 rule taxconverter:

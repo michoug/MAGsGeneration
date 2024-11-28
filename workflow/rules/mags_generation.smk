@@ -2,68 +2,53 @@
 rule mags_generation:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample=SAMPLES
+            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample=ASSEMBLY
         ),
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
             number=[125, 150],
         ),
         expand(
             os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
             sample_2=SAMPLES,
         ),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample=SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample=ASSEMBLY),
         expand(
             os.path.join(
                 RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
     output:
         touch("status/mags_generation.done"),
-
-
-rule filter_length:
-    input:
-        rules.assembly_megahit.output.final,
-    output:
-        out=os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
-        other=temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter_name.fasta")),
-    conda:
-        os.path.join(ENV_DIR, "seqkit.yaml")
-    threads: config["filter_length"]["threads"]
-    message:
-        "Remove contigs less than 1.5kb"
-    shell:
-        'seqkit seq -j {threads} --remove-gaps -o {output.other} -m 1500 {input} && perl -pe "s/ .*//g" {output.other} > {output.out}'
 
 
 rule indexAssembly:
@@ -91,7 +76,7 @@ rule checkIndexAssembyDone:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
             number=[125, 150],
         ),
     output:
@@ -165,22 +150,6 @@ rule metabat2:
     shell:
         "(date && metabat2 -i {input.contig} -a {input.cov} -o {output}/metabat -t {threads} && "
         "date) 2> {log.err} > {log.out}"
-
-
-rule metabinner_install:
-    output:
-        dbs=directory(os.path.join(RESULTS_DIR, "DB/MetaBinner")),
-        file=os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
-    localrule: True
-    conda:
-        os.path.join(ENV_DIR, "metabinner.yaml")
-    shell:
-        """
-        rm -rf MetaBinner
-        git clone https://github.com/ziyewang/MetaBinner.git &> /dev/null
-        mv MetaBinner $(dirname {output.dbs})
-        touch {output.file}
-        """
 
 
 rule metabinner_coverage:
@@ -300,26 +269,6 @@ rule rosella:
         "(date && rm -r $(dirname {output}) && "
         "rosella recover -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
         "&& date) 2> {log.err} > {log.out}"
-
-
-rule vamb_install:
-    output:
-        dbs=directory(os.path.join(RESULTS_DIR, "vamb")),
-        testfile=os.path.join(RESULTS_DIR, "vamb/install.done"),
-    conda:
-        os.path.join(ENV_DIR, "vamb.yaml")
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/vamb_install.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/vamb_install.err.log"),
-    localrule: True
-    shell:
-        "(date && rm -rf vamb && "
-        "rm -rf {output.dbs} && "
-        "git clone https://github.com/RasmussenLab/vamb -b master && "
-        "mv vamb $(dirname {output.dbs}) && "
-        "pip install -e {output.dbs} && "
-        "touch {output.testfile} && "
-        "date) 2> {log.err} > {log.out}"
 
 
 rule vamb_coverage:

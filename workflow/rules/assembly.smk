@@ -1,7 +1,7 @@
 rule assembly_all:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit.fa"), sample=SAMPLES
+            os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit.fa"), sample=ASSEMBLY
         ),
     output:
         touch("status/assembly.done"),

@@ -16,11 +16,18 @@ import pandas as pd
 
 include: "rules/init.smk"
 
+ASSEMBLY = SAMPLES
 
 ##############################
 # TARGETS & RULES
 # List of (main) targets to be created
 TARGETS = []
+
+if "install_software" in STEPS:
+
+    include: "rules/install_software_DB.smk"
+
+    TARGETS += ["status/install_software.done"]
 
 if "trim_reads" in STEPS:
 
@@ -35,13 +42,17 @@ if "assembly_all" in STEPS:
 
     TARGETS += ["status/assembly.done"]
 
-
 if "contigs_taxonomy" in STEPS:
 
     include: "rules/contigs_taxonomy.smk"
 
     TARGETS += ["status/taxonomy.done"]
 
+if "check_assembly" in STEPS:
+
+    include: "rules/filter_assembly.smk"
+
+    TARGETS += ["status/checkAssembly.done"]
 
 if "mags_generation" in STEPS:
 

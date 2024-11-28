@@ -5,11 +5,11 @@ rule refine_all:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv")),
     output:
@@ -82,7 +82,7 @@ rule cp_mags:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
     output:
         directory(os.path.join(RESULTS_DIR, "Bins/renamed_mags")),

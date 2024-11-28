@@ -5,8 +5,10 @@
 # ORDER of STEPS: ["checkm", "dereplicate", "drep_checkm", "coverage", "gtdbtk", "eggnog", "metabolic", "mgthermometer"]
 #
 
-steps: ["trim_reads","assembly_all","contigs_taxonomy","mags_generation","dastool","checkm","refine_all","dereplicate"]
-#,"mags_generation",,"singlem_all"]#,"coverage","annotations","gtdbtk","mgthermometer","eggnog"]
+steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy",
+"check_assembly","mags_generation","dastool","checkm",
+"refine_all","dereplicate","coverage","annotations",
+"gtdbtk","mgthermometer","eggnog"]
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
@@ -14,7 +16,7 @@ steps: ["trim_reads","assembly_all","contigs_taxonomy","mags_generation","dastoo
 work_dir: "/scratch/gmichoud/GlacierIce/MAGsGeneration/"
 
 # Directory where assembly files are
-# assembly_dir: "/scratch/gmichoud/GlacierIceGlacierIce/Assembly"
+assembly_dir: "/scratch/gmichoud/GlacierIce/Assembly"
 
 # Directory to save the output to
 results_dir: "/scratch/gmichoud/GlacierIce/mags_all"  

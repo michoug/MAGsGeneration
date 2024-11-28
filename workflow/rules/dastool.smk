@@ -2,7 +2,7 @@ rule dastool:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/das_DASTool_summary.tsv"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
     output:
         touch("status/dastool.done"),
