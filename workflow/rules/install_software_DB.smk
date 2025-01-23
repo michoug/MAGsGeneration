@@ -45,7 +45,7 @@ rule taxconverter_install:
         out=os.path.join(RESULTS_DIR, "logs/taxconverter_install.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxconverter_install.err.log"),
     conda:
-        os.path.join(ENV_DIR, "vamb.yaml")
+        os.path.join(ENV_DIR, "taxconverter.yaml")
     localrule: True
     shell:
         """
@@ -62,8 +62,6 @@ rule taxconverter_install:
 
 
 rule download_tax_db:
-    input:
-        rules.taxconverter_install.output.file
     output:
         file=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
         tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
