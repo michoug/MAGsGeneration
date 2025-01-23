@@ -35,8 +35,13 @@ getfinalreads:
 
 ### contigs_taxonomy.smk ###
 
+downloadHuman:
+  time: "00-01:00:00"
+  mem_mb: 60000
+
 download_tax_db:
-  time: "00-02:00:00"
+  time: "00-06:00:00"
+  mem_mb: 60000
 
 taxonomy:
   time: "00-05:00:00"

@@ -19,7 +19,7 @@ SMK_ENV="snakemake" # USER INPUT REQUIRED
 # number of cores for snakemake
 SMK_CORES=112
 # snakemake file
-SMK_SMK="workflow/Snakefile"
+SMK_SMK="workflow/runAll.smk"
 # config file
 SMK_CONFIG="config/config.yaml" # USER INPUT REQUIRED
 # slurm config file

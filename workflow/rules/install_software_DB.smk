@@ -7,6 +7,33 @@ rule install_software:
     output:
         touch("status/install_software.done"),
 
+rule downloadHuman:
+    output:
+        file = os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
+    conda:
+        os.path.join(ENV_DIR, "datasets.yaml")
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/human_download.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/human_download.err.log"),
+    threads: 10
+    shell:
+        """
+        (date
+        rm -f ncbi_dataset.zip
+        rm -rf $(dirname {output.file})/ncbi_dataset
+        rm -f $(dirname {output.file})/md5sum.txt
+        rm -f $(dirname {output.file})/README.md
+        datasets download genome accession GCF_000001405.40 --include genome --assembly-source refseq --dehydrated
+        unzip ncbi_dataset.zip -d $(dirname {output.file})
+        datasets rehydrate --directory $(dirname /scratch/gmichoud/GlacierIce/mags_all/DB/hg38.fa.gz)
+        pigz -p 10  $(dirname {output.file})/ncbi_dataset/data/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fna
+        mv $(dirname {output.file})/ncbi_dataset/data/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fna.gz {output.file}
+        rm -rf $(dirname {output.file})/ncbi_dataset
+        rm -f $(dirname {output.file})/md5sum.txt
+        rm -f $(dirname {output.file})/README.md
+        rm -f ncbi_dataset.zip
+        date) 2> {log.err} > {log.out}
+        """
 
 rule taxconverter_install:
     # input:
@@ -14,12 +41,12 @@ rule taxconverter_install:
     output:
         folder=directory(os.path.join(RESULTS_DIR, "DB/taxconverter")),
         file=os.path.join(RESULTS_DIR, "DB/taxconverter/taxconverter.done"),
-    conda:
-        os.path.join(ENV_DIR, "vamb.yaml")
-    localrule: True
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxconverter_install.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxconverter_install.err.log"),
+    conda:
+        os.path.join(ENV_DIR, "vamb.yaml")
+    localrule: True
     shell:
         """
         (date
@@ -35,8 +62,8 @@ rule taxconverter_install:
 
 
 rule download_tax_db:
-    # input:
-    #     db = rules.create_db_folder.output.folder
+    input:
+        rules.taxconverter_install.output.file
     output:
         file=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
         tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
@@ -52,8 +79,8 @@ rule download_tax_db:
 
 
 rule metabinner_install:
-    # input:
-    #     rules.create_db_folder.output.file
+    input:
+        rules.taxconverter_install.output.file
     output:
         dbs=directory(os.path.join(RESULTS_DIR, "DB/MetaBinner")),
         file=os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
@@ -73,8 +100,8 @@ rule metabinner_install:
 
 
 rule vamb_install:
-    # input:
-    #     rules.create_db_folder.output.file
+    input:
+        rules.metabinner_install.output.file
     output:
         dbs=directory(os.path.join(RESULTS_DIR, "DB/vamb")),
         testfile=os.path.join(RESULTS_DIR, "DB/vamb/install.done"),

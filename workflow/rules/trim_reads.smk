@@ -30,16 +30,6 @@ rule trimming:
         "trim_galore --paired -j {threads} --output_dir $(dirname {output.trim1}) {input.read1} {input.read2} && "
         "date) 2> {log.err} > {log.out}"
 
-
-rule downloadHuman:
-    output:
-        os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
-    shell:
-        """
-        wget -O {output} ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
-        """
-
-
 rule indexHuman:
     input:
         fa=rules.downloadHuman.output,

@@ -6,9 +6,9 @@
 #
 
 steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy",
-"check_assembly","mags_generation","dastool","checkm",
-"refine_all","dereplicate","coverage","annotations",
-"gtdbtk","mgthermometer","eggnog"]
+"check_assembly","mags_generation"]#,"dastool","checkm",
+# "refine_all","dereplicate","coverage","annotations",
+# "gtdbtk","mgthermometer","eggnog"]
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
