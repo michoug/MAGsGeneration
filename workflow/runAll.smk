@@ -60,6 +60,11 @@ if "mags_generation" in STEPS:
 
     TARGETS += ["status/mags_generation.done"]
 
+if "genome_face" in STEPS:
+
+    include: "rules/genome_face.smk"
+
+    TARGETS += ["status/genome_face.done"]
 
 if "dastool" in STEPS:
 
