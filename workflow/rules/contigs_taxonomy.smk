@@ -47,7 +47,7 @@ rule taxconverter:
     localrule: True
     threads: 20
     conda:
-        os.path.join(ENV_DIR, "vamb.yaml")
+        os.path.join(ENV_DIR, "taxconverter.yaml")
     shell:
         "(date && "
         "taxconverter mmseqs2 -i {input.tax} -o {output} && date) 2> {log.err} > {log.out}"
