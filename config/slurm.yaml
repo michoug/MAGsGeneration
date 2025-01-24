@@ -99,6 +99,20 @@ comebin:
   time: "00-10:00:00"
   mem_mb: 90000
 
+### genome_face.smk ###
+
+indexAssemblyGenomeFace:
+  time: "00-01:00:00"
+  mem_mb: 60000
+
+coverage_genome_face_bam:
+  time: "00-02:00:00"
+  mem_mb: 50000
+
+coverage_genome_face:
+  time: "00-02:00:00"
+  mem_mb: 50000
+
 ### dastool.smk ###
 
 dasTool_run:
