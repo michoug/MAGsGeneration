@@ -4,5 +4,5 @@ channels:
   - defaults
 dependencies:
   - python=3.8.5
-  - snakemake=6.4.0
+  - snakemake=7.32.0
   - mamba=1
