@@ -23,8 +23,8 @@ rule trimming:
         os.path.join(WORK_DIR, "envs/trim_galore.yaml")
     threads: config["trimming"]["threads"]
     resources:
-        runtime = 60*3,
-        mem = "30G"
+        runtime=60 * 3,
+        mem="30G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.err.log"),
@@ -32,6 +32,7 @@ rule trimming:
         "(date && "
         "trim_galore --paired -j {threads} --output_dir $(dirname {output.trim1}) {input.read1} {input.read2} && "
         "date) 2> {log.err} > {log.out}"
+
 
 rule indexHuman:
     input:
@@ -42,8 +43,8 @@ rule indexHuman:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: config["indexHuman"]["threads"]
     resources:
-        runtime = 60,
-        mem = "50G"
+        runtime=60,
+        mem="50G",
     params:
         # numb = lambda wildcards, output: output[0][-7:-4]
         numb="{number}",
@@ -80,8 +81,8 @@ rule mappingHuman:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: config["mappingHuman"]["threads"]
     resources:
-        runtime = 60*5,
-        mem = "50G"
+        runtime=60 * 5,
+        mem="50G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.err.log"),

@@ -8,12 +8,13 @@ rule install_software:
     output:
         touch("status/install_software.done"),
 
+
 rule downloadHuman:
     output:
-        file = os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
+        file=os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
     resources:
-        runtime = 60,
-        mem = "10G"
+        runtime=60,
+        mem="10G",
     conda:
         os.path.join(WORK_DIR, "envs/datasets.yaml")
     log:
@@ -38,6 +39,7 @@ rule downloadHuman:
         rm -f ncbi_dataset.zip
         date) 2> {log.err} > {log.out}
         """
+
 
 rule taxconverter_install:
     # input:
@@ -74,7 +76,7 @@ rule download_tax_db:
         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
     resources:
         mem="10G",
-        runtime=6*60,
+        runtime=6 * 60,
     threads: 20
     conda:
         os.path.join(WORK_DIR, "envs/mmseqs.yaml")
@@ -85,7 +87,7 @@ rule download_tax_db:
 
 rule metabinner_install:
     input:
-        rules.taxconverter_install.output.file
+        rules.taxconverter_install.output.file,
     output:
         dbs=directory(os.path.join(RESULTS_DIR, "DB/MetaBinner")),
         file=os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
@@ -106,7 +108,7 @@ rule metabinner_install:
 
 rule vamb_install:
     input:
-        rules.metabinner_install.output.file
+        rules.metabinner_install.output.file,
     output:
         dbs=directory(os.path.join(RESULTS_DIR, "DB/vamb")),
         testfile=os.path.join(RESULTS_DIR, "DB/vamb/install.done"),

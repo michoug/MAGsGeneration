@@ -2,7 +2,8 @@
 rule mags_generation:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample=ASSEMBLY
+            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
@@ -60,8 +61,8 @@ rule indexAssembly:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
     resources:
-        runtime = 60,
-        mem = "50G"
+        runtime=60,
+        mem="50G",
     params:
         numb="{number}",
     log:
@@ -101,8 +102,8 @@ rule mapping:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 8
     resources:
-        runtime = 60*2,
-        mem = "50G"
+        runtime=60 * 2,
+        mem="50G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
@@ -129,8 +130,8 @@ rule metabat2_mapping:
         os.path.join(WORK_DIR, "envs/metabat.yaml")
     threads: config["metabat2"]["threads"]
     resources:
-        runtime = 60*2,
-        mem = "50G"
+        runtime=60 * 2,
+        mem="50G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.err.log"),
@@ -152,8 +153,8 @@ rule metabat2:
         os.path.join(WORK_DIR, "envs/metabat.yaml")
     threads: config["metabat2"]["threads"]
     resources:
-        runtime = 60*2,
-        mem = "50G"
+        runtime=60 * 2,
+        mem="50G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.err.log"),
@@ -179,8 +180,8 @@ rule metabinner_coverage:
         os.path.join(WORK_DIR, "envs/metabat.yaml")
     threads: config["metabinner"]["threads"]
     resources:
-        runtime = 60,
-        mem = "50G"
+        runtime=60,
+        mem="50G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log"),
@@ -252,8 +253,8 @@ rule metabinner:
         err=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.err.log"),
     threads: config["metabinner"]["threads"]
     resources:
-        runtime = 60*6,
-        mem = "50G"
+        runtime=60 * 6,
+        mem="50G",
     message:
         "Running Metabinner"
     shell:
@@ -282,8 +283,8 @@ rule rosella:
         err=os.path.join(RESULTS_DIR, "logs/rosella/{sample}.err.log"),
     threads: config["rosella"]["threads"]
     resources:
-        runtime = 60*8,
-        mem = "50G"
+        runtime=60 * 8,
+        mem="50G",
     message:
         "Running Rosella"
     shell:
@@ -360,8 +361,8 @@ rule taxvamb:
         os.path.join(WORK_DIR, "envs/vamb.yaml")
     threads: config["vamb"]["threads"]
     resources:
-        runtime = 60*8,
-        mem = "50G"
+        runtime=60 * 8,
+        mem="50G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log"),
@@ -406,8 +407,8 @@ rule concoct:
         os.path.join(WORK_DIR, "envs/concoct.yaml")
     threads: 20
     resources:
-        runtime = 60*8,
-        mem = "80G"
+        runtime=60 * 8,
+        mem="80G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.err.log"),
@@ -435,8 +436,8 @@ rule comebin:
         folder=os.path.join(RESULTS_DIR, "Bins/{sample}/Comebin/"),
     threads: 20
     resources:
-        runtime = 60*10,
-        mem = "90G"
+        runtime=60 * 10,
+        mem="90G",
     message:
         "Running Comebin"
     shell:

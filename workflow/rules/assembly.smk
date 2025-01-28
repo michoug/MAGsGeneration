@@ -21,8 +21,8 @@ rule assembly_megahit:
         name="{sample}",
     threads: config["assembly"]["threads"]
     resources:
-        runtime = 60*12,
-        mem = "70G"
+        runtime=60 * 12,
+        mem="70G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.err.log"),

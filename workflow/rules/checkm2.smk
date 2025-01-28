@@ -20,15 +20,15 @@ rule checkm2:
     conda:
         os.path.join(WORK_DIR, "envs/checkm2.yaml")
     resources:
-        runtime = 60*4,
-        mem = "50G"
+        runtime=60 * 4,
+        mem="50G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm/{sample}.err.log"),
     threads: config["checkm2"]["threads"]
     params:
         ext=config["checkm2"]["extension"],
-        db=config["checkm2"]["db"]
+        db=config["checkm2"]["db"],
     message:
         "Running CheckM2 for directory renamed bins"
     shell:

@@ -42,8 +42,8 @@ rule galah:
         cont=config["galah"]["cont"],
     threads: config["galah"]["threads"]
     resources:
-        runtime = 60*2,
-        mem = "60G"
+        runtime=60 * 2,
+        mem="60G",
     message:
         "Running Galah on all NOMIS MAGs"
     shell:

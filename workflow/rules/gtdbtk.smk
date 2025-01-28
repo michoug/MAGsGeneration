@@ -19,8 +19,8 @@ rule gtdbtk:
         db=config["gtdbtk"]["path"],
     threads: config["gtdbtk"]["threads"]
     resources:
-        runtime = 60*12,
-        mem = "250G"
+        runtime=60 * 12,
+        mem="250G",
     message:
         "Running GTDB on MAGs"
     shell:

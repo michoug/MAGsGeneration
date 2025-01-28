@@ -9,10 +9,11 @@ rule contigs_taxonomy:
     output:
         touch("status/taxonomy.done"),
 
+
 rule taxonomy:
     input:
         fasta=rules.assembly_megahit.output.final,
-        file=rules.download_tax_db.output.file
+        file=rules.download_tax_db.output.file,
     output:
         taxonomy=os.path.join(
             RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax.tsv"
@@ -25,8 +26,8 @@ rule taxonomy:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.err.log"),
     resources:
-        runtime = 60*5,
-        mem = "400G"
+        runtime=60 * 5,
+        mem="400G",
     threads: 20
     conda:
         os.path.join(WORK_DIR, "envs/mmseqs.yaml")

@@ -43,8 +43,8 @@ rule singlem_reads:
         os.path.join(WORK_DIR, "envs/singlem.yaml")
     threads: config["singlem"]["threads"]
     resources:
-        runtime = 60*4,
-        mem = "50G"
+        runtime=60 * 4,
+        mem="50G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.err.log"),
@@ -73,8 +73,8 @@ rule singlem_microbial:
     conda:
         os.path.join(WORK_DIR, "envs/singlem.yaml")
     resources:
-        runtime = 60*2,
-        mem = "50G"
+        runtime=60 * 2,
+        mem="50G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_MF.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_MF.err.log"),
@@ -97,8 +97,8 @@ rule singlem_genomes:
     conda:
         os.path.join(WORK_DIR, "envs/singlem.yaml")
     resources:
-        runtime = 60*2,
-        mem = "50G"
+        runtime=60 * 2,
+        mem="50G",
     threads: config["singlem"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_genomes.out.log"),

@@ -68,8 +68,8 @@ rule emapper:
         os.path.join(WORK_DIR, "envs/eggnog.yaml")
     threads: config["eggnog"]["threads"]
     resources:
-        runtime = 60*12,
-        mem = "30G"
+        runtime=60 * 12,
+        mem="30G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.err.log"),
@@ -105,8 +105,8 @@ rule emapper_final:
         os.path.join(WORK_DIR, "envs/eggnog.yaml")
     threads: config["eggnog"]["threads"]
     resources:
-        runtime = 60*12,
-        mem = "60G"
+        runtime=60 * 12,
+        mem="60G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.err.log"),

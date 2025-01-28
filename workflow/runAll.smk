@@ -16,6 +16,7 @@ import pandas as pd
 
 include: "rules/init.smk"
 
+
 ASSEMBLY = SAMPLES
 
 ##############################
@@ -28,6 +29,7 @@ if "install_software" in STEPS:
     include: "rules/install_software_DB.smk"
 
     TARGETS += ["status/install_software.done"]
+
 
 if "trim_reads" in STEPS:
 
@@ -42,11 +44,13 @@ if "assembly_all" in STEPS:
 
     TARGETS += ["status/assembly.done"]
 
+
 if "contigs_taxonomy" in STEPS:
 
     include: "rules/contigs_taxonomy.smk"
 
     TARGETS += ["status/taxonomy.done"]
+
 
 if "check_assembly" in STEPS:
 
@@ -54,17 +58,20 @@ if "check_assembly" in STEPS:
 
     TARGETS += ["status/checkAssembly.done"]
 
+
 if "mags_generation" in STEPS:
 
     include: "rules/mags_generation.smk"
 
     TARGETS += ["status/mags_generation.done"]
 
+
 if "genome_face" in STEPS:
 
     include: "rules/genome_face.smk"
 
     TARGETS += ["status/genome_face.done"]
+
 
 if "dastool" in STEPS:
 

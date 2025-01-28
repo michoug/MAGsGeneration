@@ -34,8 +34,8 @@ rule rosella_ref:
         err=os.path.join(RESULTS_DIR, "logs/refine/{sample}.err.log"),
     threads: config["rosella"]["threads"]
     resources:
-        runtime = 60*12,
-        mem = "90G"
+        runtime=60 * 12,
+        mem="90G",
     message:
         "Refine bins with Rosella"
     params:
@@ -109,8 +109,8 @@ rule checkm2_refine:
         err=os.path.join(RESULTS_DIR, "logs/checkm_refine.err.log"),
     threads: config["checkm2"]["threads"]
     resources:
-        runtime = 60*4,
-        mem = "50G"
+        runtime=60 * 4,
+        mem="50G",
     params:
         ext=config["checkm2"]["extension"],
         db=config["checkm2"]["db"],
