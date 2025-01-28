@@ -57,7 +57,7 @@ rule metabolic:
         out=os.path.join(RESULTS_DIR, "logs/metabolic/metabolic.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabolic/metabolic.err.log"),
     conda:
-        os.path.join(ENV_DIR, "metabolic.yaml")
+        os.path.join(WORK_DIR, "envs/metabolic.yaml")
     params:
         gtdbtk=config["metabolic"]["db"],
         metabolic=config["metabolic"]["directory"],

@@ -20,8 +20,11 @@ rule trimming:
         trim1=temp(os.path.join(RESULTS_DIR, "Trim/{sample}_R1_001_val_1.fq.gz")),
         trim2=temp(os.path.join(RESULTS_DIR, "Trim/{sample}_R2_001_val_2.fq.gz")),
     conda:
-        os.path.join(ENV_DIR, "trim_galore.yaml")
+        os.path.join(WORK_DIR, "envs/trim_galore.yaml")
     threads: config["trimming"]["threads"]
+    resources:
+        runtime = 60*3,
+        mem = "30G"
     log:
         out=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.err.log"),
@@ -36,8 +39,11 @@ rule indexHuman:
     output:
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: config["indexHuman"]["threads"]
+    resources:
+        runtime = 60,
+        mem = "50G"
     params:
         # numb = lambda wildcards, output: output[0][-7:-4]
         numb="{number}",
@@ -71,8 +77,11 @@ rule mappingHuman:
     output:
         temp(os.path.join(RESULTS_DIR, "Trim_Human/{sample}.bam")),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: config["mappingHuman"]["threads"]
+    resources:
+        runtime = 60*5,
+        mem = "50G"
     log:
         out=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.err.log"),
@@ -91,7 +100,7 @@ rule removeHuman:
     output:
         temp(os.path.join(RESULTS_DIR, "TrimHuman/{sample}.noHuman.bam")),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: config["removeHuman"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/removeHuman/{sample}.out.log"),
@@ -111,7 +120,7 @@ rule getfinalreads:
         read1=os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"),
         read2=os.path.join(RESULTS_DIR, "TrimFinal/{sample}_2.fq.gz"),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: config["getfinalreads"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.out.log"),

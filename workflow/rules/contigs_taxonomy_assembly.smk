@@ -26,8 +26,11 @@ rule taxonomy:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.err.log"),
     threads: 20
+    resources:
+        runtime = 60*5,
+        mem = "400G"
     conda:
-        os.path.join(ENV_DIR, "mmseqs.yaml")
+        os.path.join(WORK_DIR, "envs/mmseqs.yaml")
     shell:
         '(date && name=$(echo $(basename {output.taxonomy}) | sed "s/_tax.tsv//g") && '
         "rm -rf $(dirname {output.dbfasta})/* && "
@@ -48,7 +51,7 @@ rule taxconverter:
     localrule: True
     threads: 20
     conda:
-        os.path.join(ENV_DIR, "vamb.yaml")
+        os.path.join(WORK_DIR, "envs/vamb.yaml")
     shell:
         "(date && "
         "taxconverter mmseqs2 -i {input.tax} -o {output} && date) 2> {log.err} > {log.out}"

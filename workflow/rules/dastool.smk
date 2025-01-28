@@ -28,7 +28,7 @@ rule prepare_dasTool:
     params:
         value="{sample}",
     conda:
-        os.path.join(ENV_DIR, "dastool.yaml")
+        os.path.join(WORK_DIR, "envs/dastool.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/prepare_dasTool/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/prepare_dasTool/{sample}.err.log"),
@@ -62,11 +62,14 @@ rule dasTool_run:
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/das_DASTool_summary.tsv"),
     conda:
-        os.path.join(ENV_DIR, "dastool.yaml")
+        os.path.join(WORK_DIR, "envs/dastool.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/dasTool/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/dasTool/{sample}.err.log"),
     threads: config["dasTool"]["threads"]
+    resources:
+        runtime = 60*12,
+        mem = "90G"
     message:
         "Running DasTool"
     shell:

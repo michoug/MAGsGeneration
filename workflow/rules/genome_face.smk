@@ -39,8 +39,11 @@ rule indexAssemblyGenomeFace:
     output:
         os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly.fa.r{number}.sti")
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
+    resources:
+        runtime = 60,
+        mem = "60G"
     params:
         numb="{number}",
     log:
@@ -76,9 +79,12 @@ rule coverage_genome_face_bam:
     output:
         temp(os.path.join(RESULTS_DIR, "Bins/GenomeFace/Bam/concat_assembly.fa.{sample}.bam"))
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads:
         config["mapping"]["threads"]
+    resources:
+        runtime = 60*2,
+        mem = "50G"
     log:
         out=os.path.join(RESULTS_DIR, "logs/coverage_genome_face_{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/coverage_genome_face_{sample}.err.log")
@@ -99,9 +105,12 @@ rule coverage_genome_face:
     output:
         os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly_cov.txt")
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")        
+        os.path.join(WORK_DIR, "envs/coverm.yaml")        
     threads:
         config["mapping"]["threads"]
+    resources:
+        runtime = 60*2,
+        mem = "50G"
     log:
         out=os.path.join(RESULTS_DIR, "logs/coverage_genome_face/coverage.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/coverage_genome_face/coverage.err.log")

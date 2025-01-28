@@ -4,14 +4,18 @@ rule install_software:
         os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
         os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
         os.path.join(RESULTS_DIR, "DB/vamb/install.done"),
+        os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
     output:
         touch("status/install_software.done"),
 
 rule downloadHuman:
     output:
         file = os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
+    resources:
+        runtime = 60,
+        mem = "10G"
     conda:
-        os.path.join(ENV_DIR, "datasets.yaml")
+        os.path.join(WORK_DIR, "envs/datasets.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/human_download.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/human_download.err.log"),
@@ -25,7 +29,7 @@ rule downloadHuman:
         rm -f $(dirname {output.file})/README.md
         datasets download genome accession GCF_000001405.40 --include genome --assembly-source refseq --dehydrated
         unzip ncbi_dataset.zip -d $(dirname {output.file})
-        datasets rehydrate --directory $(dirname /scratch/gmichoud/GlacierIce/mags_all/DB/hg38.fa.gz)
+        datasets rehydrate --directory $(dirname {output.file})
         pigz -p 10  $(dirname {output.file})/ncbi_dataset/data/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fna
         mv $(dirname {output.file})/ncbi_dataset/data/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fna.gz {output.file}
         rm -rf $(dirname {output.file})/ncbi_dataset
@@ -45,7 +49,7 @@ rule taxconverter_install:
         out=os.path.join(RESULTS_DIR, "logs/taxconverter_install.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxconverter_install.err.log"),
     conda:
-        os.path.join(ENV_DIR, "taxconverter.yaml")
+        os.path.join(WORK_DIR, "envs/taxconverter.yaml")
     localrule: True
     shell:
         """
@@ -68,9 +72,12 @@ rule download_tax_db:
     log:
         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
+    resources:
+        mem="10G",
+        runtime=6*60,
     threads: 20
     conda:
-        os.path.join(ENV_DIR, "mmseqs.yaml")
+        os.path.join(WORK_DIR, "envs/mmseqs.yaml")
     shell:
         '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
         "mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
@@ -84,7 +91,7 @@ rule metabinner_install:
         file=os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
     localrule: True
     conda:
-        os.path.join(ENV_DIR, "metabinner.yaml")
+        os.path.join(WORK_DIR, "envs/metabinner.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_install.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_install.err.log"),
@@ -104,7 +111,7 @@ rule vamb_install:
         dbs=directory(os.path.join(RESULTS_DIR, "DB/vamb")),
         testfile=os.path.join(RESULTS_DIR, "DB/vamb/install.done"),
     conda:
-        os.path.join(ENV_DIR, "vamb.yaml")
+        os.path.join(WORK_DIR, "envs/vamb.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/vamb_install.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/vamb_install.err.log"),

@@ -15,7 +15,7 @@ rule multi_to_single:
     output:
         fixed_fa=os.path.join(RESULTS_DIR, "EggNOG/cat_proteins.faa"),
     conda:
-        os.path.join(ENV_DIR, "seqkit.yaml")
+        os.path.join(WORK_DIR, "envs/seqkit.yaml")
     message:
         "Converting multi-line FASTA to single line FASTA files"
     shell:
@@ -35,7 +35,7 @@ checkpoint prep_eggnog:
     message:
         "Splitting the large concactenated protein file into chunks of 1000000"
     conda:
-        os.path.join(ENV_DIR, "seqkit.yaml")
+        os.path.join(WORK_DIR, "envs/seqkit.yaml")
     shell:
         "(date && seqkit split -s 1000000 -O {output.dir} {input.fa} "
         "&& date) 2> {log.err} > {log.out}"
@@ -65,8 +65,11 @@ rule emapper:
             "EggNOG/split/temp/cat_proteins.part_{i}.emapper.seed_orthologs",
         ),
     conda:
-        os.path.join(ENV_DIR, "eggnog.yaml")
+        os.path.join(WORK_DIR, "envs/eggnog.yaml")
     threads: config["eggnog"]["threads"]
+    resources:
+        runtime = 60*12,
+        mem = "30G"
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.err.log"),
@@ -99,8 +102,11 @@ rule emapper_final:
     output:
         os.path.join(RESULTS_DIR, "EggNOG/allMAGs_egg.txt.emapper.annotations"),
     conda:
-        os.path.join(ENV_DIR, "eggnog.yaml")
+        os.path.join(WORK_DIR, "envs/eggnog.yaml")
     threads: config["eggnog"]["threads"]
+    resources:
+        runtime = 60*12,
+        mem = "60G"
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.err.log"),

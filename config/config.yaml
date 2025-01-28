@@ -6,9 +6,9 @@
 #
 
 steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy",
-"check_assembly","mags_generation", "genome_face"]#,"dastool","checkm",
-# "refine_all","dereplicate","coverage","annotations",
-# "gtdbtk","mgthermometer","eggnog"]
+"check_assembly","mags_generation", "genome_face","dastool","checkm",
+"refine_all","dereplicate","coverage","annotations",
+"gtdbtk","mgthermometer","eggnog"]
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
@@ -21,13 +21,7 @@ assembly_dir: "/scratch/gmichoud/GlacierIce/Assembly"
 # Directory to save the output to
 results_dir: "/scratch/gmichoud/GlacierIce/mags_all"  
 
-# Directory for all the conda environments
-env_dir: "/scratch/gmichoud/GlacierIce/MAGsGeneration/envs" 
-
-# Directory for databases
-db_dir: "/scratch/gmichoud/DB"
-
-# Directory for trimmed reads
+# Directory for raw reads
 reads_dir: "/scratch/gmichoud/GlacierIce/Reads"
 
 # Number of cpus or threads to use

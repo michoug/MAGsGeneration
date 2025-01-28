@@ -20,7 +20,7 @@ rule singlem_data:
             DB_DIR, "SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb"
         ),
     conda:
-        os.path.join(ENV_DIR, "singlem.yaml")
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_data.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_data.err.log"),
@@ -40,8 +40,11 @@ rule singlem_reads:
         table=os.path.join(RESULTS_DIR, "SingleM/all/{sample}_otu.tsv"),
         profile=os.path.join(RESULTS_DIR, "SingleM/all/{sample}_profile.tsv"),
     conda:
-        os.path.join(ENV_DIR, "singlem.yaml")
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
     threads: config["singlem"]["threads"]
+    resources:
+        runtime = 60*4,
+        mem = "50G"
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.err.log"),
@@ -68,7 +71,10 @@ rule singlem_microbial:
         profile=os.path.join(RESULTS_DIR, "SingleM/allProfiles.tsv"),
         mf=os.path.join(RESULTS_DIR, "SingleM/SingleM_MF.tsv"),
     conda:
-        os.path.join(ENV_DIR, "singlem.yaml")
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
+    resources:
+        runtime = 60*2,
+        mem = "50G"
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_MF.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_MF.err.log"),
@@ -89,7 +95,11 @@ rule singlem_genomes:
     output:
         table=os.path.join(RESULTS_DIR, "SingleM/genomes_otu.tsv"),
     conda:
-        os.path.join(ENV_DIR, "singlem.yaml")
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
+    resources:
+        runtime = 60*2,
+        mem = "50G"
+    threads: config["singlem"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_genomes.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_genomes.err.log"),
@@ -97,7 +107,7 @@ rule singlem_genomes:
         """
         (date
         export SINGLEM_METAPACKAGE_PATH={input.db}
-        singlem pipe --otu-table {output.table} --genome-fasta-files $(dirname {input.genomes})/finalBins/*fa &&
+        singlem pipe --threads {threads} --otu-table {output.table} --genome-fasta-files $(dirname {input.genomes})/finalBins/*fa &&
         date ) 2> {log.err} > {log.out}
         """
 
@@ -111,7 +121,7 @@ rule singlem_appraise:
     output:
         os.path.join(RESULTS_DIR, "SingleM/SingleM_appraise.tsv"),
     conda:
-        os.path.join(ENV_DIR, "singlem.yaml")
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_appraise.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_appraise.err.log"),

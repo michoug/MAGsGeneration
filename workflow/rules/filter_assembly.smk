@@ -11,7 +11,7 @@ rule filter_length:
         out=os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
         other=temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter_name.fasta")),
     conda:
-        os.path.join(ENV_DIR, "seqkit.yaml")
+        os.path.join(WORK_DIR, "envs/seqkit.yaml")
     threads: config["filter_length"]["threads"]
     message:
         "Remove contigs less than 1.5kb"

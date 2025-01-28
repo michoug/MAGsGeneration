@@ -53,7 +53,7 @@ conda env create -f requirements.yaml -n "snakemake"
 
 ### Without Slurm
 
-`snakemake -s workflow/Snakefile --conda-prefix snakemake_envs --configfile config/config.yaml --cores 28 --use-conda -rp`
+`snakemake -s workflow/Snakefile --conda-prefix snakemake_envs/ --configfile config/config.yaml --cores 28 --use-conda -rp`
 
 ### With Slurm
 

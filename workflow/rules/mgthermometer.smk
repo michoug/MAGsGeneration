@@ -16,13 +16,13 @@ def count_mags(wildcards):
 rule mgthermometer_run:
     input:
         fasta=os.path.join(RESULTS_DIR, "Bins/Annotation/{mags}.faa"),
-        script=os.path.join(SRC_DIR, "getFrequency.pl"),
+        script=os.path.join(WORK_DIR, "scripts/getFrequency.pl"),
     output:
         proportion=os.path.join(RESULTS_DIR, "mgthermometer/proportion_{mags}.txt"),
     params:
         prefix="{mags}",
     conda:
-        os.path.join(ENV_DIR, "mgthermometer.yaml")
+        os.path.join(WORK_DIR, "envs/mgthermometer.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/mgthermometer/{mags}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mgthermometer/{mags}.err.log"),

@@ -33,7 +33,7 @@ rule galah:
         final=directory(os.path.join(RESULTS_DIR, "Bins/finalBins")),
         cluster=os.path.join(RESULTS_DIR, "Bins/cluster_galah.txt"),
     conda:
-        os.path.join(ENV_DIR, "galah.yaml")
+        os.path.join(WORK_DIR, "envs/galah.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/galah/galah.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/galah/galah.err.log"),
@@ -41,6 +41,9 @@ rule galah:
         comp=config["galah"]["comp"],
         cont=config["galah"]["cont"],
     threads: config["galah"]["threads"]
+    resources:
+        runtime = 60*2,
+        mem = "60G"
     message:
         "Running Galah on all NOMIS MAGs"
     shell:

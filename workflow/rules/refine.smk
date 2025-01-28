@@ -28,11 +28,14 @@ rule rosella_ref:
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done"),
     conda:
-        os.path.join(ENV_DIR, "rosella.yaml")
+        os.path.join(WORK_DIR, "envs/rosella.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/refine/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/refine/{sample}.err.log"),
     threads: config["rosella"]["threads"]
+    resources:
+        runtime = 60*12,
+        mem = "90G"
     message:
         "Refine bins with Rosella"
     params:
@@ -100,11 +103,14 @@ rule checkm2_refine:
     output:
         tsv=os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv"),
     conda:
-        os.path.join(ENV_DIR, "checkm2.yaml")
+        os.path.join(WORK_DIR, "envs/checkm2.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm_refine.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm_refine.err.log"),
     threads: config["checkm2"]["threads"]
+    resources:
+        runtime = 60*4,
+        mem = "50G"
     params:
         ext=config["checkm2"]["extension"],
         db=config["checkm2"]["db"],
