@@ -5,6 +5,7 @@ rule install_software:
         os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
         os.path.join(RESULTS_DIR, "DB/vamb/install.done"),
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
+        os.path.join(RESULTS_DIR, "DB/SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb/CONTENTS.json"),
     output:
         touch("status/install_software.done"),
 
@@ -135,9 +136,9 @@ rule singlem_data:
             RESULTS_DIR,
             "DB/SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb/CONTENTS.json",
         ),
-        folder=os.path.join(
+        folder=directory(os.path.join(
             RESULTS_DIR, "DB/SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb"
-        ),
+        )),
     conda:
         os.path.join(WORK_DIR, "envs/singlem.yaml")
     log:
