@@ -19,7 +19,7 @@ rule assembly_megahit:
     params:
         folder=directory(os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit")),
         name="{sample}",
-    threads: config["assembly"]["threads"]
+    threads: 10
     resources:
         runtime=60 * 12,
         mem="70G",

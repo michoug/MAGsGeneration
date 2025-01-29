@@ -32,14 +32,14 @@ rule rosella_ref:
     log:
         out=os.path.join(RESULTS_DIR, "logs/refine/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/refine/{sample}.err.log"),
-    threads: config["rosella"]["threads"]
+    threads: 14
     resources:
         runtime=60 * 12,
         mem="90G",
     message:
         "Refine bins with Rosella"
     params:
-        ext=config["checkm2"]["extension"],
+        ext="fa",
     shell:
         """
         (date && 
@@ -107,12 +107,12 @@ rule checkm2_refine:
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm_refine.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm_refine.err.log"),
-    threads: config["checkm2"]["threads"]
+    threads: 10
     resources:
         runtime=60 * 4,
         mem="50G",
     params:
-        ext=config["checkm2"]["extension"],
+        ext="fa",
         db=config["checkm2"]["db"],
     message:
         "Running CheckM2 for directory renamed bins"

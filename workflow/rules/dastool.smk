@@ -66,7 +66,7 @@ rule dasTool_run:
     log:
         out=os.path.join(RESULTS_DIR, "logs/dasTool/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/dasTool/{sample}.err.log"),
-    threads: config["dasTool"]["threads"]
+    threads: 10
     resources:
         runtime=60 * 12,
         mem="90G",

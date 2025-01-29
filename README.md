@@ -47,20 +47,15 @@ conda env create -f requirements.yaml -n "snakemake"
 ```
 
 ### Run Setup
-* Place your preprocessed/trim reads (e.g. `sample_R1_001.fastq.gz` and `sample_R2_001.fastq.gz` files) in a `reads` folder
+* Place your reads (e.g. `sample_R1_001.fastq.gz` and `sample_R2_001.fastq.gz` files) in a `reads` folder
 * Fill the `config/all_samples.txt` file with the name of your samples (e.g. `{sample}_R2_001.fastq.gz`)
 * Modify the `config/config.yaml` file to change the different paths and eventually the different options
 
 ### Without Slurm
 
-`snakemake -s workflow/Snakefile --conda-prefix snakemake_envs/ --configfile config/config.yaml --cores 28 --use-conda -rp`
+`snakemake -s workflow/runAll.smk --configfile config/config.yaml`
 
 ### With Slurm
 
-This part was mainly taken from [@susheelbhanu](https://github.com/susheelbhanu/) [nomis_pipeline](https://github.com/susheelbhanu/nomis_pipeline)
-
-* Modify the `slurm.yaml` file by checking `partition`, `qos` and `account` that heavily depends on your system
-* Modify the `sbatch.sh` file by checking `#SBATCH -p`, `#SBATCH --qos=` and `#SBATCH -A` options that heavily depends on your system
-
-`sbatch config/sbatch.sh`
+`snakemake -s workflow/runAll.smk --configfile config/config.yaml --profile profile/`
 

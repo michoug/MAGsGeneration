@@ -66,10 +66,10 @@ rule emapper:
         ),
     conda:
         os.path.join(WORK_DIR, "envs/eggnog.yaml")
-    threads: config["eggnog"]["threads"]
+    threads: 10
     resources:
         runtime=60 * 12,
-        mem="30G",
+        mem="70G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.err.log"),
@@ -103,15 +103,15 @@ rule emapper_final:
         os.path.join(RESULTS_DIR, "EggNOG/allMAGs_egg.txt.emapper.annotations"),
     conda:
         os.path.join(WORK_DIR, "envs/eggnog.yaml")
-    threads: config["eggnog"]["threads"]
+    threads: 10
     resources:
         runtime=60 * 12,
-        mem="60G",
+        mem="70G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.err.log"),
     params:
-        db=config["eggnog"]["db"],
+        db=10,
     message:
         "Running EggNog-mapper on All MAGs"
     shell:

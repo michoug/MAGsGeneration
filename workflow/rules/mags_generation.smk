@@ -128,7 +128,7 @@ rule metabat2_mapping:
         os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),
     conda:
         os.path.join(WORK_DIR, "envs/metabat.yaml")
-    threads: config["metabat2"]["threads"]
+    threads: 10
     resources:
         runtime=60 * 2,
         mem="50G",
@@ -151,7 +151,7 @@ rule metabat2:
         directory(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat/")),
     conda:
         os.path.join(WORK_DIR, "envs/metabat.yaml")
-    threads: config["metabat2"]["threads"]
+    threads: 10
     resources:
         runtime=60 * 2,
         mem="50G",
@@ -178,10 +178,12 @@ rule metabinner_coverage:
         final=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_cov.txt"),
     conda:
         os.path.join(WORK_DIR, "envs/metabat.yaml")
-    threads: config["metabinner"]["threads"]
+    threads: 14
     resources:
         runtime=60,
         mem="50G",
+    params:
+        length=1500,
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log"),
@@ -190,7 +192,7 @@ rule metabinner_coverage:
     shell:
         """
         (date && jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input} && 
-        cat {output.temp} | awk '{{if ($2>{config[metabinner][length]}) print $0 }}' | cut -f -1,4- > {output.final} && 
+        cat {output.temp} | awk '{{if ($2>{params.length}) print $0 }}' | cut -f -1,4- > {output.final} && 
         date) 2> {log.err} > {log.out}
         """
 
@@ -203,28 +205,28 @@ rule metabinner_prepare:
         cont_t=temp(
             RESULTS_DIR
             + "/Assembly/{sample}_filter_"
-            + str(config["metabinner"]["length"])
+            + str({params.length})
             + ".fa"
         ),
         cont=RESULTS_DIR
         + "/Bins/{sample}/{sample}_metabinner_"
-        + str(config["metabinner"]["length"])
+        + str({params.length})
         + ".fa",
         kmer_t=temp(
             RESULTS_DIR
             + "/Assembly/{sample}_filter_kmer_4_f"
-            + str(config["metabinner"]["length"])
+            + str({params.length})
             + ".csv"
         ),
         kmer=RESULTS_DIR
         + "/Bins/{sample}/{sample}_kmer_4_f"
-        + str(config["metabinner"]["length"])
+        + str({params.length})
         + ".csv",
     localrule: True
     conda:
         os.path.join(WORK_DIR, "envs/metabinner.yaml")
     params:
-        config["metabinner"]["length"],
+        length=1500,
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.err.log"),
@@ -251,7 +253,7 @@ rule metabinner:
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.err.log"),
-    threads: config["metabinner"]["threads"]
+    threads: 14
     resources:
         runtime=60 * 6,
         mem="50G",
@@ -281,7 +283,7 @@ rule rosella:
     log:
         out=os.path.join(RESULTS_DIR, "logs/rosella/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/rosella/{sample}.err.log"),
-    threads: config["rosella"]["threads"]
+    threads: 14
     resources:
         runtime=60 * 8,
         mem="50G",
@@ -316,7 +318,7 @@ rule vamb_length:
         temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter_vamb.fasta")),
     conda:
         os.path.join(WORK_DIR, "envs/seqkit.yaml")
-    threads: config["filter_length"]["threads"]
+    threads: 4
     localrule: True
     message:
         "Remove contigs less than 1501 bp for Vamb"
@@ -359,7 +361,7 @@ rule taxvamb:
         ),
     conda:
         os.path.join(WORK_DIR, "envs/vamb.yaml")
-    threads: config["vamb"]["threads"]
+    threads: 14
     resources:
         runtime=60 * 8,
         mem="50G",

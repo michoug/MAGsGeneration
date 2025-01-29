@@ -17,7 +17,7 @@ rule gtdbtk:
         os.path.join(WORK_DIR, "envs/gtdbtk.yaml")
     params:
         db=config["gtdbtk"]["path"],
-    threads: config["gtdbtk"]["threads"]
+    threads: 30
     resources:
         runtime=60 * 12,
         mem="250G",

@@ -26,7 +26,7 @@ rule mapping_all:
     output:
         temp(os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample}_1.fq.gz.bam"))
     threads:
-        config["mapping"]["threads"]
+        10
     resources:
         runtime = 60*12,
         mem = "50G"
@@ -54,7 +54,7 @@ rule coverage:
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")        
     threads:
-        config["mapping"]["threads"]
+        10
     resources:
         runtime = 60*2,
         mem = "50G"

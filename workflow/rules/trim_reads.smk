@@ -21,7 +21,7 @@ rule trimming:
         trim2=temp(os.path.join(RESULTS_DIR, "Trim/{sample}_R2_001_val_2.fq.gz")),
     conda:
         os.path.join(WORK_DIR, "envs/trim_galore.yaml")
-    threads: config["trimming"]["threads"]
+    threads: 4
     resources:
         runtime=60 * 3,
         mem="30G",
@@ -41,7 +41,7 @@ rule indexHuman:
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"),
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
-    threads: config["indexHuman"]["threads"]
+    threads: 10
     resources:
         runtime=60,
         mem="50G",
@@ -79,7 +79,7 @@ rule mappingHuman:
         temp(os.path.join(RESULTS_DIR, "Trim_Human/{sample}.bam")),
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
-    threads: config["mappingHuman"]["threads"]
+    threads: 10
     resources:
         runtime=60 * 5,
         mem="50G",
@@ -102,7 +102,7 @@ rule removeHuman:
         temp(os.path.join(RESULTS_DIR, "TrimHuman/{sample}.noHuman.bam")),
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
-    threads: config["removeHuman"]["threads"]
+    threads: 10
     log:
         out=os.path.join(RESULTS_DIR, "logs/removeHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/removeHuman/{sample}.err.log"),
@@ -122,7 +122,7 @@ rule getfinalreads:
         read2=os.path.join(RESULTS_DIR, "TrimFinal/{sample}_2.fq.gz"),
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
-    threads: config["getfinalreads"]["threads"]
+    threads: 10
     log:
         out=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.err.log"),

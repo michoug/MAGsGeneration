@@ -88,7 +88,7 @@ rule coverage_genome_face_bam:
         ),
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
-    threads: config["mapping"]["threads"]
+    threads: 10
     resources:
         runtime=60 * 2,
         mem="50G",
@@ -119,7 +119,7 @@ rule coverage_genome_face:
         os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly_cov.txt"),
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
-    threads: config["mapping"]["threads"]
+    threads: 10
     resources:
         runtime=60 * 2,
         mem="50G",

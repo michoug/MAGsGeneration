@@ -25,9 +25,9 @@ rule checkm2:
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm/{sample}.err.log"),
-    threads: config["checkm2"]["threads"]
+    threads: 10
     params:
-        ext=config["checkm2"]["extension"],
+        ext="fa",
         db=config["checkm2"]["db"],
     message:
         "Running CheckM2 for directory renamed bins"

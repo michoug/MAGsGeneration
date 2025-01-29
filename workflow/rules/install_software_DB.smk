@@ -126,3 +126,25 @@ rule vamb_install:
         "pip install -e {output.dbs} && "
         "touch {output.testfile} && "
         "date) 2> {log.err} > {log.out}"
+
+rule singlem_data:
+    input:
+        rules.vamb_install.output.testfile,
+    output:
+        file=os.path.join(
+            RESULTS_DIR,
+            "DB/SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb/CONTENTS.json",
+        ),
+        folder=os.path.join(
+            RESULTS_DIR, "DB/SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb"
+        ),
+    conda:
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/singlem_data.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/singlem_data.err.log"),
+    localrule: True
+    shell:
+        """
+        singlem data --output-directory $(dirname {output.folder})
+        """

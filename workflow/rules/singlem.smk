@@ -10,27 +10,6 @@ rule singlem_all:
         touch("status/singlem.done"),
 
 
-rule singlem_data:
-    output:
-        file=os.path.join(
-            DB_DIR,
-            "SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb/CONTENTS.json",
-        ),
-        folder=os.path.join(
-            DB_DIR, "SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb"
-        ),
-    conda:
-        os.path.join(WORK_DIR, "envs/singlem.yaml")
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/singlem_data.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/singlem_data.err.log"),
-    localrule: True
-    shell:
-        """
-        singlem data --output-directory $(dirname {output.folder})
-        """
-
-
 rule singlem_reads:
     input:
         read1=os.path.join(READS_DIR, "{sample}_R1_001.fastq.gz"),
@@ -41,7 +20,7 @@ rule singlem_reads:
         profile=os.path.join(RESULTS_DIR, "SingleM/all/{sample}_profile.tsv"),
     conda:
         os.path.join(WORK_DIR, "envs/singlem.yaml")
-    threads: config["singlem"]["threads"]
+    threads: 8
     resources:
         runtime=60 * 4,
         mem="50G",
@@ -99,7 +78,7 @@ rule singlem_genomes:
     resources:
         runtime=60 * 2,
         mem="50G",
-    threads: config["singlem"]["threads"]
+    threads: 8
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_genomes.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_genomes.err.log"),
