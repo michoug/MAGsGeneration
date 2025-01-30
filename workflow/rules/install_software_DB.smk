@@ -71,18 +71,20 @@ rule taxconverter_install:
 rule download_tax_db:
     output:
         file=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
+        look=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs.lookup"),
         tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
     log:
         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
     resources:
-        mem="10G",
+        mem="100G",
         runtime=6 * 60,
     threads: 20
     conda:
         os.path.join(WORK_DIR, "envs/mmseqs.yaml")
     shell:
         '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
+        "rm -f $(dirname {output.file})/$name* && "
         "mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
 
 

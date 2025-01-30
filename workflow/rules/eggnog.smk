@@ -37,7 +37,7 @@ checkpoint prep_eggnog:
     conda:
         os.path.join(WORK_DIR, "envs/seqkit.yaml")
     shell:
-        "(date && seqkit split -s 1000000 -O {output.dir} {input.fa} "
+        "(date && rm -f {output.dir}/* && seqkit split -s 1000000 -O {output.dir} {input.fa} "
         "&& date) 2> {log.err} > {log.out}"
 
 
@@ -79,6 +79,7 @@ rule emapper:
         "Running EggNog-mapper on {wildcards.i}"
     shell:
         "(date && "
+        "rm -f {input}.emapper.hits && "
         "emapper.py -m diamond --data_dir {params.db} --no_annot --no_file_comments --cpu {threads} -i {input} -o {input} && "
         "mv {input}.emapper.hits {output.hits} && mv {input}.emapper.seed_orthologs {output.seed} && "
         "date) 2> {log.err} > {log.out}"

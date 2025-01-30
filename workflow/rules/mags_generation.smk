@@ -204,24 +204,16 @@ rule metabinner_prepare:
     output:
         cont_t=temp(
             RESULTS_DIR
-            + "/Assembly/{sample}_filter_"
-            + str({params.length})
-            + ".fa"
+            + "/Assembly/{sample}_filter_1500.fa"
         ),
         cont=RESULTS_DIR
-        + "/Bins/{sample}/{sample}_metabinner_"
-        + str({params.length})
-        + ".fa",
+        + "/Bins/{sample}/{sample}_metabinner_1500.fa",
         kmer_t=temp(
             RESULTS_DIR
-            + "/Assembly/{sample}_filter_kmer_4_f"
-            + str({params.length})
-            + ".csv"
+            + "/Assembly/{sample}_filter_kmer_4_f1500.csv"
         ),
         kmer=RESULTS_DIR
-        + "/Bins/{sample}/{sample}_kmer_4_f"
-        + str({params.length})
-        + ".csv",
+        + "/Bins/{sample}/{sample}_kmer_4_f1500.csv",
     localrule: True
     conda:
         os.path.join(WORK_DIR, "envs/metabinner.yaml")

@@ -76,7 +76,7 @@ rule mappingHuman:
         fasta=rules.downloadHuman.output,
         index=rules.checkIndexDone.output,
     output:
-        temp(os.path.join(RESULTS_DIR, "Trim_Human/{sample}.bam")),
+        temp(os.path.join(RESULTS_DIR, "TrimHuman/{sample}.bam")),
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
@@ -103,13 +103,17 @@ rule removeHuman:
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
+    resources:
+        runtime=60 * 3,
+        mem="70G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/removeHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/removeHuman/{sample}.err.log"),
     shell:
         """
         (date
-        samtools view -@ {threads} -b -f 12 -F 256 {input} | samtools sort -@ {threads} - -o {output} &&
+        rm -f {output}.tmp*
+        samtools view -@ {threads} -b -f 12 -F 256 {input} | samtools sort -@ {threads} - -o {output}
         date ) 2> {log.err} > {log.out}
         """
 
@@ -123,6 +127,9 @@ rule getfinalreads:
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
+    resources:
+        runtime=60,
+        mem="70G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.err.log"),

@@ -97,6 +97,7 @@ rule singlem_appraise:
             os.path.join(RESULTS_DIR, "SingleM/all/{sample}_otu.tsv"), sample=SAMPLES
         ),
         genomes=os.path.join(RESULTS_DIR, "SingleM/genomes_otu.tsv"),
+        db=rules.singlem_data.output.folder,
     output:
         os.path.join(RESULTS_DIR, "SingleM/SingleM_appraise.tsv"),
     conda:
@@ -108,6 +109,7 @@ rule singlem_appraise:
     shell:
         """
         (date
+        export SINGLEM_METAPACKAGE_PATH={input.db}
         singlem appraise --metagenome-otu-tables {input.metagenomes} --genome-otu-tables {input.genomes} --imperfect > {output}
         date ) 2> {log.err} > {log.out}
         """
