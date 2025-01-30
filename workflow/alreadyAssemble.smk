@@ -16,6 +16,7 @@ import pandas as pd
 
 include: "rules/init.smk"
 
+
 ASSEMBLY = glob_wildcards(os.path.join(ASSEMBLY_DIR, "{assembly}.fna")).assembly
 
 ##############################
@@ -43,11 +44,13 @@ if "contigs_taxonomy" in STEPS:
 
     TARGETS += ["status/taxonomy.done"]
 
+
 if "check_assembly" in STEPS:
 
     include: "rules/filter_assembly_done.smk"
 
     TARGETS += ["status/checkAssembly.done"]
+
 
 if "mags_generation" in STEPS:
 

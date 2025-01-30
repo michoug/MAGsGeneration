@@ -3,6 +3,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - python=3.8.5
-  - snakemake=6.4.0
-  - mamba=1
+  - conda=24
+  - snakemake=8.27
+  - mamba=2.0.5
+  - snakemake-executor-plugin-slurm=0.15.0

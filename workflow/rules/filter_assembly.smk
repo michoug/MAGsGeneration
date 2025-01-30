@@ -1,8 +1,11 @@
 rule chekAssembly:
-	input:
-		expand(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample=SAMPLES),
-	output:
-		touch("status/checkAssembly.done"),
+    input:
+        expand(
+            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample=SAMPLES
+        ),
+    output:
+        touch("status/checkAssembly.done"),
+
 
 rule filter_length:
     input:
@@ -11,8 +14,8 @@ rule filter_length:
         out=os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
         other=temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter_name.fasta")),
     conda:
-        os.path.join(ENV_DIR, "seqkit.yaml")
-    threads: config["filter_length"]["threads"]
+        os.path.join(WORK_DIR, "envs/seqkit.yaml")
+    threads: 4
     message:
         "Remove contigs less than 1.5kb"
     shell:

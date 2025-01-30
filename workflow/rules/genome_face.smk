@@ -2,7 +2,7 @@ rule genome_face:
     input:
         expand(os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly_cov.txt")),
     output:
-        touch("status/genome_face.done")
+        touch("status/genome_face.done"),
 
 
 rule renameAssembly:
@@ -21,11 +21,12 @@ rule renameAssembly:
         date ) 2> {log.err} > {log.out}
         """
 
+
 rule concat_assembly:
     input:
-        expand(os.path.join(RESULTS_DIR, "Assembly/{sample}_rename.fa"), sample = SAMPLES)
+        expand(os.path.join(RESULTS_DIR, "Assembly/{sample}_rename.fa"), sample=SAMPLES),
     output:
-        os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly.fa")
+        os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly.fa"),
     message:
         "Concatenating all renamed assemblies"
     localrule: True
@@ -37,10 +38,13 @@ rule indexAssemblyGenomeFace:
     input:
         fa=rules.concat_assembly.output,
     output:
-        os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly.fa.r{number}.sti")
+        os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly.fa.r{number}.sti"),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
+    resources:
+        runtime=60,
+        mem="60G",
     params:
         numb="{number}",
     log:
@@ -57,7 +61,9 @@ rule indexAssemblyGenomeFace:
 rule checkindexAssemblyGenomeFaceDone:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly.fa.r{number}.sti"),
+            os.path.join(
+                RESULTS_DIR, "Bins/GenomeFace/concat_assembly.fa.r{number}.sti"
+            ),
             sample=ASSEMBLY,
             number=[125, 150],
         ),
@@ -66,7 +72,8 @@ rule checkindexAssemblyGenomeFaceDone:
     localrule: True
     shell:
         "touch {output}"
-    
+
+
 rule coverage_genome_face_bam:
     input:
         read1=rules.getfinalreads.output.read1,
@@ -74,14 +81,20 @@ rule coverage_genome_face_bam:
         cont=os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly.fa"),
         index=os.path.join(RESULTS_DIR, "Bins/GenomeFace/index.done"),
     output:
-        temp(os.path.join(RESULTS_DIR, "Bins/GenomeFace/Bam/concat_assembly.fa.{sample}.bam"))
+        temp(
+            os.path.join(
+                RESULTS_DIR, "Bins/GenomeFace/Bam/concat_assembly.fa.{sample}.bam"
+            )
+        ),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
-    threads:
-        config["mapping"]["threads"]
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
+    threads: 10
+    resources:
+        runtime=60 * 2,
+        mem="50G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/coverage_genome_face_{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/coverage_genome_face_{sample}.err.log")
+        err=os.path.join(RESULTS_DIR, "logs/coverage_genome_face_{sample}.err.log"),
     message:
         "Running coverm to produce sorted bams for GenomeFace"
     shell:
@@ -93,18 +106,26 @@ rule coverage_genome_face_bam:
         date) 2> {log.err} > {log.out}
         """
 
+
 rule coverage_genome_face:
     input:
-        expand(os.path.join(RESULTS_DIR, "Bins/GenomeFace/Bam/concat_assembly.fa.{sample}.bam"), sample = SAMPLES)
+        expand(
+            os.path.join(
+                RESULTS_DIR, "Bins/GenomeFace/Bam/concat_assembly.fa.{sample}.bam"
+            ),
+            sample=SAMPLES,
+        ),
     output:
-        os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly_cov.txt")
+        os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly_cov.txt"),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")        
-    threads:
-        config["mapping"]["threads"]
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
+    threads: 10
+    resources:
+        runtime=60 * 2,
+        mem="50G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/coverage_genome_face/coverage.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/coverage_genome_face/coverage.err.log")
+        err=os.path.join(RESULTS_DIR, "logs/coverage_genome_face/coverage.err.log"),
     message:
         "Calculating coverage for GenomeFace"
     shell:

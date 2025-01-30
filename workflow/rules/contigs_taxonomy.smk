@@ -9,10 +9,11 @@ rule contigs_taxonomy:
     output:
         touch("status/taxonomy.done"),
 
+
 rule taxonomy:
     input:
         fasta=rules.assembly_megahit.output.final,
-        file=rules.download_tax_db.output.file
+        file=rules.download_tax_db.output.file,
     output:
         taxonomy=os.path.join(
             RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax.tsv"
@@ -24,9 +25,12 @@ rule taxonomy:
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.err.log"),
+    resources:
+        runtime=60 * 5,
+        mem="400G",
     threads: 20
     conda:
-        os.path.join(ENV_DIR, "mmseqs.yaml")
+        os.path.join(WORK_DIR, "envs/mmseqs.yaml")
     shell:
         '(date && name=$(echo $(basename {output.taxonomy}) | sed "s/_tax.tsv//g") && '
         "rm -rf $(dirname {output.dbfasta})/* && "
@@ -47,7 +51,7 @@ rule taxconverter:
     localrule: True
     threads: 20
     conda:
-        os.path.join(ENV_DIR, "taxconverter.yaml")
+        os.path.join(WORK_DIR, "envs/taxconverter.yaml")
     shell:
         "(date && "
         "taxconverter mmseqs2 -i {input.tax} -o {output} && date) 2> {log.err} > {log.out}"

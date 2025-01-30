@@ -15,11 +15,14 @@ rule assembly_megahit:
         fasta=os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit/final.contigs.fa"),
         final=os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit.fa"),
     conda:
-        os.path.join(ENV_DIR, "megahit.yaml")
+        os.path.join(WORK_DIR, "envs/megahit.yaml")
     params:
         folder=directory(os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit")),
         name="{sample}",
-    threads: config["assembly"]["threads"]
+    threads: 10
+    resources:
+        runtime=60 * 12,
+        mem="70G",
     log:
         out=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.err.log"),

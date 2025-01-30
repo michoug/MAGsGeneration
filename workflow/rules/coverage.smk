@@ -26,9 +26,12 @@ rule mapping_all:
     output:
         temp(os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample}_1.fq.gz.bam"))
     threads:
-        config["mapping"]["threads"]
+        10
+    resources:
+        runtime = 60*12,
+        mem = "50G"
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}.err.log")
@@ -49,9 +52,12 @@ rule coverage:
 #        temp=temp(os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_temp.txt")),
 #        final=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_cov.txt")
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")        
+        os.path.join(WORK_DIR, "envs/coverm.yaml")        
     threads:
-        config["mapping"]["threads"]
+        10
+    resources:
+        runtime = 60*2,
+        mem = "50G"
     priority: 
         50
     log:
@@ -66,7 +72,7 @@ rule coverage:
 rule concat_coverage:
     input:
         files = expand(os.path.join(RESULTS_DIR, "Bins/cat_mags_cov_{sample}.txt"), sample = SAMPLES),
-        script=os.path.join(SRC_DIR,"mergeTables.pl")
+        script=os.path.join(WORK_DIR,"scripts/mergeTables.pl")
     output:
         os.path.join(RESULTS_DIR, "cat_mags_cov.txt") 
     log:

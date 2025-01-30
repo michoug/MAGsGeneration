@@ -11,7 +11,7 @@ rule checkmBeforeDrep:
     output:
         tsv=os.path.join(RESULTS_DIR, "Bins/checkm2/quality_report.tsv"),
     conda:
-        os.path.join(ENV_DIR, "checkm2.yaml")
+        os.path.join(WORK_DIR, "envs/checkm2.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm_beforeDrep.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm_beforeDrep.err.log"),
@@ -54,7 +54,7 @@ rule dRep:
         temp=directory(os.path.join(RESULTS_DIR, "Bins/dRep/dereplicated_genomes")),
         final=directory(os.path.join(RESULTS_DIR, "Bins/finalBins")),
     conda:
-        os.path.join(ENV_DIR, "drep.yaml")
+        os.path.join(WORK_DIR, "envs/drep.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/drep/drep.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/drep/drep.err.log"),

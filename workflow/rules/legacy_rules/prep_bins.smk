@@ -20,7 +20,7 @@ rule rename:
         renamed=temp(os.path.join(RESULTS_DIR, "Bins/mags_before_drep/{mags}.fasta.gz")),
         final=os.path.join(RESULTS_DIR, "Bins/mags_before_drep/{mags}.fasta"),
     conda:
-        os.path.join(ENV_DIR, "bbmap.yaml")
+        os.path.join(WORK_DIR, "envs/bbmap.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/rename/rename_{mags}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/rename/rename_{mags}.err.log"),

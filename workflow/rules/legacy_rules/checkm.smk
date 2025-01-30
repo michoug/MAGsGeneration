@@ -36,7 +36,7 @@ rule checkm:
     output:
         tsv=os.path.join(RESULTS_DIR, "renamed_mags/checkm_{number}/checkm.tsv"),
     conda:
-        os.path.join(ENV_DIR, "checkm.yaml")
+        os.path.join(WORK_DIR, "envs/checkm.yaml")
     wildcard_constraints:
         number="|".join(["1", "2", "3", "4", "5"]),
     log:
