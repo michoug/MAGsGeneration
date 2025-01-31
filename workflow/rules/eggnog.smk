@@ -112,7 +112,7 @@ rule emapper_final:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.err.log"),
     params:
-        db=10,
+        db=config["eggnog"]["db"],
     message:
         "Running EggNog-mapper on All MAGs"
     shell:
