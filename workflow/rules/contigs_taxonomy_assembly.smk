@@ -25,10 +25,10 @@ rule taxonomy:
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.err.log"),
-    threads: 20
+    threads: 55
     resources:
         runtime=60 * 5,
-        mem="400G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     conda:
         os.path.join(WORK_DIR, "envs/mmseqs.yaml")
     shell:

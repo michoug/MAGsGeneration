@@ -48,6 +48,10 @@ rule mags_generation:
             ),
             sample=ASSEMBLY,
         ),
+        expand(
+            os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/semibin.done"),
+            sample=ASSEMBLY,
+        ),
     output:
         touch("status/mags_generation.done"),
 
@@ -62,7 +66,7 @@ rule indexAssembly:
     threads: 10
     resources:
         runtime=60,
-        mem="50G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     params:
         numb="{number}",
     log:
@@ -103,7 +107,7 @@ rule mapping:
     threads: 8
     resources:
         runtime=60 * 2,
-        mem="50G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
@@ -131,7 +135,7 @@ rule metabat2_mapping:
     threads: 10
     resources:
         runtime=60 * 2,
-        mem="50G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.err.log"),
@@ -154,7 +158,7 @@ rule metabat2:
     threads: 10
     resources:
         runtime=60 * 2,
-        mem="50G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.err.log"),
@@ -181,7 +185,7 @@ rule metabinner_coverage:
     threads: 14
     resources:
         runtime=60,
-        mem="50G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     params:
         length=1500,
     log:
@@ -202,18 +206,10 @@ rule metabinner_prepare:
         contig=rules.filter_length.output.out,
         bin=rules.metabinner_install.output.file,
     output:
-        cont_t=temp(
-            RESULTS_DIR
-            + "/Assembly/{sample}_filter_1500.fa"
-        ),
-        cont=RESULTS_DIR
-        + "/Bins/{sample}/{sample}_metabinner_1500.fa",
-        kmer_t=temp(
-            RESULTS_DIR
-            + "/Assembly/{sample}_filter_kmer_4_f1500.csv"
-        ),
-        kmer=RESULTS_DIR
-        + "/Bins/{sample}/{sample}_kmer_4_f1500.csv",
+        cont_t=temp(RESULTS_DIR + "/Assembly/{sample}_filter_1500.fa"),
+        cont=RESULTS_DIR + "/Bins/{sample}/{sample}_metabinner_1500.fa",
+        kmer_t=temp(RESULTS_DIR + "/Assembly/{sample}_filter_kmer_4_f1500.csv"),
+        kmer=RESULTS_DIR + "/Bins/{sample}/{sample}_kmer_4_f1500.csv",
     localrule: True
     conda:
         os.path.join(WORK_DIR, "envs/metabinner.yaml")
@@ -248,7 +244,7 @@ rule metabinner:
     threads: 14
     resources:
         runtime=60 * 6,
-        mem="50G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     message:
         "Running Metabinner"
     shell:
@@ -278,7 +274,7 @@ rule rosella:
     threads: 14
     resources:
         runtime=60 * 8,
-        mem="50G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     message:
         "Running Rosella"
     shell:
@@ -356,7 +352,7 @@ rule taxvamb:
     threads: 14
     resources:
         runtime=60 * 8,
-        mem="50G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log"),
@@ -402,7 +398,7 @@ rule concoct:
     threads: 20
     resources:
         runtime=60 * 8,
-        mem="80G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.err.log"),
@@ -431,7 +427,7 @@ rule comebin:
     threads: 20
     resources:
         runtime=60 * 10,
-        mem="90G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     message:
         "Running Comebin"
     shell:
@@ -439,3 +435,29 @@ rule comebin:
         "rm -r {params.folder} && "
         "run_comebin.sh -a {input.cont} -o {params.folder} -t {threads} -p {params.bam}"
         "&& date) 2> {log.err} > {log.out}"
+
+
+rule semibin:
+    input:
+        cont=rules.filter_length.output.out,
+        cov=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),
+    output:
+        os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/semibin.done"),
+    conda:
+        os.path.join(WORK_DIR, "envs/semibin.yaml")
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.err.log"),
+    threads: 10
+    resources:
+        runtime=60 * 10,
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+    message:
+        "Running Semibin"
+    shell:
+        """
+        (date && "
+        SemiBin2 single_easy_bin -i {input.cont} --depth-metabat2 {input.cov} -o $(dirname {output}) -t {threads} --biome global
+        touch {output}
+        date) 2> {log.err} > {log.out}
+        """

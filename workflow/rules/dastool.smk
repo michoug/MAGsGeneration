@@ -16,6 +16,7 @@ rule prepare_dasTool:
         taxvamb=rules.taxvamb.output,
         concoct=rules.concoct.output,
         comebin=rules.comebin.output,
+        semibin=rules.semiBin.output,
     output:
         metabatout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabat_das.tsv"),
         metabinnerout=os.path.join(
@@ -25,6 +26,7 @@ rule prepare_dasTool:
         taxvambout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/taxvamb_das.tsv"),
         concoctout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/concoct_das.tsv"),
         comebinout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/comebin_das.tsv"),
+        semibinout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/semibin_das.tsv"),
     params:
         value="{sample}",
     conda:
@@ -58,6 +60,7 @@ rule dasTool_run:
         rosella=rules.prepare_dasTool.output.rosellaout,
         concoct=rules.prepare_dasTool.output.concoctout,
         comebin=rules.prepare_dasTool.output.comebinout,
+        semibin=rules.prepare_dasTool.output.semibinout,
         cont=rules.filter_length.output.out,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/das_DASTool_summary.tsv"),
@@ -69,12 +72,12 @@ rule dasTool_run:
     threads: 10
     resources:
         runtime=60 * 12,
-        mem="90G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     message:
         "Running DasTool"
     shell:
         """
         (date && 
-        DAS_Tool -i {input.metabat},{input.taxvamb},{input.metabinner},{input.rosella},{input.concoct},{input.comebin} --score_threshold -42 -l metabat,taxvamb,metabinner,rosella,concoct,comebin -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
+        DAS_Tool -i {input.metabat},{input.taxvamb},{input.metabinner},{input.rosella},{input.concoct},{input.comebin},{input.semibin} --score_threshold -42 -l metabat,taxvamb,metabinner,rosella,concoct,comebin,semibin -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
         date) 2> {log.err} > {log.out}        
         """

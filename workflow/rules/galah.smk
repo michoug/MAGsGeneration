@@ -43,7 +43,7 @@ rule galah:
     threads: 10
     resources:
         runtime=60 * 2,
-        mem="60G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     message:
         "Running Galah on all NOMIS MAGs"
     shell:

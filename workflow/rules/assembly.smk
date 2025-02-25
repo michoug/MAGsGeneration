@@ -22,7 +22,7 @@ rule assembly_megahit:
     threads: 10
     resources:
         runtime=60 * 12,
-        mem="70G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.err.log"),

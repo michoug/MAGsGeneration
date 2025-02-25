@@ -5,7 +5,10 @@ rule install_software:
         os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
         os.path.join(RESULTS_DIR, "DB/vamb/install.done"),
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
-        os.path.join(RESULTS_DIR, "DB/SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb/CONTENTS.json"),
+        os.path.join(
+            RESULTS_DIR,
+            "DB/SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb/CONTENTS.json",
+        ),
     output:
         touch("status/install_software.done"),
 
@@ -15,7 +18,7 @@ rule downloadHuman:
         file=os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
     resources:
         runtime=60,
-        mem="10G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     conda:
         os.path.join(WORK_DIR, "envs/datasets.yaml")
     log:
@@ -77,7 +80,7 @@ rule download_tax_db:
         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
     resources:
-        mem="100G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
         runtime=6 * 60,
     threads: 20
     conda:
@@ -130,6 +133,7 @@ rule vamb_install:
         "touch {output.testfile} && "
         "date) 2> {log.err} > {log.out}"
 
+
 rule singlem_data:
     input:
         rules.vamb_install.output.testfile,
@@ -138,9 +142,12 @@ rule singlem_data:
             RESULTS_DIR,
             "DB/SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb/CONTENTS.json",
         ),
-        folder=directory(os.path.join(
-            RESULTS_DIR, "DB/SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb"
-        )),
+        folder=directory(
+            os.path.join(
+                RESULTS_DIR,
+                "DB/SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb",
+            )
+        ),
     conda:
         os.path.join(WORK_DIR, "envs/singlem.yaml")
     log:
@@ -149,5 +156,7 @@ rule singlem_data:
     localrule: True
     shell:
         """
+        (date
         singlem data --output-directory $(dirname {output.folder})
+        date) 2> {log.err} > {log.out}
         """

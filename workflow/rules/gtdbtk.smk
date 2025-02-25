@@ -20,7 +20,7 @@ rule gtdbtk:
     threads: 30
     resources:
         runtime=60 * 12,
-        mem="250G",
+        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
     message:
         "Running GTDB on MAGs"
     shell:
