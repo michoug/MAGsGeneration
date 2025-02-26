@@ -32,7 +32,7 @@ rule mapping_all:
     threads: 10
     resources:
         runtime=60 * 12,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     log:
@@ -58,7 +58,7 @@ rule coverage:
     threads: 10
     resources:
         runtime=60 * 2,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     priority: 50
     log:
         out=os.path.join(RESULTS_DIR, "logs/coverage/coverage_{sample}.out.log"),

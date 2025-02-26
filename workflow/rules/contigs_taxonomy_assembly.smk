@@ -28,7 +28,7 @@ rule taxonomy:
     threads: 55
     resources:
         runtime=60 * 5,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     conda:
         os.path.join(WORK_DIR, "envs/mmseqs.yaml")
     shell:

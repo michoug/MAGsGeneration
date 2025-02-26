@@ -16,6 +16,8 @@ rule filter_length:
     conda:
         os.path.join(WORK_DIR, "envs/seqkit.yaml")
     threads: 4
+    resources:
+        mem_mb=get_mem_mb,
     message:
         "Remove contigs less than 1.5kb"
     shell:

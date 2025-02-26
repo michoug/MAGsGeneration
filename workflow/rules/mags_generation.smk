@@ -66,7 +66,7 @@ rule indexAssembly:
     threads: 10
     resources:
         runtime=60,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     params:
         numb="{number}",
     log:
@@ -107,7 +107,7 @@ rule mapping:
     threads: 8
     resources:
         runtime=60 * 2,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
@@ -135,7 +135,7 @@ rule metabat2_mapping:
     threads: 10
     resources:
         runtime=60 * 2,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.err.log"),
@@ -158,7 +158,7 @@ rule metabat2:
     threads: 10
     resources:
         runtime=60 * 2,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.err.log"),
@@ -185,7 +185,7 @@ rule metabinner_coverage:
     threads: 14
     resources:
         runtime=60,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     params:
         length=1500,
     log:
@@ -244,7 +244,7 @@ rule metabinner:
     threads: 14
     resources:
         runtime=60 * 6,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     message:
         "Running Metabinner"
     shell:
@@ -274,7 +274,7 @@ rule rosella:
     threads: 14
     resources:
         runtime=60 * 8,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     message:
         "Running Rosella"
     shell:
@@ -352,7 +352,7 @@ rule taxvamb:
     threads: 14
     resources:
         runtime=60 * 8,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log"),
@@ -398,7 +398,7 @@ rule concoct:
     threads: 20
     resources:
         runtime=60 * 8,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.err.log"),
@@ -427,7 +427,7 @@ rule comebin:
     threads: 20
     resources:
         runtime=60 * 10,
-        mem_mb=get_mem_mb
+        mem_mb=get_mem_mb,
     message:
         "Running Comebin"
     shell:
@@ -440,7 +440,10 @@ rule comebin:
 rule semibin:
     input:
         cont=rules.filter_length.output.out,
-        cov=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),
+        bam=expand(
+            os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
+            sample_2=SAMPLES,
+        ),
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/semibin.done"),
     conda:
@@ -450,14 +453,14 @@ rule semibin:
         err=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.err.log"),
     threads: 10
     resources:
-        runtime=60 * 10,
-        mem_mb=get_mem_mb
+        runtime=60 * 12,
+        mem_mb=get_mem_mb,
     message:
         "Running Semibin"
     shell:
         """
-        (date && "
-        SemiBin2 single_easy_bin -i {input.cont} --depth-metabat2 {input.cov} -o $(dirname {output}) -t {threads} --biome global
+        (date
+        SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads}
         touch {output}
         date) 2> {log.err} > {log.out}
         """
