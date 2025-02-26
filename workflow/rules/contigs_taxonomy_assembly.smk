@@ -28,7 +28,7 @@ rule taxonomy:
     threads: 55
     resources:
         runtime=60 * 5,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     conda:
         os.path.join(WORK_DIR, "envs/mmseqs.yaml")
     shell:

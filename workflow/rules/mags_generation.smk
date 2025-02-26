@@ -66,7 +66,7 @@ rule indexAssembly:
     threads: 10
     resources:
         runtime=60,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     params:
         numb="{number}",
     log:
@@ -107,7 +107,7 @@ rule mapping:
     threads: 8
     resources:
         runtime=60 * 2,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
@@ -135,7 +135,7 @@ rule metabat2_mapping:
     threads: 10
     resources:
         runtime=60 * 2,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.err.log"),
@@ -158,7 +158,7 @@ rule metabat2:
     threads: 10
     resources:
         runtime=60 * 2,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.err.log"),
@@ -185,7 +185,7 @@ rule metabinner_coverage:
     threads: 14
     resources:
         runtime=60,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     params:
         length=1500,
     log:
@@ -244,7 +244,7 @@ rule metabinner:
     threads: 14
     resources:
         runtime=60 * 6,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     message:
         "Running Metabinner"
     shell:
@@ -274,7 +274,7 @@ rule rosella:
     threads: 14
     resources:
         runtime=60 * 8,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     message:
         "Running Rosella"
     shell:
@@ -352,7 +352,7 @@ rule taxvamb:
     threads: 14
     resources:
         runtime=60 * 8,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log"),
@@ -398,7 +398,7 @@ rule concoct:
     threads: 20
     resources:
         runtime=60 * 8,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.err.log"),
@@ -427,7 +427,7 @@ rule comebin:
     threads: 20
     resources:
         runtime=60 * 10,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     message:
         "Running Comebin"
     shell:
@@ -451,7 +451,7 @@ rule semibin:
     threads: 10
     resources:
         runtime=60 * 10,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     message:
         "Running Semibin"
     shell:

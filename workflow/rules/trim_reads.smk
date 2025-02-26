@@ -24,7 +24,7 @@ rule trimming:
     threads: 4
     resources:
         runtime=60 * 3,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.err.log"),
@@ -44,7 +44,7 @@ rule indexHuman:
     threads: 10
     resources:
         runtime=60,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     params:
         # numb = lambda wildcards, output: output[0][-7:-4]
         numb="{number}",
@@ -82,7 +82,7 @@ rule mappingHuman:
     threads: 10
     resources:
         runtime=60 * 5,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.err.log"),
@@ -105,7 +105,7 @@ rule removeHuman:
     threads: 10
     resources:
         runtime=60 * 3,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/removeHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/removeHuman/{sample}.err.log"),
@@ -129,7 +129,7 @@ rule getfinalreads:
     threads: 10
     resources:
         runtime=60,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.err.log"),

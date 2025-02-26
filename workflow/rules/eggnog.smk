@@ -68,7 +68,7 @@ rule emapper:
         os.path.join(WORK_DIR, "envs/eggnog.yaml")
     threads: 10
     resources:
-        lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb = lambda wildcards, threads: threads * config["memory_per_thread"],
         runtime=60 * 12,
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.out.log"),
@@ -107,7 +107,7 @@ rule emapper_final:
     threads: 10
     resources:
         runtime=60 * 12,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.err.log"),

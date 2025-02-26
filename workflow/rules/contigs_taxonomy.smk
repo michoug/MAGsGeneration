@@ -27,7 +27,7 @@ rule taxonomy:
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.err.log"),
     resources:
         runtime=60 * 5,
-        mem="400G",
+        mem_mb="400000",
     threads: 60
     conda:
         os.path.join(WORK_DIR, "envs/mmseqs.yaml")

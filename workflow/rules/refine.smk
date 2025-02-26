@@ -35,7 +35,7 @@ rule rosella_ref:
     threads: 14
     resources:
         runtime=60 * 12,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     message:
         "Refine bins with Rosella"
     params:
@@ -110,7 +110,7 @@ rule checkm2_refine:
     threads: 10
     resources:
         runtime=60 * 4,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     params:
         ext="fa",
         db=config["checkm2"]["db"],

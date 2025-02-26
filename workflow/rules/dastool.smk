@@ -72,7 +72,7 @@ rule dasTool_run:
     threads: 10
     resources:
         runtime=60 * 12,
-        mem=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
     message:
         "Running DasTool"
     shell:
