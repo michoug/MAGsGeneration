@@ -23,7 +23,7 @@ rule singlem_reads:
     threads: 8
     resources:
         runtime=60 * 4,
-        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=get_mem_mb
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.err.log"),
@@ -53,7 +53,7 @@ rule singlem_microbial:
         os.path.join(WORK_DIR, "envs/singlem.yaml")
     resources:
         runtime=60 * 2,
-        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=get_mem_mb
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_MF.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_MF.err.log"),
@@ -77,7 +77,7 @@ rule singlem_genomes:
         os.path.join(WORK_DIR, "envs/singlem.yaml")
     resources:
         runtime=60 * 2,
-        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=get_mem_mb
     threads: 8
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_genomes.out.log"),

@@ -107,7 +107,7 @@ rule emapper_final:
     threads: 10
     resources:
         runtime=60 * 12,
-        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=get_mem_mb
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.err.log"),

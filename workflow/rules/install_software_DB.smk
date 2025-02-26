@@ -18,7 +18,7 @@ rule downloadHuman:
         file=os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
     resources:
         runtime=60,
-        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=get_mem_mb
     conda:
         os.path.join(WORK_DIR, "envs/datasets.yaml")
     log:
@@ -80,7 +80,7 @@ rule download_tax_db:
         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
     resources:
-        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=get_mem_mb
         runtime=6 * 60,
     threads: 20
     conda:

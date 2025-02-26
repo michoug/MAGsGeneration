@@ -21,7 +21,7 @@ rule checkm2:
         os.path.join(WORK_DIR, "envs/checkm2.yaml")
     resources:
         runtime=60 * 4,
-        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=get_mem_mb
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm/{sample}.err.log"),
