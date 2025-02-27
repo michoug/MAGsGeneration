@@ -20,7 +20,7 @@ rule gtdbtk:
     threads: 30
     resources:
         runtime=60 * 12,
-        mem="250G",
+        mem_mb=get_mem_mb,
     message:
         "Running GTDB on MAGs"
     shell:

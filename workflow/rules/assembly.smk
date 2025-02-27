@@ -19,10 +19,10 @@ rule assembly_megahit:
     params:
         folder=directory(os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit")),
         name="{sample}",
-    threads: 10
+    threads: 20
     resources:
         runtime=60 * 12,
-        mem="70G",
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.err.log"),

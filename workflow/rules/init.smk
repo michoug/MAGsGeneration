@@ -36,3 +36,7 @@ STEPS = config["steps"]
 # Input
 SAMPLES = [line.strip() for line in open("config/sample_list.txt").readlines()]
 # SAMPLES_2=SAMPLES
+
+
+def get_mem_mb(wildcards, threads):
+    return threads * config["memory_per_thread"]

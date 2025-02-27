@@ -35,7 +35,7 @@ rule annotation:
         os.path.join(WORK_DIR, "envs/annotations.yaml")
     resources:
         runtime=60,
-        mem="30G",
+        mem_mb=get_mem_mb,
     threads: 4
     log:
         out=os.path.join(RESULTS_DIR, "logs/annotations/{mags}.out.log"),

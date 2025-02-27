@@ -43,7 +43,7 @@ rule galah:
     threads: 10
     resources:
         runtime=60 * 2,
-        mem="60G",
+        mem_mb=get_mem_mb,
     message:
         "Running Galah on all NOMIS MAGs"
     shell:

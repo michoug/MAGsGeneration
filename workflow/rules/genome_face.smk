@@ -44,7 +44,7 @@ rule indexAssemblyGenomeFace:
     threads: 10
     resources:
         runtime=60,
-        mem="60G",
+        mem_mb=get_mem_mb,
     params:
         numb="{number}",
     log:
@@ -91,7 +91,7 @@ rule coverage_genome_face_bam:
     threads: 10
     resources:
         runtime=60 * 2,
-        mem="50G",
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/coverage_genome_face_{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/coverage_genome_face_{sample}.err.log"),
@@ -122,7 +122,7 @@ rule coverage_genome_face:
     threads: 10
     resources:
         runtime=60 * 2,
-        mem="50G",
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/coverage_genome_face/coverage.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/coverage_genome_face/coverage.err.log"),
