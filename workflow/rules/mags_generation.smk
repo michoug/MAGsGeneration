@@ -445,7 +445,7 @@ rule semibin:
             sample_2=SAMPLES,
         ),
     output:
-        os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/semibin.done"),
+        os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
     conda:
         os.path.join(WORK_DIR, "envs/semibin.yaml")
     log:
@@ -453,7 +453,7 @@ rule semibin:
         err=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.err.log"),
     threads: 10
     resources:
-        runtime=60 * 12,
+        runtime=60 * 24,
         mem_mb=get_mem_mb,
     message:
         "Running Semibin"

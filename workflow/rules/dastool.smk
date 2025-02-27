@@ -16,7 +16,7 @@ rule prepare_dasTool:
         taxvamb=rules.taxvamb.output,
         concoct=rules.concoct.output,
         comebin=rules.comebin.output,
-        semibin=rules.semiBin.output,
+        semibin=rules.semibin.output,
     output:
         metabatout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabat_das.tsv"),
         metabinnerout=os.path.join(
@@ -48,6 +48,7 @@ rule prepare_dasTool:
         perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout}
         perl -pe 's/,/\t{params.value}_concoct_/g' {input.concoct} | tail -n +2 > {output.concoctout}
         perl -pe 's/\tgroup/\t{params.value}_comebin_/g' {input.comebin} > {output.comebinout}
+        perl -pe 's/\t/\t{params.value}_semibin_/g' {input.semibin} | tail -n +2 > {output.semibinout}
         date) 2> {log.err} > {log.out}
         """
 

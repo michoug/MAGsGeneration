@@ -5,8 +5,7 @@
 # ORDER of STEPS: ["checkm", "dereplicate", "drep_checkm", "coverage", "gtdbtk", "eggnog", "metabolic", "mgthermometer"]
 #
 
-steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy","check_assembly","mags_generation"]
-#, "genome_face","dastool","checkm",
+steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy","check_assembly","mags_generation","dastool","checkm"]#,"genome_face",
 # "refine_all","dereplicate","coverage","annotations",
 # "gtdbtk","mgthermometer","eggnog","singlem_all"]
 
@@ -32,7 +31,7 @@ memory_per_thread : 7000
 ################
 # Databases
 checkm2:
-  db: "/work/river/Databases/checkm2/CheckM2_database/uniref100.KO.1.dmnd"  ###USER INPUT REQUIRED###
+  db: "/work/river/Databases/checkm2/v1.1/CheckM2_database/uniref100.KO.1.dmnd"  ###USER INPUT REQUIRED###
 
 gtdbtk:
   path: "/work/river/Databases/GTDBTk/release220"  ###USER INPUT REQUIRED###
