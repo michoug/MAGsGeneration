@@ -11,7 +11,7 @@ rule dastool:
 rule prepare_dasTool:
     input:
         metabat=rules.metabat2.output,
-        metabinner=rules.metabinner.output,
+        # metabinner=rules.metabinner.output,
         rosella=rules.rosella.output,
         taxvamb=rules.taxvamb.output,
         concoct=rules.concoct.output,
@@ -19,9 +19,9 @@ rule prepare_dasTool:
         semibin=rules.semibin.output,
     output:
         metabatout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabat_das.tsv"),
-        metabinnerout=os.path.join(
-            RESULTS_DIR, "Bins/{sample}/DasTool/metabinner_das.tsv"
-        ),
+        # metabinnerout=os.path.join(
+        #     RESULTS_DIR, "Bins/{sample}/DasTool/metabinner_das.tsv"
+        # ),
         rosellaout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/rosella_das.tsv"),
         taxvambout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/taxvamb_das.tsv"),
         concoctout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/concoct_das.tsv"),
@@ -45,18 +45,18 @@ rule prepare_dasTool:
         perl -pe 's/rosella_(bin|refined)_/{params.value}_rosella_/g' {output.rosellaout} > $(dirname {output.metabatout})/t2.txt && mv $(dirname {output.metabatout})/t2.txt {output.rosellaout}
         Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.taxvamb})/bins > {output.taxvambout}
         perl -pe 's/\t/\t{params.value}_taxvamb_/g' {output.taxvambout} > $(dirname {output.metabatout})/t3.txt && mv $(dirname {output.metabatout})/t3.txt {output.taxvambout} 
-        perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout}
         perl -pe 's/,/\t{params.value}_concoct_/g' {input.concoct} | tail -n +2 > {output.concoctout}
         perl -pe 's/\tgroup/\t{params.value}_comebin_/g' {input.comebin} > {output.comebinout}
         perl -pe 's/\t/\t{params.value}_semibin_/g' {input.semibin} | tail -n +2 > {output.semibinout}
         date) 2> {log.err} > {log.out}
         """
+        # perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout}
 
 
 rule dasTool_run:
     input:
         metabat=rules.prepare_dasTool.output.metabatout,
-        metabinner=rules.prepare_dasTool.output.metabinnerout,
+        # metabinner=rules.prepare_dasTool.output.metabinnerout,
         taxvamb=rules.prepare_dasTool.output.taxvambout,
         rosella=rules.prepare_dasTool.output.rosellaout,
         concoct=rules.prepare_dasTool.output.concoctout,
@@ -79,6 +79,6 @@ rule dasTool_run:
     shell:
         """
         (date && 
-        DAS_Tool -i {input.metabat},{input.taxvamb},{input.metabinner},{input.rosella},{input.concoct},{input.comebin},{input.semibin} --score_threshold -42 -l metabat,taxvamb,metabinner,rosella,concoct,comebin,semibin -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
+        DAS_Tool -i {input.metabat},{input.taxvamb},{input.rosella},{input.concoct},{input.comebin},{input.semibin} --score_threshold -42 -l metabat,taxvamb,rosella,concoct,comebin,semibin -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
         date) 2> {log.err} > {log.out}        
         """

@@ -16,12 +16,12 @@ rule mags_generation:
             sample_2=SAMPLES,
         ),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample=ASSEMBLY),
-        expand(
-            os.path.join(
-                RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"
-            ),
-            sample=ASSEMBLY,
-        ),
+        # expand(
+        #     os.path.join(
+        #         RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"
+        #     ),
+        #     sample=ASSEMBLY,
+        # ),
         expand(
             os.path.join(
                 RESULTS_DIR,
