@@ -49,7 +49,7 @@ rule mags_generation:
             sample=ASSEMBLY,
         ),
         expand(
-            os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/semibin.done"),
+            os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
             sample=ASSEMBLY,
         ),
     output:
