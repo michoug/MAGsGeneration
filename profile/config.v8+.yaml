@@ -7,7 +7,7 @@ default-resources:
     runtime: 60
     qos: "serial"
 
-max-jobs-per-second: 10
+max-jobs-per-second: 50
 max-status-checks-per-second: 1
 local-cores: 1
 latency-wait: 60

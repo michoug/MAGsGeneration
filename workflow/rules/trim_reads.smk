@@ -25,6 +25,7 @@ rule trimming:
     resources:
         runtime=60 * 3,
         mem_mb=get_mem_mb,
+    priority: 20
     log:
         out=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.err.log"),
@@ -80,6 +81,7 @@ rule mappingHuman:
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
+    priority: 20
     resources:
         runtime=60 * 5,
         mem_mb=get_mem_mb,
@@ -103,6 +105,7 @@ rule removeHuman:
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
+    priority: 20
     resources:
         runtime=60 * 3,
         mem_mb=get_mem_mb,
@@ -130,6 +133,7 @@ rule getfinalreads:
     resources:
         runtime=60,
         mem_mb=get_mem_mb,
+    priority: 20
     log:
         out=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.err.log"),

@@ -339,7 +339,7 @@ rule vamb_filter:
 
 rule taxvamb:
     input:
-        file=rules.vamb_install.output.testfile,
+        file=rules.vamb_install.output,
         contig=rules.vamb_length.output,
         tax=rules.vamb_filter.output,
         cov=rules.vamb_coverage.output,

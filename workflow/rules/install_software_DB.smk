@@ -3,7 +3,7 @@ rule install_software:
         os.path.join(RESULTS_DIR, "DB/taxconverter/taxconverter.done"),
         os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
         os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
-        os.path.join(RESULTS_DIR, "DB/vamb/install.done"),
+        os.path.join(RESULTS_DIR, "DB/vamb.done"),
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
         os.path.join(
             RESULTS_DIR,
@@ -116,8 +116,7 @@ rule vamb_install:
     input:
         rules.metabinner_install.output.file,
     output:
-        dbs=directory(os.path.join(RESULTS_DIR, "DB/vamb")),
-        testfile=os.path.join(RESULTS_DIR, "DB/vamb/install.done"),
+        os.path.join(RESULTS_DIR, "DB/vamb.done"),
     conda:
         os.path.join(WORK_DIR, "envs/vamb.yaml")
     log:
@@ -125,18 +124,17 @@ rule vamb_install:
         err=os.path.join(RESULTS_DIR, "logs/vamb_install.err.log"),
     localrule: True
     shell:
-        "(date && rm -rf vamb && "
-        "rm -rf {output.dbs} && "
-        "git clone https://github.com/RasmussenLab/vamb -b master && "
-        "mv vamb {output.dbs} && "
-        "pip install -e {output.dbs} && "
-        "touch {output.testfile} && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (date
+        pip install vamb
+        touch {output}
+        date) 2> {log.err} > {log.out}
+        """
 
 
 rule singlem_data:
     input:
-        rules.vamb_install.output.testfile,
+        rules.vamb_install.output,
     output:
         file=os.path.join(
             RESULTS_DIR,
