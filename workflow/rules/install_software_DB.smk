@@ -56,6 +56,7 @@ rule taxconverter_install:
         err=os.path.join(RESULTS_DIR, "logs/taxconverter_install.err.log"),
     conda:
         os.path.join(WORK_DIR, "envs/taxconverter.yaml")
+    priority: 20
     localrule: True
     shell:
         """
@@ -103,6 +104,7 @@ rule metabinner_install:
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_install.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_install.err.log"),
+    priority: 20
     shell:
         """
         (date &&  rm -rf MetaBinner
@@ -122,10 +124,12 @@ rule vamb_install:
     log:
         out=os.path.join(RESULTS_DIR, "logs/vamb_install.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/vamb_install.err.log"),
+    priority: 20
     localrule: True
     shell:
         """
         (date
+        rm -r $CONDA_PREFIX/compiler_compat/
         pip install vamb
         touch {output}
         date) 2> {log.err} > {log.out}
@@ -152,6 +156,7 @@ rule singlem_data:
         out=os.path.join(RESULTS_DIR, "logs/singlem_data.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_data.err.log"),
     localrule: True
+    priority: 20
     shell:
         """
         (date

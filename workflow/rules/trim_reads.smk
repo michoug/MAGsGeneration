@@ -63,7 +63,8 @@ rule indexHuman:
 rule checkIndexDone:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"), number=[125, 150]
+            os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"),
+            number=[100, 125, 150],
         ),
     output:
         touch("status/index.done"),

@@ -8,7 +8,7 @@ rule mags_generation:
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
             sample=ASSEMBLY,
-            number=[125, 150],
+            number=[100, 125, 150],
         ),
         expand(
             os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
@@ -70,8 +70,12 @@ rule indexAssembly:
     params:
         numb="{number}",
     log:
-        out=os.path.join(RESULTS_DIR, "logs/indexAssembly_{sample}_{number}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/indexAssembly_{sample}_{number}.err.log"),
+        out=os.path.join(
+            RESULTS_DIR, "logs/indexAssembly/indexAssembly_{sample}_{number}.out.log"
+        ),
+        err=os.path.join(
+            RESULTS_DIR, "logs/indexAssembly/indexAssembly_{sample}_{number}.err.log"
+        ),
     shell:
         """
         (date 
@@ -85,7 +89,7 @@ rule checkIndexAssembyDone:
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
             sample=ASSEMBLY,
-            number=[125, 150],
+            number=[100, 125, 150],
         ),
     output:
         os.path.join(RESULTS_DIR, "Assembly/index.done"),
@@ -426,7 +430,7 @@ rule comebin:
         folder=os.path.join(RESULTS_DIR, "Bins/{sample}/Comebin/"),
     threads: 20
     resources:
-        runtime=60 * 10,
+        runtime=60 * 24,
         mem_mb=get_mem_mb,
     message:
         "Running Comebin"
