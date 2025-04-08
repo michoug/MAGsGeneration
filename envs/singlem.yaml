@@ -4,3 +4,4 @@ channels:
   - conda-forge
 dependencies:
   - singlem=0.18.3
+  - expressbetadiversity=1.0.10

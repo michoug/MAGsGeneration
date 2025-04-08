@@ -457,7 +457,7 @@ rule semibin:
         err=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.err.log"),
     threads: 10
     resources:
-        runtime=60 * 24,
+        runtime=60 * 48,
         mem_mb=get_mem_mb,
     message:
         "Running Semibin"

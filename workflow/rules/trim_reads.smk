@@ -1,12 +1,12 @@
 rule trim_reads:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"), number=[125, 150]
+            os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"), number=[100, 125, 150]
         ),
-        expand(
-            os.path.join(RESULTS_DIR, "Trim/{sample}_R1_001_val_1.fq.gz"),
-            sample=SAMPLES,
-        ),
+        # expand(
+        #     os.path.join(RESULTS_DIR, "Trim/{sample}_R1_001_val_1.fq.gz"),
+        #     sample=SAMPLES,
+        # ),
         expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"), sample=SAMPLES),
     output:
         touch("status/trimming.done"),
