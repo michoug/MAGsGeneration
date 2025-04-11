@@ -15,7 +15,7 @@ rule multi_to_single:
     output:
         fixed_fa=os.path.join(RESULTS_DIR, "EggNOG/cat_proteins.faa"),
     conda:
-        os.path.join(ENV_DIR, "seqkit.yaml")
+        os.path.join(WORK_DIR, "envs/seqkit.yaml")
     message:
         "Converting multi-line FASTA to single line FASTA files"
     shell:
@@ -35,9 +35,9 @@ checkpoint prep_eggnog:
     message:
         "Splitting the large concactenated protein file into chunks of 1000000"
     conda:
-        os.path.join(ENV_DIR, "seqkit.yaml")
+        os.path.join(WORK_DIR, "envs/seqkit.yaml")
     shell:
-        "(date && seqkit split -s 1000000 -O {output.dir} {input.fa} "
+        "(date && rm -f {output.dir}/* && seqkit split -s 1000000 -O {output.dir} {input.fa} "
         "&& date) 2> {log.err} > {log.out}"
 
 
@@ -65,8 +65,11 @@ rule emapper:
             "EggNOG/split/temp/cat_proteins.part_{i}.emapper.seed_orthologs",
         ),
     conda:
-        os.path.join(ENV_DIR, "eggnog.yaml")
-    threads: config["eggnog"]["threads"]
+        os.path.join(WORK_DIR, "envs/eggnog.yaml")
+    threads: 10
+    resources:
+        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
+        runtime=60 * 12,
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.err.log"),
@@ -76,6 +79,7 @@ rule emapper:
         "Running EggNog-mapper on {wildcards.i}"
     shell:
         "(date && "
+        "rm -f {input}.emapper.hits && "
         "emapper.py -m diamond --data_dir {params.db} --no_annot --no_file_comments --cpu {threads} -i {input} -o {input} && "
         "mv {input}.emapper.hits {output.hits} && mv {input}.emapper.seed_orthologs {output.seed} && "
         "date) 2> {log.err} > {log.out}"
@@ -99,8 +103,11 @@ rule emapper_final:
     output:
         os.path.join(RESULTS_DIR, "EggNOG/allMAGs_egg.txt.emapper.annotations"),
     conda:
-        os.path.join(ENV_DIR, "eggnog.yaml")
-    threads: config["eggnog"]["threads"]
+        os.path.join(WORK_DIR, "envs/eggnog.yaml")
+    threads: 10
+    resources:
+        runtime=60 * 12,
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.err.log"),

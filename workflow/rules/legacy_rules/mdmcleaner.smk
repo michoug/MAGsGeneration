@@ -17,7 +17,7 @@ rule mdmcleaner_db:
     log:
         os.path.join(RESULTS_DIR, "logs/mdmcleaner_db.log"),
     conda:
-        os.path.join(ENV_DIR, "mdmcleaner.yaml")
+        os.path.join(WORK_DIR, "envs/mdmcleaner.yaml")
     message:
         "Downloading the MDMCleanerDB and create the config file"
     shell:
@@ -46,7 +46,7 @@ rule mdmcleaner:
         ),
         prefix="{magsT}",
     conda:
-        os.path.join(ENV_DIR, "mdmcleaner.yaml")
+        os.path.join(WORK_DIR, "envs/mdmcleaner.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/mdmcleaner/{magsT}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mdmcleaner/{magsT}.err.log"),

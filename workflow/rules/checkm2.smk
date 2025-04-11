@@ -18,15 +18,17 @@ rule checkm2:
     output:
         tsv=os.path.join(RESULTS_DIR, "Bins/{sample}/checkm2/quality_report.tsv"),
     conda:
-        os.path.join(ENV_DIR, "checkm2.yaml")
+        os.path.join(WORK_DIR, "envs/checkm2.yaml")
+    resources:
+        runtime=60 * 4,
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm/{sample}.err.log"),
-    threads: config["checkm2"]["threads"]
+    threads: 10
     params:
-        ext=config["checkm2"]["extension"],
+        ext="fa",
         db=config["checkm2"]["db"],
-        checkm2=os.path.join(SUBMODULES, "bin/checkm2"),
     message:
         "Running CheckM2 for directory renamed bins"
     shell:
@@ -34,3 +36,4 @@ rule checkm2:
         "export CHECKM2DB={params.db} && "
         "checkm2 predict --threads {threads} -x {params.ext} --input $(dirname {input})/das_DASTool_bins --output-directory $(dirname {output.tsv}) --force && "
         "date) 2> {log.err} > {log.out}"
+

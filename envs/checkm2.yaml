@@ -4,5 +4,4 @@ channels:
   - defaults
   - au-eoed
 dependencies:
-  - python=3.8
-  - checkm2=1.0.2
+  - checkm2=1.1

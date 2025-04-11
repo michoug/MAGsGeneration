@@ -32,7 +32,10 @@ rule annotation:
     params:
         prefix="{mags}",
     conda:
-        os.path.join(ENV_DIR, "annotations.yaml")
+        os.path.join(WORK_DIR, "envs/annotations.yaml")
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
     threads: 4
     log:
         out=os.path.join(RESULTS_DIR, "logs/annotations/{mags}.out.log"),

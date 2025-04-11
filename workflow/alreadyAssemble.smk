@@ -17,10 +17,19 @@ import pandas as pd
 include: "rules/init.smk"
 
 
+ASSEMBLY = glob_wildcards(os.path.join(ASSEMBLY_DIR, "{assembly}.fna")).assembly
+
 ##############################
 # TARGETS & RULES
 # List of (main) targets to be created
 TARGETS = []
+
+if "install_software" in STEPS:
+
+    include: "rules/install_software_DB.smk"
+
+    TARGETS += ["status/install_software.done"]
+
 
 if "trim_reads" in STEPS:
 
@@ -29,18 +38,18 @@ if "trim_reads" in STEPS:
     TARGETS += ["status/trimming.done"]
 
 
-if "assembly_all" in STEPS:
-
-    include: "rules/assembly.smk"
-
-    TARGETS += ["status/assembly.done"]
-
-
 if "contigs_taxonomy" in STEPS:
 
-    include: "rules/contigs_taxonomy.smk"
+    include: "rules/contigs_taxonomy_assembly.smk"
 
     TARGETS += ["status/taxonomy.done"]
+
+
+if "check_assembly" in STEPS:
+
+    include: "rules/filter_assembly_done.smk"
+
+    TARGETS += ["status/checkAssembly.done"]
 
 
 if "mags_generation" in STEPS:
@@ -104,13 +113,12 @@ if "coverage" in STEPS:
     TARGETS += ["status/coverage.done"]
 
 
-# GTDBtk
-if "gtdbtk" in STEPS:
+# GTDBtk & CheckM2
+if "quality" in STEPS:
 
-    include: "rules/gtdbtk.smk"
+    include: "rules/quality.smk"
 
-    TARGETS += ["status/gtdbtk.done"]
-
+    TARGETS += ["status/quality.done"]
 
 # MG Thermometer
 if "mgthermometer" in STEPS:

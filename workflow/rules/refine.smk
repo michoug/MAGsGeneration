@@ -5,11 +5,11 @@ rule refine_all:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv")),
     output:
@@ -28,15 +28,18 @@ rule rosella_ref:
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done"),
     conda:
-        os.path.join(ENV_DIR, "rosella.yaml")
+        os.path.join(WORK_DIR, "envs/rosella.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/refine/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/refine/{sample}.err.log"),
-    threads: config["rosella"]["threads"]
+    threads: 14
+    resources:
+        runtime=60 * 12,
+        mem_mb=get_mem_mb,
     message:
         "Refine bins with Rosella"
     params:
-        ext=config["checkm2"]["extension"],
+        ext="fa",
     shell:
         """
         (date && 
@@ -82,7 +85,7 @@ rule cp_mags:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/genomes_list.txt"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
     output:
         directory(os.path.join(RESULTS_DIR, "Bins/renamed_mags")),
@@ -94,24 +97,15 @@ rule cp_mags:
 
 
 # Checking bin quality
-rule checkm2_refine:
+use rule checkm2 as checkm2_refine with:
     input:
         os.path.join(RESULTS_DIR, "Bins/renamed_mags"),
     output:
         tsv=os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv"),
-    conda:
-        os.path.join(ENV_DIR, "checkm2.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm_refine.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm_refine.err.log"),
-    threads: config["checkm2"]["threads"]
-    params:
-        ext=config["checkm2"]["extension"],
-        db=config["checkm2"]["db"],
-    message:
-        "Running CheckM2 for directory renamed bins"
-    shell:
-        "(date && "
-        "export CHECKM2DB={params.db} && "
-        "checkm2 predict --threads {threads} -x fa --input {input} --output-directory $(dirname {output.tsv}) --force && "
-        "date) 2> {log.err} > {log.out}"
+    resources:
+        runtime=60 * 24,
+        mem_mb=get_mem_mb,
+    threads: 20

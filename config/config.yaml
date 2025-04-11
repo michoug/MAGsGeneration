@@ -5,8 +5,10 @@
 # ORDER of STEPS: ["checkm", "dereplicate", "drep_checkm", "coverage", "gtdbtk", "eggnog", "metabolic", "mgthermometer"]
 #
 
-steps: ["trim_reads","assembly_all","contigs_taxonomy","mags_generation","dastool","checkm","refine_all","dereplicate"]
-#,"mags_generation",,"singlem_all"]#,"coverage","annotations","gtdbtk","mgthermometer","eggnog"]
+steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy","check_assembly","mags_generation","dastool","checkm",
+  "refine_all","dereplicate","coverage","annotations",
+  "quality","mgthermometer","eggnog","singlem_all"]
+#,"genome_face",
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
@@ -14,108 +16,26 @@ steps: ["trim_reads","assembly_all","contigs_taxonomy","mags_generation","dastoo
 work_dir: "/scratch/gmichoud/GlacierIce/MAGsGeneration/"
 
 # Directory where assembly files are
-# assembly_dir: "/scratch/gmichoud/GlacierIceGlacierIce/Assembly"
+assembly_dir: "/scratch/gmichoud/GlacierIce/Assembly"
 
 # Directory to save the output to
 results_dir: "/scratch/gmichoud/GlacierIce/mags_all"  
 
-# Directory for all the conda environments
-env_dir: "/scratch/gmichoud/GlacierIce/MAGsGeneration/envs" 
-
-# Directory for databases
-db_dir: "/scratch/gmichoud/DB"
-
-# Directory for trimmed reads
+# Directory for raw reads
 reads_dir: "/scratch/gmichoud/GlacierIce/Reads"
 
-# Number of cpus or threads to use
-# threads: 28
 
+### Memory per cpus for your cluster
 
-##############################
-# Parameters #
-filter_length:
-  threads: 4
-
-trimming:
-  threads: 4
-
-indexHuman:
-  threads: 10
-
-mappingHuman:
-  threads: 10
-
-removeHuman:
-  threads: 10
-
-getfinalreads:
-  threads: 10
-
-assembly:
-  threads: 10
-
-spades:
-  threads: 15
-  memory: 100
-#################
-# Coverage
-fairy:
-  threads: 10
-
-fairy_aemb:
-  threads: 4
-
-mapping:
-  threads: 10
-  
-#################
-# Binning
-metabat2:
-  threads: 14
-
-metabinner:
-  length: 1500
-  threads: 14
-
-dasTool:
-  threads: 14
-
-vamb:
-  threads: 14
-
-semibin2:
-  threads: 14
-################
-# Bins
-
-galah:
-  threads: 14
-  comp: 70
-  cont: 10
-
-mdmcleaner:
-  threads: 7
-
-rosella:
-  threads: 14
+memory_per_thread : 7000
 
 ################
-# Quality & Taxonomy
+# Databases
 checkm2:
-  threads: 10
-  db: "/work/river/Databases/checkm2/CheckM2_database/uniref100.KO.1.dmnd"  ###USER INPUT REQUIRED###
-  extension: "fa"  ###USER INPUT REQUIRED###
+  db: "/work/river/Databases/checkm2/v1.1/CheckM2_database/uniref100.KO.1.dmnd"  ###USER INPUT REQUIRED###
 
 gtdbtk:
-  threads: 20
   path: "/work/river/Databases/GTDBTk/release220"  ###USER INPUT REQUIRED###
 
-singlem:
-  threads: 8
-################
-# Functions
-
 eggnog:
-  threads: 16
   db: "/work/river/Databases/eggnog-mapper-2.1.2/data/"  ###USER INPUT REQUIRED###

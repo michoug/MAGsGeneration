@@ -7,7 +7,7 @@ rule metabat2_mapping:
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),
     conda:
-        os.path.join(ENV_DIR, "metabat.yaml")
+        os.path.join(WORK_DIR, "envs/metabat.yaml")
     threads: config["metabat2"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
@@ -26,7 +26,7 @@ rule metabat2:
     output:
         directory(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat/")),
     conda:
-        os.path.join(ENV_DIR, "metabat.yaml")
+        os.path.join(WORK_DIR, "envs/metabat.yaml")
     threads: config["metabat2"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.out.log"),
@@ -50,7 +50,7 @@ rule concoct_prepare:
         cont=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_10k.fa"),
         cov=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_concoct_cov.txt"),
     conda:
-        os.path.join(ENV_DIR, "concoct.yaml")
+        os.path.join(WORK_DIR, "envs/concoct.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.err.log"),
@@ -69,7 +69,7 @@ rule concoct:
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"),
     conda:
-        os.path.join(ENV_DIR, "concoct.yaml")
+        os.path.join(WORK_DIR, "envs/concoct.yaml")
     threads: config["concoct"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.out.log"),
@@ -86,7 +86,7 @@ rule metabinner_install:
     output:
         dbs=directory(os.path.join(DB_DIR, "MetaBinner")),
     conda:
-        os.path.join(ENV_DIR, "metabinner.yaml")
+        os.path.join(WORK_DIR, "envs/metabinner.yaml")
     shell:
         "git clone https://github.com/ziyewang/MetaBinner.git &> /dev/null && "
         "mv MetaBinner $(dirname {output.dbs})"
@@ -104,7 +104,7 @@ rule metabinner_coverage:
         ),
         final=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_cov.txt"),
     conda:
-        os.path.join(ENV_DIR, "metabat.yaml")
+        os.path.join(WORK_DIR, "envs/metabat.yaml")
     threads: config["metabinner"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
@@ -147,7 +147,7 @@ rule metabinner_prepare:
         + str(config["metabinner"]["length"])
         + ".csv",
     conda:
-        os.path.join(ENV_DIR, "metabinner.yaml")
+        os.path.join(WORK_DIR, "envs/metabinner.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.err.log"),
@@ -169,7 +169,7 @@ rule metabinner:
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"),
     conda:
-        os.path.join(ENV_DIR, "metabinner.yaml")
+        os.path.join(WORK_DIR, "envs/metabinner.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.err.log"),

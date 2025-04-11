@@ -6,29 +6,11 @@ rule singlem_all:
         expand(os.path.join(RESULTS_DIR, "SingleM/genomes_otu.tsv")),
         expand(os.path.join(RESULTS_DIR, "SingleM/SingleM_MF.tsv")),
         expand(os.path.join(RESULTS_DIR, "SingleM/SingleM_appraise.tsv")),
+        expand(os.path.join(RESULTS_DIR, "SingleM/clustered_all.otu_table.tsv")),
+        expand(os.path.join(RESULTS_DIR, "SingleM/Unifrac/otu_table.S3.35.RNA_SBDS.unifrac")),
+        expand(os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.ebd")),
     output:
         touch("status/singlem.done"),
-
-
-rule singlem_data:
-    output:
-        file=os.path.join(
-            DB_DIR,
-            "SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb/CONTENTS.json",
-        ),
-        folder=os.path.join(
-            DB_DIR, "SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb"
-        ),
-    conda:
-        os.path.join(ENV_DIR, "singlem.yaml")
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/singlem_data.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/singlem_data.err.log"),
-    localrule: True
-    shell:
-        """
-        singlem data --output-directory $(dirname {output.folder})
-        """
 
 
 rule singlem_reads:
@@ -40,8 +22,11 @@ rule singlem_reads:
         table=os.path.join(RESULTS_DIR, "SingleM/all/{sample}_otu.tsv"),
         profile=os.path.join(RESULTS_DIR, "SingleM/all/{sample}_profile.tsv"),
     conda:
-        os.path.join(ENV_DIR, "singlem.yaml")
-    threads: config["singlem"]["threads"]
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
+    threads: 8
+    resources:
+        runtime=60 * 4,
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.err.log"),
@@ -51,6 +36,77 @@ rule singlem_reads:
         export SINGLEM_METAPACKAGE_PATH={input.db}
         singlem pipe --threads {threads} -1 {input.read1} -2 {input.read2} --otu-table {output.table} -p {output.profile}
         date ) 2> {log.err} > {log.out}
+        """
+
+rule singlem_cluster:
+    input:
+        expand(os.path.join(RESULTS_DIR, "SingleM/all/{sample}_otu.tsv"), sample = SAMPLES),
+    output:
+        os.path.join(RESULTS_DIR, "SingleM/clustered_all.otu_table.tsv")
+    conda:
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
+    threads: 2
+    resources:
+        runtime=60 * 6,
+        mem_mb=get_mem_mb,
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/singlem/singlem_cluster.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/singlem/singlem_cluster.err.log"),
+    shell:
+        """
+        (date
+        singlem summarise --input-otu-tables {input} --cluster --clustered-output-otu-table {output}
+        date ) 2> {log.err} > {log.out}
+        """
+
+rule singlem_unifrac:
+    input:
+        rules.singlem_cluster.output,
+    output:
+        os.path.join(RESULTS_DIR, "SingleM/Unifrac/otu_table.S3.35.RNA_SBDS.unifrac"),
+    conda:
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
+    threads: 2
+    resources:
+        runtime=60 * 1,
+        mem_mb=get_mem_mb,
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/singlem/singlem_unifrac.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/singlem/singlem_unifrac.err.log"),
+    params:
+        "otu_table"
+    shell:
+        """
+        (date
+        singlem summarise --input-otu-table {input} --unifrac-by-otu $(dirname {output})/{params}
+        date ) 2> {log.err} > {log.out}
+        """
+
+rule singlem_betadiv:
+    input:
+        rules.singlem_unifrac.output,
+    output:
+        ebd=os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.ebd"),
+        tree=os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.tre"),
+    conda:
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
+    threads: 2
+    resources:
+        runtime=60 * 1,
+        mem_mb=get_mem_mb,
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/singlem/singlem_betadiv.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/singlem/singlem_betadiv.err.log"),
+    params:
+        "otu_table"
+    shell:
+        """
+        (date
+        for file in $(dirname {input})/*.unifrac; do
+            convertToEBD.py $file $(dirname {output.ebd})/$(basename $file .unifrac).ebd
+            ExpressBetaDiversity -s $(dirname {output.tree})/$(basename $file .unifrac).ebd -c Bray-Curtis -p $(dirname {output.tree})/$(basename $file .unifrac)
+        done
+        ) 2> {log.err} > {log.out}
         """
 
 
@@ -68,7 +124,10 @@ rule singlem_microbial:
         profile=os.path.join(RESULTS_DIR, "SingleM/allProfiles.tsv"),
         mf=os.path.join(RESULTS_DIR, "SingleM/SingleM_MF.tsv"),
     conda:
-        os.path.join(ENV_DIR, "singlem.yaml")
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
+    resources:
+        runtime=60 * 2,
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_MF.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_MF.err.log"),
@@ -89,7 +148,11 @@ rule singlem_genomes:
     output:
         table=os.path.join(RESULTS_DIR, "SingleM/genomes_otu.tsv"),
     conda:
-        os.path.join(ENV_DIR, "singlem.yaml")
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
+    resources:
+        runtime=60 * 2,
+        mem_mb=get_mem_mb,
+    threads: 8
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_genomes.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_genomes.err.log"),
@@ -97,7 +160,7 @@ rule singlem_genomes:
         """
         (date
         export SINGLEM_METAPACKAGE_PATH={input.db}
-        singlem pipe --otu-table {output.table} --genome-fasta-files $(dirname {input.genomes})/finalBins/*fa &&
+        singlem pipe --threads {threads} --otu-table {output.table} --genome-fasta-files $(dirname {input.genomes})/finalBins/*fa &&
         date ) 2> {log.err} > {log.out}
         """
 
@@ -108,10 +171,11 @@ rule singlem_appraise:
             os.path.join(RESULTS_DIR, "SingleM/all/{sample}_otu.tsv"), sample=SAMPLES
         ),
         genomes=os.path.join(RESULTS_DIR, "SingleM/genomes_otu.tsv"),
+        db=rules.singlem_data.output.folder,
     output:
         os.path.join(RESULTS_DIR, "SingleM/SingleM_appraise.tsv"),
     conda:
-        os.path.join(ENV_DIR, "singlem.yaml")
+        os.path.join(WORK_DIR, "envs/singlem.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_appraise.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_appraise.err.log"),
@@ -119,6 +183,7 @@ rule singlem_appraise:
     shell:
         """
         (date
+        export SINGLEM_METAPACKAGE_PATH={input.db}
         singlem appraise --metagenome-otu-tables {input.metagenomes} --genome-otu-tables {input.genomes} --imperfect > {output}
         date ) 2> {log.err} > {log.out}
         """

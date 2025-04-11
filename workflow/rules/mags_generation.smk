@@ -2,68 +2,58 @@
 rule mags_generation:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample=SAMPLES
+            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-            sample=SAMPLES,
-            number=[125, 150],
+            sample=ASSEMBLY,
+            number=[100, 125, 150],
         ),
         expand(
             os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
             sample_2=SAMPLES,
         ),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample=SAMPLES),
-        expand(
-            os.path.join(
-                RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"
-            ),
-            sample=SAMPLES,
-        ),
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample=ASSEMBLY),
+        # expand(
+        #     os.path.join(
+        #         RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"
+        #     ),
+        #     sample=ASSEMBLY,
+        # ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
+        ),
+        expand(
+            os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
+            sample=ASSEMBLY,
         ),
     output:
         touch("status/mags_generation.done"),
-
-
-rule filter_length:
-    input:
-        rules.assembly_megahit.output.final,
-    output:
-        out=os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
-        other=temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter_name.fasta")),
-    conda:
-        os.path.join(ENV_DIR, "seqkit.yaml")
-    threads: config["filter_length"]["threads"]
-    message:
-        "Remove contigs less than 1.5kb"
-    shell:
-        'seqkit seq -j {threads} --remove-gaps -o {output.other} -m 1500 {input} && perl -pe "s/ .*//g" {output.other} > {output.out}'
 
 
 rule indexAssembly:
@@ -72,13 +62,20 @@ rule indexAssembly:
     output:
         os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
     params:
         numb="{number}",
     log:
-        out=os.path.join(RESULTS_DIR, "logs/indexAssembly_{sample}_{number}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/indexAssembly_{sample}_{number}.err.log"),
+        out=os.path.join(
+            RESULTS_DIR, "logs/indexAssembly/indexAssembly_{sample}_{number}.out.log"
+        ),
+        err=os.path.join(
+            RESULTS_DIR, "logs/indexAssembly/indexAssembly_{sample}_{number}.err.log"
+        ),
     shell:
         """
         (date 
@@ -91,8 +88,8 @@ rule checkIndexAssembyDone:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-            sample=SAMPLES,
-            number=[125, 150],
+            sample=ASSEMBLY,
+            number=[100, 125, 150],
         ),
     output:
         os.path.join(RESULTS_DIR, "Assembly/index.done"),
@@ -110,8 +107,11 @@ rule mapping:
     output:
         os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 8
+    resources:
+        runtime=60 * 2,
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
@@ -135,8 +135,11 @@ rule metabat2_mapping:
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),
     conda:
-        os.path.join(ENV_DIR, "metabat.yaml")
-    threads: config["metabat2"]["threads"]
+        os.path.join(WORK_DIR, "envs/metabat.yaml")
+    threads: 10
+    resources:
+        runtime=60 * 2,
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.err.log"),
@@ -155,8 +158,11 @@ rule metabat2:
     output:
         directory(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat/")),
     conda:
-        os.path.join(ENV_DIR, "metabat.yaml")
-    threads: config["metabat2"]["threads"]
+        os.path.join(WORK_DIR, "envs/metabat.yaml")
+    threads: 10
+    resources:
+        runtime=60 * 2,
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.err.log"),
@@ -165,22 +171,6 @@ rule metabat2:
     shell:
         "(date && metabat2 -i {input.contig} -a {input.cov} -o {output}/metabat -t {threads} && "
         "date) 2> {log.err} > {log.out}"
-
-
-rule metabinner_install:
-    output:
-        dbs=directory(os.path.join(RESULTS_DIR, "DB/MetaBinner")),
-        file=os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
-    localrule: True
-    conda:
-        os.path.join(ENV_DIR, "metabinner.yaml")
-    shell:
-        """
-        rm -rf MetaBinner
-        git clone https://github.com/ziyewang/MetaBinner.git &> /dev/null
-        mv MetaBinner $(dirname {output.dbs})
-        touch {output.file}
-        """
 
 
 rule metabinner_coverage:
@@ -195,8 +185,13 @@ rule metabinner_coverage:
         ),
         final=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_cov.txt"),
     conda:
-        os.path.join(ENV_DIR, "metabat.yaml")
-    threads: config["metabinner"]["threads"]
+        os.path.join(WORK_DIR, "envs/metabat.yaml")
+    threads: 14
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
+    params:
+        length=1500,
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log"),
@@ -205,7 +200,7 @@ rule metabinner_coverage:
     shell:
         """
         (date && jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input} && 
-        cat {output.temp} | awk '{{if ($2>{config[metabinner][length]}) print $0 }}' | cut -f -1,4- > {output.final} && 
+        cat {output.temp} | awk '{{if ($2>{params.length}) print $0 }}' | cut -f -1,4- > {output.final} && 
         date) 2> {log.err} > {log.out}
         """
 
@@ -215,31 +210,15 @@ rule metabinner_prepare:
         contig=rules.filter_length.output.out,
         bin=rules.metabinner_install.output.file,
     output:
-        cont_t=temp(
-            RESULTS_DIR
-            + "/Assembly/{sample}_filter_"
-            + str(config["metabinner"]["length"])
-            + ".fa"
-        ),
-        cont=RESULTS_DIR
-        + "/Bins/{sample}/{sample}_metabinner_"
-        + str(config["metabinner"]["length"])
-        + ".fa",
-        kmer_t=temp(
-            RESULTS_DIR
-            + "/Assembly/{sample}_filter_kmer_4_f"
-            + str(config["metabinner"]["length"])
-            + ".csv"
-        ),
-        kmer=RESULTS_DIR
-        + "/Bins/{sample}/{sample}_kmer_4_f"
-        + str(config["metabinner"]["length"])
-        + ".csv",
+        cont_t=temp(RESULTS_DIR + "/Assembly/{sample}_filter_1500.fa"),
+        cont=RESULTS_DIR + "/Bins/{sample}/{sample}_metabinner_1500.fa",
+        kmer_t=temp(RESULTS_DIR + "/Assembly/{sample}_filter_kmer_4_f1500.csv"),
+        kmer=RESULTS_DIR + "/Bins/{sample}/{sample}_kmer_4_f1500.csv",
     localrule: True
     conda:
-        os.path.join(ENV_DIR, "metabinner.yaml")
+        os.path.join(WORK_DIR, "envs/metabinner.yaml")
     params:
-        config["metabinner"]["length"],
+        length=1500,
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.err.log"),
@@ -262,11 +241,14 @@ rule metabinner:
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"),
     conda:
-        os.path.join(ENV_DIR, "metabinner.yaml")
+        os.path.join(WORK_DIR, "envs/metabinner.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.err.log"),
-    threads: config["metabinner"]["threads"]
+    threads: 14
+    resources:
+        runtime=60 * 6,
+        mem_mb=get_mem_mb,
     message:
         "Running Metabinner"
     shell:
@@ -289,37 +271,20 @@ rule rosella:
             "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png",
         ),
     conda:
-        os.path.join(ENV_DIR, "rosella.yaml")
+        os.path.join(WORK_DIR, "envs/rosella.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/rosella/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/rosella/{sample}.err.log"),
-    threads: config["rosella"]["threads"]
+    threads: 14
+    resources:
+        runtime=60 * 8,
+        mem_mb=get_mem_mb,
     message:
         "Running Rosella"
     shell:
         "(date && rm -r $(dirname {output}) && "
         "rosella recover -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
         "&& date) 2> {log.err} > {log.out}"
-
-
-rule vamb_install:
-    output:
-        dbs=directory(os.path.join(RESULTS_DIR, "vamb")),
-        testfile=os.path.join(RESULTS_DIR, "vamb/install.done"),
-    conda:
-        os.path.join(ENV_DIR, "vamb.yaml")
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/vamb_install.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/vamb_install.err.log"),
-    localrule: True
-    shell:
-        "(date && rm -rf vamb && "
-        "rm -rf {output.dbs} && "
-        "git clone https://github.com/RasmussenLab/vamb -b master && "
-        "mv vamb $(dirname {output.dbs}) && "
-        "pip install -e {output.dbs} && "
-        "touch {output.testfile} && "
-        "date) 2> {log.err} > {log.out}"
 
 
 rule vamb_coverage:
@@ -344,8 +309,8 @@ rule vamb_length:
     output:
         temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter_vamb.fasta")),
     conda:
-        os.path.join(ENV_DIR, "seqkit.yaml")
-    threads: config["filter_length"]["threads"]
+        os.path.join(WORK_DIR, "envs/seqkit.yaml")
+    threads: 4
     localrule: True
     message:
         "Remove contigs less than 1501 bp for Vamb"
@@ -378,7 +343,7 @@ rule vamb_filter:
 
 rule taxvamb:
     input:
-        file=rules.vamb_install.output.testfile,
+        file=rules.vamb_install.output,
         contig=rules.vamb_length.output,
         tax=rules.vamb_filter.output,
         cov=rules.vamb_coverage.output,
@@ -387,8 +352,11 @@ rule taxvamb:
             RESULTS_DIR, "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv"
         ),
     conda:
-        os.path.join(ENV_DIR, "vamb.yaml")
-    threads: config["vamb"]["threads"]
+        os.path.join(WORK_DIR, "envs/vamb.yaml")
+    threads: 14
+    resources:
+        runtime=60 * 8,
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log"),
@@ -411,7 +379,7 @@ rule concoct_prepare:
         cont=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_10k.fa"),
         cov=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_concoct_cov.txt"),
     conda:
-        os.path.join(ENV_DIR, "concoct.yaml")
+        os.path.join(WORK_DIR, "envs/concoct.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.err.log"),
@@ -430,8 +398,11 @@ rule concoct:
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"),
     conda:
-        os.path.join(ENV_DIR, "concoct.yaml")
+        os.path.join(WORK_DIR, "envs/concoct.yaml")
     threads: 20
+    resources:
+        runtime=60 * 8,
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.err.log"),
@@ -450,7 +421,7 @@ rule comebin:
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"),
     conda:
-        os.path.join(ENV_DIR, "comebin.yaml")
+        os.path.join(WORK_DIR, "envs/comebin.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/comebin/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/comebin/{sample}.err.log"),
@@ -458,6 +429,9 @@ rule comebin:
         bam=os.path.join(RESULTS_DIR, "BamFiles/{sample}"),
         folder=os.path.join(RESULTS_DIR, "Bins/{sample}/Comebin/"),
     threads: 20
+    resources:
+        runtime=60 * 24,
+        mem_mb=get_mem_mb,
     message:
         "Running Comebin"
     shell:
@@ -465,3 +439,32 @@ rule comebin:
         "rm -r {params.folder} && "
         "run_comebin.sh -a {input.cont} -o {params.folder} -t {threads} -p {params.bam}"
         "&& date) 2> {log.err} > {log.out}"
+
+
+rule semibin:
+    input:
+        cont=rules.filter_length.output.out,
+        bam=expand(
+            os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
+            sample_2=SAMPLES,
+        ),
+    output:
+        os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
+    conda:
+        os.path.join(WORK_DIR, "envs/semibin.yaml")
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.err.log"),
+    threads: 10
+    resources:
+        runtime=60 * 48,
+        mem_mb=get_mem_mb,
+    message:
+        "Running Semibin"
+    shell:
+        """
+        (date
+        SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads}
+        touch {output}
+        date) 2> {log.err} > {log.out}
+        """

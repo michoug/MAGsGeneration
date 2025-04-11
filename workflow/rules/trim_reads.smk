@@ -1,12 +1,12 @@
 rule trim_reads:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"), number=[125, 150]
+            os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"), number=[100, 125, 150]
         ),
-        expand(
-            os.path.join(RESULTS_DIR, "Trim/{sample}_R1_001_val_1.fq.gz"),
-            sample=SAMPLES,
-        ),
+        # expand(
+        #     os.path.join(RESULTS_DIR, "Trim/{sample}_R1_001_val_1.fq.gz"),
+        #     sample=SAMPLES,
+        # ),
         expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"), sample=SAMPLES),
     output:
         touch("status/trimming.done"),
@@ -20,8 +20,12 @@ rule trimming:
         trim1=temp(os.path.join(RESULTS_DIR, "Trim/{sample}_R1_001_val_1.fq.gz")),
         trim2=temp(os.path.join(RESULTS_DIR, "Trim/{sample}_R2_001_val_2.fq.gz")),
     conda:
-        os.path.join(ENV_DIR, "trim_galore.yaml")
-    threads: config["trimming"]["threads"]
+        os.path.join(WORK_DIR, "envs/trim_galore.yaml")
+    threads: 4
+    resources:
+        runtime=60 * 3,
+        mem_mb=get_mem_mb,
+    priority: 20
     log:
         out=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.err.log"),
@@ -31,23 +35,17 @@ rule trimming:
         "date) 2> {log.err} > {log.out}"
 
 
-rule downloadHuman:
-    output:
-        os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
-    shell:
-        """
-        wget -O {output} ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
-        """
-
-
 rule indexHuman:
     input:
         fa=rules.downloadHuman.output,
     output:
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
-    threads: config["indexHuman"]["threads"]
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
+    threads: 10
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
     params:
         # numb = lambda wildcards, output: output[0][-7:-4]
         numb="{number}",
@@ -65,7 +63,8 @@ rule indexHuman:
 rule checkIndexDone:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"), number=[125, 150]
+            os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"),
+            number=[100, 125, 150],
         ),
     output:
         touch("status/index.done"),
@@ -79,10 +78,14 @@ rule mappingHuman:
         fasta=rules.downloadHuman.output,
         index=rules.checkIndexDone.output,
     output:
-        temp(os.path.join(RESULTS_DIR, "Trim_Human/{sample}.bam")),
+        temp(os.path.join(RESULTS_DIR, "TrimHuman/{sample}.bam")),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
-    threads: config["mappingHuman"]["threads"]
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
+    threads: 10
+    priority: 20
+    resources:
+        runtime=60 * 5,
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.err.log"),
@@ -101,15 +104,20 @@ rule removeHuman:
     output:
         temp(os.path.join(RESULTS_DIR, "TrimHuman/{sample}.noHuman.bam")),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
-    threads: config["removeHuman"]["threads"]
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
+    threads: 10
+    priority: 20
+    resources:
+        runtime=60 * 3,
+        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/removeHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/removeHuman/{sample}.err.log"),
     shell:
         """
         (date
-        samtools view -@ {threads} -b -f 12 -F 256 {input} | samtools sort -@ {threads} - -o {output} &&
+        rm -f {output}.tmp*
+        samtools view -@ {threads} -b -f 12 -F 256 {input} | samtools sort -@ {threads} - -o {output}
         date ) 2> {log.err} > {log.out}
         """
 
@@ -121,8 +129,12 @@ rule getfinalreads:
         read1=os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"),
         read2=os.path.join(RESULTS_DIR, "TrimFinal/{sample}_2.fq.gz"),
     conda:
-        os.path.join(ENV_DIR, "coverm.yaml")
-    threads: config["getfinalreads"]["threads"]
+        os.path.join(WORK_DIR, "envs/coverm.yaml")
+    threads: 10
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
+    priority: 20
     log:
         out=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.err.log"),

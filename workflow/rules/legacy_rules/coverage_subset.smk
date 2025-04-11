@@ -25,7 +25,7 @@ rule filter_n_reads:
         out1=temp(os.path.join(RESULTS_DIR, "TempReads/{sample_2}_sub_R1.fastq.gz")),
         out2=temp(os.path.join(RESULTS_DIR, "TempReads/{sample_2}_sub_R2.fastq.gz")),
     conda:
-        os.path.join(ENV_DIR, "mapping.yaml")
+        os.path.join(WORK_DIR, "envs/mapping.yaml")
     threads: config["filter_n_reads"]["threads"]
     params:
         config["filter_n_reads"]["read_p"],
@@ -42,7 +42,7 @@ rule filter_length:
     output:
         os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
     conda:
-        os.path.join(ENV_DIR, "mapping.yaml")
+        os.path.join(WORK_DIR, "envs/mapping.yaml")
     threads: config["filter_length"]["threads"]
     message:
         "Remove contigs less than 1.5kb"
@@ -58,7 +58,7 @@ rule mapping_index:
     log:
         os.path.join(RESULTS_DIR, "logs/mapping_{sample}.bwa.index.log"),
     conda:
-        os.path.join(ENV_DIR, "mapping.yaml")
+        os.path.join(WORK_DIR, "envs/mapping.yaml")
     message:
         "Mapping: BWA index for assembly mapping"
     shell:
@@ -75,7 +75,7 @@ rule mapping:
         temp(os.path.join(RESULTS_DIR, "Bam/{sample}/{sample}_{sample_2}.bam")),
     threads: config["mapping"]["threads"]
     conda:
-        os.path.join(ENV_DIR, "mapping.yaml")
+        os.path.join(WORK_DIR, "envs/mapping.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
