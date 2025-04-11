@@ -5,8 +5,8 @@
 - This pipeline expect raw reads (`_R1_001.fastq.gz` or `_R2_001.fastq.gz` files) in the `reads_dir`.
 - The reads are trimmed with trim_galore and human reads are removed with [strobealign](https://github.com/ksahlin/strobealign) and [samtools](https://github.com/samtools/samtools).
 - The trimmed reads are then assembled with [megahit](https://github.com/voutcn/megahit).
-- The coverage is calculated with [fairy](https://github.com/bluenote-1577/fairy) for binning that speeds up the process greatly
-- Bins are generated with [Metabat2](https://bitbucket.org/berkeleylab/metabat), [Metabinner](https://github.com/ziyewang/MetaBinner) and [Rosella](https://github.com/rhysnewell/rosella) per sample.
+- The coverage is calculated with [strobealign](https://github.com/ksahlin/strobealign) and [CoverM](https://github.com/wwood/CoverM) for binning that speeds up the process greatly
+- Bins are generated with [Metabat2](https://bitbucket.org/berkeleylab/metabat), [Metabinner](https://github.com/ziyewang/MetaBinner), [Rosella](https://github.com/rhysnewell/rosella) [taxvamb](https://github.com/RasmussenLab/vamb), [Concoct](https://github.com/BinPro/CONCOCT), and [Comebin](https://github.com/ziyewang/COMEBin) per sample.
 - [DAS Tool](https://github.com/cmks/DAS_Tool) is then used to generate a non redudant set of bins per samples.
 - These redundant sets are refined using [Rosella](https://github.com/rhysnewell/rosella).
 - All bins from all samples are then combined in a single folder and [Checkm2](https://github.com/chklovski/CheckM2) is used to estimate quality (completeness and contamination)
@@ -36,7 +36,7 @@ chmod u+x Miniconda3-latest-Linux-x86_64.sh
 
 Getting the repository including sub-modules
 ```bash
-git clone git@github.com:michoug/FertilityIslandMAGs.git
+git clone https://github.com/michoug/MAGsGeneration.git
 ```
 
 Create the main `snakemake` environment
@@ -47,6 +47,7 @@ conda env create -f requirements.yaml -n "snakemake"
 ```
 
 ### Run Setup
+
 * Place your reads (e.g. `sample_R1_001.fastq.gz` and `sample_R2_001.fastq.gz` files) in a `reads` folder
 * Fill the `config/all_samples.txt` file with the name of your samples (e.g. `{sample}_R2_001.fastq.gz`)
 * Modify the `config/config.yaml` file to change the different paths and eventually the different options
