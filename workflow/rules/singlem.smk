@@ -84,10 +84,10 @@ rule singlem_unifrac:
 
 rule singlem_betadiv:
     input:
-        rules.singlem_cluster.output,
+        rules.singlem_unifrac.output,
     output:
         ebd=os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.ebd"),
-        tree=os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.tree"),
+        tree=os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.tre"),
     conda:
         os.path.join(WORK_DIR, "envs/singlem.yaml")
     threads: 2

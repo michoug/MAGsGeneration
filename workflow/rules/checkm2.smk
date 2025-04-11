@@ -36,3 +36,4 @@ rule checkm2:
         "export CHECKM2DB={params.db} && "
         "checkm2 predict --threads {threads} -x {params.ext} --input $(dirname {input})/das_DASTool_bins --output-directory $(dirname {output.tsv}) --force && "
         "date) 2> {log.err} > {log.out}"
+

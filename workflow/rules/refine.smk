@@ -97,27 +97,15 @@ rule cp_mags:
 
 
 # Checking bin quality
-rule checkm2_refine:
+use rule checkm2 as checkm2_refine with:
     input:
         os.path.join(RESULTS_DIR, "Bins/renamed_mags"),
     output:
         tsv=os.path.join(RESULTS_DIR, "Bins/checkm2_refine/quality_report.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/checkm2.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm_refine.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm_refine.err.log"),
-    threads: 10
     resources:
-        runtime=60 * 4,
+        runtime=60 * 24,
         mem_mb=get_mem_mb,
-    params:
-        ext="fa",
-        db=config["checkm2"]["db"],
-    message:
-        "Running CheckM2 for directory renamed bins"
-    shell:
-        "(date && "
-        "export CHECKM2DB={params.db} && "
-        "checkm2 predict --threads {threads} -x fa --input {input} --output-directory $(dirname {output.tsv}) --force && "
-        "date) 2> {log.err} > {log.out}"
+    threads: 20

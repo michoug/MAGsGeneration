@@ -127,12 +127,12 @@ if "coverage" in STEPS:
     TARGETS += ["status/coverage.done"]
 
 
-# GTDBtk
-if "gtdbtk" in STEPS:
+# GTDBtk & CheckM2
+if "quality" in STEPS:
 
-    include: "rules/gtdbtk.smk"
+    include: "rules/quality.smk"
 
-    TARGETS += ["status/gtdbtk.done"]
+    TARGETS += ["status/quality.done"]
 
 
 # MG Thermometer
