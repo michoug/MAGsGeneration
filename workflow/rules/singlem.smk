@@ -7,8 +7,14 @@ rule singlem_all:
         expand(os.path.join(RESULTS_DIR, "SingleM/SingleM_MF.tsv")),
         expand(os.path.join(RESULTS_DIR, "SingleM/SingleM_appraise.tsv")),
         expand(os.path.join(RESULTS_DIR, "SingleM/clustered_all.otu_table.tsv")),
-        expand(os.path.join(RESULTS_DIR, "SingleM/Unifrac/otu_table.S3.35.RNA_SBDS.unifrac")),
-        expand(os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.ebd")),
+        expand(
+            os.path.join(
+                RESULTS_DIR, "SingleM/Unifrac/otu_table.S3.35.RNA_SBDS.unifrac"
+            )
+        ),
+        expand(
+            os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.ebd")
+        ),
     output:
         touch("status/singlem.done"),
 
@@ -38,11 +44,14 @@ rule singlem_reads:
         date ) 2> {log.err} > {log.out}
         """
 
+
 rule singlem_cluster:
     input:
-        expand(os.path.join(RESULTS_DIR, "SingleM/all/{sample}_otu.tsv"), sample = SAMPLES),
+        expand(
+            os.path.join(RESULTS_DIR, "SingleM/all/{sample}_otu.tsv"), sample=SAMPLES
+        ),
     output:
-        os.path.join(RESULTS_DIR, "SingleM/clustered_all.otu_table.tsv")
+        os.path.join(RESULTS_DIR, "SingleM/clustered_all.otu_table.tsv"),
     conda:
         os.path.join(WORK_DIR, "envs/singlem.yaml")
     threads: 2
@@ -59,6 +68,7 @@ rule singlem_cluster:
         date ) 2> {log.err} > {log.out}
         """
 
+
 rule singlem_unifrac:
     input:
         rules.singlem_cluster.output,
@@ -74,13 +84,14 @@ rule singlem_unifrac:
         out=os.path.join(RESULTS_DIR, "logs/singlem/singlem_unifrac.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem/singlem_unifrac.err.log"),
     params:
-        "otu_table"
+        "otu_table",
     shell:
         """
         (date
         singlem summarise --input-otu-table {input} --unifrac-by-otu $(dirname {output})/{params}
         date ) 2> {log.err} > {log.out}
         """
+
 
 rule singlem_betadiv:
     input:
@@ -98,7 +109,7 @@ rule singlem_betadiv:
         out=os.path.join(RESULTS_DIR, "logs/singlem/singlem_betadiv.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem/singlem_betadiv.err.log"),
     params:
-        "otu_table"
+        "otu_table",
     shell:
         """
         (date

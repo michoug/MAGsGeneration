@@ -120,6 +120,7 @@ if "quality" in STEPS:
 
     TARGETS += ["status/quality.done"]
 
+
 # MG Thermometer
 if "mgthermometer" in STEPS:
 
