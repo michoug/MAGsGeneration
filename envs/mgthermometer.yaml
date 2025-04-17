@@ -1,7 +1,6 @@
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - perl-bioperl=1.7.8
   - perl-file-slurp

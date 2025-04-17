@@ -2,7 +2,6 @@ name: drep
 channels:
   - conda-forge
   - bioconda
-  - defaults
   - au-eoed
 dependencies:
   - fastani=1.33=h0fdf51a_0
@@ -11,4 +10,4 @@ dependencies:
   - prodigal=2.6.3=hec16e2b_4
   - python=3.8
   - pip:
-    - drep==3.4.2
+  - drep==3.4.2

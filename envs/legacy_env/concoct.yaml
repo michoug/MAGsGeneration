@@ -2,7 +2,6 @@ name: concoct
 channels:
   - bioconda
   - conda-forge
-  - defaults
 dependencies:
   - concoct=1.1.0
   - scikit-learn=1.1.0

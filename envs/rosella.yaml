@@ -2,6 +2,5 @@ channels:
   - conda-forge
   - numba
   - bioconda
-  - defaults
 dependencies:
   - rosella==0.5.4

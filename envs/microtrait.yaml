@@ -1,0 +1,28 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - prodigal=2.6.3
+  - hmmer=3.4
+  - infernal=1.1.5
+  - trnascan-se=2
+  - bedtools=2.31
+  - bioconductor-cordon=1.24.0
+  - r-tidyverse
+  - r-ape
+  - r-base=4
+  - r-corrplot=0.95
+  - r-rcolorbrewer=1.1_3
+  - r-r.utils=2.13.0
+  - r-checkmate 2.3.2
+  - r-doparallel 1.0.17
+  - r-gtools
+  - r-lazyeval
+  - r-pheatmap=1.0
+  - r-tictoc=1.2
+  - r-futile.logger=1.4
+  - bioconductor-complexheatmap
+  - bioconductor-biostrings=2.74.0
+  - r-devtools=2.4.5
+  - r-seqinr
+  - r-vegan

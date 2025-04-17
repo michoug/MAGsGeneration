@@ -1,7 +1,6 @@
 channels:
   - conda-forge
   - bioconda
-  - defaults
   - au-eoed
 dependencies:
   - semibin=2.1

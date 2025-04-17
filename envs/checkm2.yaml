@@ -1,7 +1,6 @@
 channels:
   - conda-forge
   - bioconda
-  - defaults
   - au-eoed
 dependencies:
   - checkm2=1.1
