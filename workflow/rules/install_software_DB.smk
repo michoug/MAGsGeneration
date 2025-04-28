@@ -143,12 +143,12 @@ rule singlem_data:
     output:
         file=os.path.join(
             RESULTS_DIR,
-            "DB/SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb/CONTENTS.json",
+            "DB/SingleM/S5.4.0.GTDB_r226.metapackage_20250331.smpkg.zb/CONTENTS.json",
         ),
         folder=directory(
             os.path.join(
                 RESULTS_DIR,
-                "DB/SingleM/S4.3.0.GTDB_r220.metapackage_20240523.smpkg.zb",
+                "DB/SingleM/S5.4.0.GTDB_r226.metapackage_20250331.smpkg.zb",
             )
         ),
     conda:
