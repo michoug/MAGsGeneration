@@ -2,7 +2,7 @@ rule trim_reads:
     input:
         expand(
             os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"),
-            number=[100, 125, 150],
+            number=[100, 125, 150, 200, 250, 300],
         ),
         # expand(
         #     os.path.join(RESULTS_DIR, "Trim/{sample}_R1_001_val_1.fq.gz"),
@@ -65,7 +65,7 @@ rule checkIndexDone:
     input:
         expand(
             os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"),
-            number=[100, 125, 150],
+            number=[100, 125, 150, 200, 250, 300],
         ),
     output:
         touch("status/index.done"),

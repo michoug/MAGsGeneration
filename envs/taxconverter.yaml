@@ -5,4 +5,4 @@ dependencies:
   - python=3.10
   - numpy==1.26.3
   - pip=24
-  - git-lfs
+  - git-lfs=3.6

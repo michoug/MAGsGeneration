@@ -8,7 +8,7 @@ rule mags_generation:
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
             sample=ASSEMBLY,
-            number=[100, 125, 150],
+            number=[100, 125, 150, 200, 250, 300],
         ),
         expand(
             os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
@@ -89,7 +89,7 @@ rule checkIndexAssembyDone:
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
             sample=ASSEMBLY,
-            number=[100, 125, 150],
+            number=[100, 125, 150, 200, 250, 300],
         ),
     output:
         os.path.join(RESULTS_DIR, "Assembly/index.done"),

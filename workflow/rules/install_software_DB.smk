@@ -63,6 +63,7 @@ rule taxconverter_install:
         (date
         rm -rf {output.folder}
         rm -rf taxconverter
+        git lfs install
         git clone https://github.com/RasmussenLab/taxconverter.git
         mv taxconverter $(dirname {output.folder})
         pip install -e {output.folder}
@@ -129,7 +130,7 @@ rule vamb_install:
     shell:
         """
         (date
-        rm -r $CONDA_PREFIX/compiler_compat/
+        rm -rf $CONDA_PREFIX/compiler_compat/
         pip install vamb
         touch {output}
         date) 2> {log.err} > {log.out}
