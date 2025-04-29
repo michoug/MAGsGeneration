@@ -75,11 +75,11 @@ rule tax_add_missing:
                 if line.startswith(">"):
                     contigs.append(line[1:].strip().split()[0])
         
-        tax_df = pd.read_csv(input[1], sep="\t", header=True, names=["contig", "prediction"])
+        tax_df = pd.read_csv(input[1], sep="\t", header=None, names=["contigs", "predictions"])
 
-        all_df = pd.DataFrame({"contig": contigs})
+        all_df = pd.DataFrame({"contigs": contigs})
 
-        merged = all_df.merge(tax_df, on="contig", how="left")
-        merged["prediction"].fillna("unknown", inplace=True)
+        merged = all_df.merge(tax_df, on="contigs", how="left")
+        merged["predictions"].fillna("unknown", inplace=True)
 
         merged.to_csv(output[0], sep="\t", index=False, header=True)
