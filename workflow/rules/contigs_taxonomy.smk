@@ -67,10 +67,14 @@ rule tax_add_missing:
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.err.log"),
     localrule: True
     run:
-        from Bio import SeqIO
         import pandas as pd
 
-        contigs = [record.id for record in SeqIO.parse(input[0], "fasta")]
+        contigs = []
+        with open(input[0], "r") as f:
+            for line in f:
+                if line.startswith(">"):
+                    contigs.append(line[1:].strip().split()[0])
+        
         tax_df = pd.read_csv(input[1], sep="\t", header=True, names=["contig", "prediction"])
 
         all_df = pd.DataFrame({"contig": contigs})
