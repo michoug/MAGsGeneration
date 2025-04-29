@@ -35,7 +35,7 @@ rule taxonomy:
         '(date && name=$(echo $(basename {output.taxonomy}) | sed "s/_tax.tsv//g") && '
         "rm -rf $(dirname {output.dbfasta})/* && "
         "mmseqs createdb  {input.fasta} {output.dbfasta} && "
-        "mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/GTDB_mmseqs $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 && "
+        "mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/GTDB_mmseqs $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 --report-unaligned 1 && "
         "mmseqs createtsv {output.dbfasta} $(dirname {output.taxonomy})/$name {output.taxonomy} && date) 2> {log.err} > {log.out}"
 
 
