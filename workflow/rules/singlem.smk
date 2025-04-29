@@ -40,7 +40,7 @@ rule singlem_reads:
         """
         (date
         export SINGLEM_METAPACKAGE_PATH={input.db}
-        singlem pipe --threads {threads} -1 {input.read1} -2 {input.read2} --otu-table {output.table} -p {output.profile}
+        singlem pipe --threads {threads} -1 {input.read1} -2 {input.read2} --otu-table {output.table} -p {output.profile} --metapackage {input.db}
         date ) 2> {log.err} > {log.out}
         """
 
@@ -146,8 +146,8 @@ rule singlem_microbial:
         """
         (date
         export SINGLEM_METAPACKAGE_PATH={input.db}
-        singlem summarise --input-taxonomic-profiles {input.profile} --output-taxonomic-profile {output.profile}
-        singlem microbial_fraction -1 {input.read1} -2 {input.read2} -p {output.profile} > {output.mf}
+        singlem summarise --input-taxonomic-profiles {input.profile} --output-taxonomic-profile {output.profile} --metapackage {input.db}
+        singlem microbial_fraction -1 {input.read1} -2 {input.read2} -p {output.profile} > {output.mf} --metapackage {input.db}
         date ) 2> {log.err} > {log.out}
         """
 
@@ -171,7 +171,7 @@ rule singlem_genomes:
         """
         (date
         export SINGLEM_METAPACKAGE_PATH={input.db}
-        singlem pipe --threads {threads} --otu-table {output.table} --genome-fasta-files $(dirname {input.genomes})/finalBins/*fa &&
+        singlem pipe --threads {threads} --otu-table {output.table} --genome-fasta-files $(dirname {input.genomes})/finalBins/*fa --metapackage {input.db} &&
         date ) 2> {log.err} > {log.out}
         """
 
@@ -195,6 +195,6 @@ rule singlem_appraise:
         """
         (date
         export SINGLEM_METAPACKAGE_PATH={input.db}
-        singlem appraise --metagenome-otu-tables {input.metagenomes} --genome-otu-tables {input.genomes} --imperfect > {output}
+        singlem appraise --metagenome-otu-tables {input.metagenomes} --genome-otu-tables {input.genomes} --imperfect --metapackage {input.db} > {output}
         date ) 2> {log.err} > {log.out}
         """
