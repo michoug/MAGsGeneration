@@ -35,7 +35,7 @@ rule taxonomy:
         '(date && name=$(echo $(basename {output.taxonomy}) | sed "s/_tax.tsv//g") && '
         "rm -rf $(dirname {output.dbfasta})/* && "
         "mmseqs createdb  {input.fasta} {output.dbfasta} && "
-        "mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/GTDB_mmseqs $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 --report-unaligned 1 && "
+        "mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/GTDB_mmseqs $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 && "
         "mmseqs createtsv {output.dbfasta} $(dirname {output.taxonomy})/$name {output.taxonomy} && date) 2> {log.err} > {log.out}"
 
 
@@ -59,15 +59,13 @@ rule taxconverter:
 rule tax_add_missing:
     input:
         fasta=rules.assembly_megahit.output.final,
-        tax=rules.taxconverter.output.taxconverter
+        tax=rules.taxconverter.output
     output:
         os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_good.tsv"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.err.log"),
     localrule: True
-    conda:
-        os.path.join(WORK_DIR, "envs/taxconverter.yaml")
     run:
         from Bio import SeqIO
         import pandas as pd

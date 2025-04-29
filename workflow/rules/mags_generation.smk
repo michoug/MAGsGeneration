@@ -320,7 +320,7 @@ rule vamb_length:
 
 rule vamb_filter:
     input:
-        rules.taxconverter.output,
+        rules.tax_add_missing.output,
         rules.vamb_length.output,
     output:
         temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_tax.tsv")),
