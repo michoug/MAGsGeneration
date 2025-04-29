@@ -44,7 +44,7 @@ rule taxconverter:
         tax=rules.taxonomy.output.taxonomy,
         taxconverter=rules.taxconverter_install.output.file,
     output:
-        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_good.tsv"),
+        temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_temp.tsv")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.err.log"),
@@ -55,3 +55,29 @@ rule taxconverter:
     shell:
         "(date && "
         "taxconverter mmseqs2 -i {input.tax} -o {output} && date) 2> {log.err} > {log.out}"
+
+rule tax_add_missing:
+    input:
+        fasta=rules.assembly_megahit.output.final,
+        tax=rules.taxconverter.output.taxconverter
+    output:
+        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_good.tsv"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.err.log"),
+    localrule: True
+    conda:
+        os.path.join(WORK_DIR, "envs/taxconverter.yaml")
+    run:
+        from Bio import SeqIO
+        import pandas as pd
+
+        contigs = [record.id for record in SeqIO.parse(input[0], "fasta")]
+        tax_df = pd.read_csv(input[1], sep="\t", header=True, names=["contig", "prediction"])
+
+        all_df = pd.DataFrame({"contig": contigs})
+
+        merged = all_df.merge(tax_df, on="contig", how="left")
+        merged["prediction"].fillna("unknown", inplace=True)
+
+        merged.to_csv(output[0], sep="\t", index=False, header=True)
