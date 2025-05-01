@@ -355,7 +355,7 @@ rule taxvamb:
         os.path.join(WORK_DIR, "envs/vamb.yaml")
     threads: 14
     resources:
-        runtime=60 * 8,
+        runtime=60 * 24,
         mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),

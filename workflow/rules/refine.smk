@@ -97,7 +97,7 @@ rule cp_mags:
 
 
 # Checking bin quality
-use rule checkm2 as checkm2_refine with:
+rule checkm2_refine:
     input:
         os.path.join(RESULTS_DIR, "Bins/renamed_mags"),
     output:
@@ -109,3 +109,13 @@ use rule checkm2 as checkm2_refine with:
         runtime=60 * 24,
         mem_mb=get_mem_mb,
     threads: 20
+    params:
+        ext="fa",
+        db=config["checkm2"]["db"],
+    message:
+        "Running CheckM2 for directory renamed bins"
+    shell:
+        "(date && touch {input} && "
+        "export CHECKM2DB={params.db} && "
+        "checkm2 predict --threads {threads} -x {params.ext} --input $(dirname {input}) --output-directory $(dirname {output.tsv}) --force && "
+        "date) 2> {log.err} > {log.out}"
