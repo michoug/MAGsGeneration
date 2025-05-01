@@ -28,7 +28,7 @@ rule gtdbtk:
         "(date && export GTDBTK_DATA_PATH={params.db} && gtdbtk classify_wf --cpus {threads} -x fa --genome_dir {input} --out_dir {output} --mash_db $(dirname {params.db})/gtdb_ref_sketch.msh && date) &> >(tee {log})"
 
 
-use rule checkm2 as checkm2_final with:
+use rule checkm2_refine as checkm2_final with:
     input:
         rules.galah.output.final,
     output:

@@ -105,6 +105,8 @@ rule checkm2_refine:
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm_refine.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm_refine.err.log"),
+    conda:
+        os.path.join(WORK_DIR, "envs/checkm2.yaml")
     resources:
         runtime=60 * 24,
         mem_mb=get_mem_mb,
@@ -117,5 +119,5 @@ rule checkm2_refine:
     shell:
         "(date && touch {input} && "
         "export CHECKM2DB={params.db} && "
-        "checkm2 predict --threads {threads} -x {params.ext} --input $(dirname {input}) --output-directory $(dirname {output.tsv}) --force && "
+        "checkm2 predict --threads {threads} -x {params.ext} --input {input} --output-directory $(dirname {output.tsv}) --force && "
         "date) 2> {log.err} > {log.out}"
