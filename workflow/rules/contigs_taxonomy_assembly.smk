@@ -1,11 +1,11 @@
 rule contigs_taxonomy:
     input:
-        # expand(
-        #     os.path.join(
-        #         RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_good.tsv"
-        #     ),
-        #     sample=ASSEMBLY,
-        # ),
+        expand(
+            os.path.join(
+                RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax.tsv"
+            ),
+            sample=ASSEMBLY,
+        ),
         expand(
             os.path.join(
                 RESULTS_DIR, "Assembly/{sample}_taxonomy_euk/{sample}_tax.tsv"
@@ -19,10 +19,10 @@ rule contigs_taxonomy:
 rule taxonomy:
     input:
         fasta=os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
-        file=rules.create_tax_db_euk.output.mapping,
+        file=rules.download_tax_db.output.file,
     output:
         taxonomy=os.path.join(
-            RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax.tsv"
+            RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_raw.tsv"
         ),
         tmp=temp(directory(os.path.join(RESULTS_DIR, "Assembly/{sample}_tmp"))),
         dbfasta=temp(
@@ -37,21 +37,21 @@ rule taxonomy:
         mem_mb=get_mem_mb,
     conda:
         os.path.join(WORK_DIR, "envs/mmseqs.yaml")
+    params: "GTDB_mmseqs"
     shell:
         '(date && name=$(echo $(basename {output.taxonomy}) | sed "s/_tax.tsv//g") && '
         "rm -rf $(dirname {output.dbfasta})/* && "
         "mmseqs createdb  {input.fasta} {output.dbfasta} && "
-        "mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/GTDB_mmseqs $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 && "
+        "mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/{params} $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 && "
         "mmseqs createtsv {output.dbfasta} $(dirname {output.taxonomy})/$name {output.taxonomy} && date) 2> {log.err} > {log.out}"
 
-
-rule taxonomy_euk:
+use rule taxonomy as taxonomy_euk with:
     input:
         fasta=os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
         file=rules.create_tax_db_euk.output.mapping,
     output:
         taxonomy=os.path.join(
-            RESULTS_DIR, "Assembly/{sample}_taxonomy_euk/{sample}_tax.tsv"
+            RESULTS_DIR, "Assembly/{sample}_taxonomy_euk/{sample}_tax_raw.tsv"
         ),
         tmp=temp(directory(os.path.join(RESULTS_DIR, "Assembly/{sample}_tmp_euk"))),
         dbfasta=temp(
@@ -60,18 +60,8 @@ rule taxonomy_euk:
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_contig_euk/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_contig_euk/{sample}.err.log"),
-    threads: 55
-    resources:
-        runtime=60 * 5,
-        mem_mb=get_mem_mb,
-    conda:
-        os.path.join(WORK_DIR, "envs/mmseqs.yaml")
-    shell:
-        '(date && name=$(echo $(basename {output.taxonomy}) | sed "s/_tax.tsv//g") && '
-        "rm -rf $(dirname {output.dbfasta})/* && "
-        "mmseqs createdb  {input.fasta} {output.dbfasta} && "
-        "mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/MicroEuk90 $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 && "
-        "mmseqs createtsv {output.dbfasta} $(dirname {output.taxonomy})/$name {output.taxonomy} && date) 2> {log.err} > {log.out}"
+    params: "MicroEuk90"
+
 
 
 rule taxconverter:
@@ -94,13 +84,26 @@ rule taxconverter:
         "(date && "
         "taxconverter mmseqs2 -i {input.tax} -o {output} && date) 2> {log.err} > {log.out}"
 
+use rule taxconverter as taxconverter_euk with:
+    input:
+        tax=rules.taxonomy_euk.output.taxonomy,
+    output:
+        temp(
+            os.path.join(
+                RESULTS_DIR, "Assembly/{sample}_taxonomy_euk/{sample}_tax_temp.tsv"
+            )
+        ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/taxonomy_convert_euk/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/taxonomy_convert_euk/{sample}.err.log"),
+
 
 rule tax_add_missing:
     input:
         fasta=os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
         tax=rules.taxconverter.output,
     output:
-        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_good.tsv"),
+        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax.tsv"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.err.log"),
@@ -124,3 +127,14 @@ rule tax_add_missing:
         merged["predictions"].fillna("unknown", inplace=True)
 
         merged.to_csv(output[0], sep="\t", index=False, header=True)
+
+
+use rule tax_add_missing as tax_add_missing_euk with:
+    input:
+        fasta=os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
+        tax=rules.taxconverter_euk.output,
+    output:
+        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy_euk/{sample}_tax.tsv"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/taxonomy_missing_euk/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/taxonomy_missing_euk/{sample}.err.log"),

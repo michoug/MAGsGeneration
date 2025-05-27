@@ -54,7 +54,7 @@ if "check_assembly" in STEPS:
 
 if "mags_generation" in STEPS:
 
-    include: "rules/mags_generation_euk.smk"
+    include: "rules/mags_generation.smk"
 
     TARGETS += ["status/mags_generation.done"]
 

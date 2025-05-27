@@ -19,13 +19,20 @@ rule mags_generation_euk:
             os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat/metabat.done"),
             sample=ASSEMBLY,
         ),
-        # expand(
-        #     os.path.join(
-        #         RESULTS_DIR,
-        #         "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
-        #     ),
-        #     sample=ASSEMBLY,
-        # ),
+        expand(
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
+            ),
+            sample=ASSEMBLY,
+        ),
+        expand(
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/{sample}/Vamb/Vamb_Results_euk/vaevae_clusters_unsplit.tsv",
+            ),
+            sample=ASSEMBLY,
+        ),
     output:
         touch("status/mags_generation.done"),
 
@@ -238,6 +245,17 @@ rule vamb_filter:
         filtered_df.to_csv(output[0], sep="\t", index=False, header=True)
 
 
+use rule vamb_filter as vamb_filter_euk with:
+    input:
+        rules.tax_add_missing_euk.output,
+        rules.vamb_length.output,
+    output:
+        temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_tax_euk.tsv")),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/vamb_filter_euk/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/vamb_filter_euk/{sample}.err.log"),
+
+
 rule taxvamb:
     input:
         file=rules.vamb_install.output,
@@ -262,3 +280,23 @@ rule taxvamb:
         "rm -r $(dirname {output}) && "
         "vamb bin taxvamb --outdir $(dirname {output}) -m 1501 --fasta {input.contig} --taxonomy {input.tax} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} -o && "
         "date) 2> {log.err} > {log.out}"
+
+use rule taxvamb as taxvamb_euk with:
+    input:
+        file=rules.vamb_install.output,
+        contig=rules.vamb_length.output,
+        tax=rules.vamb_filter_euk.output,
+        cov=rules.vamb_coverage.output,
+    output:
+        os.path.join(
+            RESULTS_DIR, "Bins/{sample}/Vamb/Vamb_Results_euk/vaevae_clusters_unsplit.tsv"
+        ),
+    conda:
+        os.path.join(WORK_DIR, "envs/vamb.yaml")
+    threads: 14
+    resources:
+        runtime=60 * 24,
+        mem_mb=get_mem_mb,
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/vamb_euk/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/vamb_euk/{sample}.err.log"),
