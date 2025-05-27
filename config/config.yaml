@@ -5,24 +5,38 @@
 # ORDER of STEPS: ["checkm", "dereplicate", "drep_checkm", "coverage", "gtdbtk", "eggnog", "metabolic", "mgthermometer"]
 #
 
-steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy","check_assembly","mags_generation","dastool","checkm",
-  "refine_all","dereplicate","coverage","annotations",
-  "quality","mgthermometer","eggnog","singlem_all"]
+steps: ["install_software",
+        "trim_reads",
+        "check_assembly",
+        "contigs_taxonomy",
+        "check_assembly",
+        "mags_generation",
+        # "dastool",
+        # "checkm",
+        # "refine_all",
+        # "dereplicate",
+        # "coverage",
+        # "annotations",
+        # "quality",
+        # "mgthermometer",
+        # "eggnog",
+        # "singlem_all"
+        ]
 #,"genome_face",
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
 # Directory where the workflow exists
-work_dir: "/scratch/poniecka/Turkey/MAGsGeneration/"
+work_dir: "/scratch/gmichoud/NOMIS_Euk/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/poniecka/Turkey/Assembly"
+assembly_dir: "/scratch/gmichoud/NOMIS_Euk/Assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/poniecka/Turkey/mags_all"  
+results_dir: "/scratch/gmichoud/NOMIS_Euk/mags_all"  
 
 # Directory for raw reads
-reads_dir: "/scratch/poniecka/Turkey/Reads"
+reads_dir: "/scratch/gmichoud/NOMIS_Euk/Reads"
 
 
 ### Memory per cpus for your cluster
