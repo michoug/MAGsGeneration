@@ -42,7 +42,6 @@ rule taxonomy:
 rule taxconverter:
     input:
         tax=rules.taxonomy.output.taxonomy,
-        taxconverter=rules.taxconverter_install.output.file,
     output:
         os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_good.tsv"),
     log:

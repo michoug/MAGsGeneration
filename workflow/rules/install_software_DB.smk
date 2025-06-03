@@ -1,6 +1,5 @@
 rule install_software:
     input:
-        os.path.join(RESULTS_DIR, "DB/taxconverter/taxconverter.done"),
         os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
         os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
         os.path.join(RESULTS_DIR, "DB/vamb.done"),
@@ -45,32 +44,32 @@ rule downloadHuman:
         """
 
 
-rule taxconverter_install:
-    # input:
-    #     rules.create_db_folder.output.file
-    output:
-        folder=directory(os.path.join(RESULTS_DIR, "DB/taxconverter")),
-        file=os.path.join(RESULTS_DIR, "DB/taxconverter/taxconverter.done"),
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/taxconverter_install.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/taxconverter_install.err.log"),
-    conda:
-        os.path.join(WORK_DIR, "envs/taxconverter.yaml")
-    priority: 20
-    localrule: True
-    shell:
-        """
-        (date
-        rm -rf {output.folder}
-        rm -rf taxconverter
-        git lfs install
-        git clone https://github.com/RasmussenLab/taxconverter.git
-        mv taxconverter $(dirname {output.folder})
-        pip install -e {output.folder}
-        unzip {output.folder}/data/lineage.zip -d {output.folder}/data
-        touch {output.file}
-        date) 2> {log.err} > {log.out}
-        """
+# rule taxconverter_install:
+#     # input:
+#     #     rules.create_db_folder.output.file
+#     output:
+#         folder=directory(os.path.join(RESULTS_DIR, "DB/taxconverter")),
+#         file=os.path.join(RESULTS_DIR, "DB/taxconverter/taxconverter.done"),
+#     log:
+#         out=os.path.join(RESULTS_DIR, "logs/taxconverter_install.out.log"),
+#         err=os.path.join(RESULTS_DIR, "logs/taxconverter_install.err.log"),
+#     conda:
+#         os.path.join(WORK_DIR, "envs/taxconverter.yaml")
+#     priority: 20
+#     localrule: True
+#     shell:
+#         """
+#         (date
+#         rm -rf {output.folder}
+#         rm -rf taxconverter
+#         git lfs install
+#         git clone https://github.com/RasmussenLab/taxconverter.git
+#         mv taxconverter $(dirname {output.folder})
+#         pip install -e {output.folder}
+#         unzip {output.folder}/data/lineage.zip -d {output.folder}/data
+#         touch {output.file}
+#         date) 2> {log.err} > {log.out}
+#         """
 
 
 rule download_tax_db:
@@ -94,8 +93,6 @@ rule download_tax_db:
 
 
 rule metabinner_install:
-    input:
-        rules.taxconverter_install.output.file,
     output:
         dbs=directory(os.path.join(RESULTS_DIR, "DB/MetaBinner")),
         file=os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),

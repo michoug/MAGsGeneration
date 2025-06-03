@@ -2,7 +2,7 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python=3.10
-  - numpy==1.26.3
-  - pip=24
-  - git-lfs=3.6
+  - pip=25.1.1
+  - python=3.10.17
+  - pip:
+      - taxconverter==1.1.0
