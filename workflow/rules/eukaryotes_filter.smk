@@ -2,9 +2,8 @@ rule eukaryotes_filter:
     input:
         expand(os.path.join(RESULTS_DIR, "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt"), sample=ASSEMBLY),
         os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags"),
-        os.path.join(
-            RESULTS_DIR, "Bins/whokaryote/collated_output/collated_percentages.txt"
-        )
+        os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_whokaryote.txt"),
+        os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_deepmicroclass.txt"),
     output:
         touch("status/eukaryotes_filter.done")
 
@@ -137,8 +136,12 @@ def get_file_names_mm(wildcards):
         mags=glob_wildcards(os.path.join(ck_output, "{mags}.fa")).mags,
     )
 
-# localrules: percentage, concatenate, whokaryote
-
+def get_file_names_mm_deepmicroclass(wildcards):
+    ck_output = checkpoints.get_filtered_mags.get(**wildcards).output[0]
+    return expand(
+        os.path.join(RESULTS_DIR, "Bins/deepmicroclass/collated_output/{mags}_percentage.txt"),
+        mags=glob_wildcards(os.path.join(ck_output, "{mags}.fa")).mags,
+    )
 
 # Running WHOKARYOTE
 rule whokaryote:
@@ -161,7 +164,7 @@ rule whokaryote:
         "(date && whokaryote.py --contigs {input} --outdir $(dirname {output}) --minsize 2500 --threads {threads} && date) 2> {log.err} > {log.out}"
 
 
-rule percentage:
+rule percentage_whokaryote:
     input:
         pred=os.path.join(RESULTS_DIR, "Bins/whokaryote/{mags}/tiara_pred.txt"),
     output:
@@ -174,44 +177,38 @@ rule percentage:
         "Getting the percentage for contigs identified as 'eukarya' in {wildcards.mags}"
     localrule: True
     run:
-        # Reading the prediction file
+        import pandas as pd
         df = pd.read_csv(input.pred, sep="\t", header=0)
-        # Tallying the predicted classes
+
         count = pd.DataFrame(df.groupby("class_fst_stage")["class_fst_stage"].count())
-        # Estimating the percentage of each class based on predictions
+
         count["percent"] = (
             count["class_fst_stage"] / count["class_fst_stage"].sum()
         ) * 100
 
-        # Transposing the file
         count_trans = count.transpose()
-        # Adding the bin name
         count_trans["bin"] = os.path.basename(os.path.dirname(input.pred))
-
-        # Dropping useless rows
         count_trans_edited = count_trans.drop(labels="class_fst_stage")
-
-        # Saving the file
         count_trans_edited.to_csv(output.percent, sep="\t", header=True)
 
 
-rule concatenate:
+rule concatenate_whokaryote:
     input:
         all_files=get_file_names_mm,
     output:
         collated=os.path.join(
             RESULTS_DIR, "Bins/whokaryote/collated_output/collated_percentages.txt"
         ),
-        final_list=os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags.txt"),
+        final_list=os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_whokaryote.txt"),
     log:
-        os.path.join(RESULTS_DIR, "logs/collate/all_files_collation.log"),
+        out=os.path.join(RESULTS_DIR, "logs/all_files_collation_whokaryote.log"),
     message:
         "Collecting all the percentages into one file"
     run:
         import pandas as pd
         import contextlib
 
-        with open(log, "w") as f_log:
+        with open(log.out, "w") as f_log:
             with contextlib.redirect_stdout(f_log), contextlib.redirect_stderr(f_log):
                 dfs = []
 
@@ -229,5 +226,102 @@ rule concatenate:
 
                 # Filter and save eukaryotic bins
                 eukaryotic_bins = concatenated[concatenated["eukarya"] >= 80]
+                eukaryotic_bins[["bin"]].to_csv(output.final_list, sep="\t", index=False)
+                print(f"Eukaryotic bins written to: {output.final_list}")
+
+
+
+rule deepmicroclass:
+    input:
+        os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags/{mags}.fa"),
+    output:
+        os.path.join(RESULTS_DIR, "Bins/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv"),
+    conda:
+        os.path.join(WORK_DIR, "envs/deepmicroclass.yaml")
+    threads: 3
+    resources:
+        runtime=30,
+        mem_mb=get_mem_mb,
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/deepmicroclass/deepmicroclass_{mags}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/deepmicroclass/deepmicroclass_{mags}.err.log"),
+    message:
+        "Running DeepMicroClass on {wildcards.mags}"
+    shell:
+        "(date && DeepMicroClass predict --input {input} --output_dir $(dirname {output}) --device cpu --cpu_thread {threads} && date) 2> {log.err} > {log.out}"
+
+
+rule deepmicroclass_percentage:
+    input:
+        pred=os.path.join(RESULTS_DIR, "Bins/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv"),
+    output:
+        percent=os.path.join(
+            RESULTS_DIR, "Bins/deepmicroclass/collated_output/{mags}_percentage.txt"
+        ),
+    log:
+        os.path.join(RESULTS_DIR, "logs/collate/deepmicroclass_{mags}.log"),
+    message:
+        "Getting the percentage for contigs identified as 'eukarya' in {wildcards.mags}"
+    localrule: True
+    run:
+        import pandas as pd
+
+        df = pd.read_csv(input.pred, sep="\t", header=0)
+
+        choice_labels = {
+            1: "Eukaryote",
+            2: "Eukaryote",
+            3: "Prokaryote",
+            4: "Prokaryote",
+            5: "Prokaryote"
+        }
+
+        df["pred"] = df["best_choice"].map(choice_labels)
+
+        count = pd.DataFrame(df.groupby("pred")["pred"].count())
+
+        count["percent"] = (
+                    count["pred"] / count["pred"].sum()
+                ) * 100
+
+        count_trans = count.transpose()
+        count_trans["bin"] = os.path.basename(os.path.dirname(input.pred))
+        count_trans_edited = count_trans.drop(labels="pred")
+        count_trans_edited.to_csv(output.percent, sep="\t", header=True)
+
+rule concatenate_deepmicroclass:
+    input:
+        all_files=get_file_names_mm_deepmicroclass,
+    output:
+        collated=os.path.join(
+            RESULTS_DIR, "Bins/deepmicroclass/collated_output/collated_percentages.txt"
+        ),
+        final_list=os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_deepmicroclass.txt"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/all_files_collation_deepmicroclass.log"),
+    message:
+        "Collecting all the percentages into one file"
+    run:
+        import pandas as pd
+        import contextlib
+
+        with open(log.out, "w") as f_log:
+            with contextlib.redirect_stdout(f_log), contextlib.redirect_stderr(f_log):
+                dfs = []
+
+                for file in input.all_files:
+                    df = pd.read_csv(file, sep="\t", header=0)
+                    print(f"Loaded file: {file}, shape: {df.shape}")
+                    dfs.append(df)
+
+                concatenated = pd.concat(dfs, ignore_index=True)
+                print(f"Concatenated DataFrame shape: {concatenated.shape}")
+
+                # Save the collated output
+                concatenated.to_csv(output.collated, sep="\t", index=False)
+                print(f"Collated output written to: {output.collated}")
+
+                # Filter and save eukaryotic bins
+                eukaryotic_bins = concatenated[concatenated["Eukaryote"] >= 80]
                 eukaryotic_bins[["bin"]].to_csv(output.final_list, sep="\t", index=False)
                 print(f"Eukaryotic bins written to: {output.final_list}")

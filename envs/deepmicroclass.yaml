@@ -1,0 +1,13 @@
+name: DeepMicroClass
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+  - au-eoed
+dependencies:
+  - pip=25
+  - python=3.10
+  - requests=2
+  - pip:
+      - biopython==1.85
+      - deepmicroclass==1.0.6.2
