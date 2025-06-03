@@ -13,16 +13,16 @@ steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy","check
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
 # Directory where the workflow exists
-work_dir: "/scratch/poniecka/Turkey/MAGsGeneration/"
+work_dir: "/scratch/zheliu/PAMIR/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/poniecka/Turkey/Assembly"
+assembly_dir: "/scratch/zheliu/PAMIR/Assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/poniecka/Turkey/mags_all"  
+results_dir: "/scratch/zheliu/PAMIR/output_test"  
 
 # Directory for raw reads
-reads_dir: "/scratch/poniecka/Turkey/Reads"
+reads_dir: "/scratch/zheliu/PAMIR/reads"
 
 
 ### Memory per cpus for your cluster
@@ -35,7 +35,7 @@ checkm2:
   db: "/work/river/Databases/checkm2/v1.1/CheckM2_database/uniref100.KO.1.dmnd"  ###USER INPUT REQUIRED###
 
 gtdbtk:
-  path: "/work/river/Databases/GTDBTk/release220"  ###USER INPUT REQUIRED###
+  path: "/work/river/Databases/GTDBTk/release226/"  ###USER INPUT REQUIRED###
 
 eggnog:
-  db: "/work/river/Databases/eggnog-mapper-2.1.2/data/"  ###USER INPUT REQUIRED###
+  db: "/work/river/Databases/eggnog-mapper-2.1.12/"  ###USER INPUT REQUIRED###
