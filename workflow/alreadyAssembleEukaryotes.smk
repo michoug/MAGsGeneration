@@ -58,6 +58,11 @@ if "mags_generation" in STEPS:
 
     TARGETS += ["status/mags_generation.done"]
 
+if "eukaryotes_filter" in STEPS:
+
+    include: "rules/eukaryotes_filter.smk"
+
+    TARGETS += ["status/eukaryotes_filter.done"]
 
 if "dastool" in STEPS:
 

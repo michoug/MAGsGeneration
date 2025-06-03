@@ -36,13 +36,13 @@ rule mags_generation:
             ),
             sample=ASSEMBLY,
         ),
-        expand(
-            os.path.join(
-                RESULTS_DIR,
-                "Bins/{sample}/Vamb/Vamb_Results_euk/vaevae_clusters_unsplit.tsv",
-            ),
-            sample=ASSEMBLY,
-        ),
+        # expand(
+        #     os.path.join(
+        #         RESULTS_DIR,
+        #         "Bins/{sample}/Vamb/Vamb_Results_euk/vaevae_clusters_unsplit.tsv",
+        #     ),
+        #     sample=ASSEMBLY,
+        # ),
         expand(
             os.path.join(
                 RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"
@@ -128,6 +128,7 @@ rule mapping:
         rm -f {output}.tmp*
         strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
         samtools sort -@ {threads} -o {output}
+        sleep 30
         samtools index {output}
         date ) 2> {log.err} > {log.out}
         """
@@ -426,6 +427,8 @@ rule concoct_prepare:
         err=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.err.log"),
     message:
         "Preparing files for Concoct"
+    resources:
+        runtime= 60 * 5,
     shell:
         "(date && rm -f {output.bed} {output.cont} {output.cov} && cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
         "concoct_coverage_table.py {output.bed} {input.bam} > {output.cov} && [[ -s {output.cov} ]] && "
@@ -505,7 +508,7 @@ rule semibin:
     shell:
         """
         (date
-        SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads}
+        SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster
         touch {output}
         date) 2> {log.err} > {log.out}
         """
