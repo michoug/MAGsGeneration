@@ -285,7 +285,7 @@ rule deepmicroclass_percentage:
                 ) * 100
 
         count_trans = count.transpose()
-        count_trans["bin"] = os.path.basename(os.path.dirname(input.pred))
+        count_trans["bin"] = os.path.basename(input.pred)
         count_trans_edited = count_trans.drop(labels="pred")
         count_trans_edited.to_csv(output.percent, sep="\t", header=True)
 
