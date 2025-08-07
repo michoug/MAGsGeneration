@@ -48,10 +48,10 @@ rule mags_generation:
             ),
             sample=ASSEMBLY,
         ),
-        expand(
-            os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
-            sample=ASSEMBLY,
-        ),
+        # expand(
+        #     os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
+        #     sample=ASSEMBLY,
+        # ),
     output:
         touch("status/mags_generation.done"),
 

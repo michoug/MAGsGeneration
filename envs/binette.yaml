@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - bioconda
+  - au-eoed
+dependencies:
+  - binette=1.1.2

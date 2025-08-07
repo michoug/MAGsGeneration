@@ -4,3 +4,4 @@ channels:
   - bioconda
 dependencies:
   - rosella==0.5.4
+  - umap-learn=0.5.3

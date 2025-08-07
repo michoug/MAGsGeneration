@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - bioconda
+  - au-eoed
+dependencies:
+  - metabuli=1.1

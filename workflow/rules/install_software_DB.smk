@@ -1,6 +1,6 @@
 rule install_software:
     input:
-        os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
+        os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
         os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
         os.path.join(RESULTS_DIR, "DB/vamb.done"),
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
@@ -72,10 +72,29 @@ rule downloadHuman:
 #         """
 
 
+# rule download_tax_db:
+#     output:
+#         file=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
+#         look=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs.lookup"),
+#         tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
+#     log:
+#         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
+#         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
+#     resources:
+#         mem_mb=get_mem_mb,
+#         runtime=6 * 60,
+#     threads: 20
+#     conda:
+#         os.path.join(WORK_DIR, "envs/mmseqs.yaml")
+#     shell:
+#         '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
+#         "rm -f $(dirname {output.file})/$name* && "
+#         "mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
+
 rule download_tax_db:
     output:
-        file=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
-        look=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs.lookup"),
+        file=os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
+        folder=directory(os.path.join(RESULTS_DIR, "DB/gtdb")),
         tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
     log:
         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
@@ -85,11 +104,13 @@ rule download_tax_db:
         runtime=6 * 60,
     threads: 20
     conda:
-        os.path.join(WORK_DIR, "envs/mmseqs.yaml")
+        os.path.join(WORK_DIR, "envs/metabuli.yaml")
     shell:
-        '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
-        "rm -f $(dirname {output.file})/$name* && "
-        "mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
+        """
+        (date
+        metabuli databases GTDB $(dirname {output.folder}) {output.tmp} --threads {threads}
+        date) 2> {log.err} > {log.out}
+        """
 
 
 rule metabinner_install:
