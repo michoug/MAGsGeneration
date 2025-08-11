@@ -91,6 +91,7 @@ rule downloadHuman:
 #         "rm -f $(dirname {output.file})/$name* && "
 #         "mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
 
+
 rule download_tax_db:
     output:
         file=os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),

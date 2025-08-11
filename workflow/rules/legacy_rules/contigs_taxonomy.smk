@@ -43,7 +43,11 @@ rule taxconverter:
     input:
         tax=rules.taxonomy.output.taxonomy,
     output:
-        temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_temp.tsv")),
+        temp(
+            os.path.join(
+                RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_temp.tsv"
+            )
+        ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.err.log"),
@@ -55,10 +59,11 @@ rule taxconverter:
         "(date && "
         "taxconverter mmseqs2 -i {input.tax} -o {output} && date) 2> {log.err} > {log.out}"
 
+
 rule tax_add_missing:
     input:
         fasta=rules.assembly_megahit.output.final,
-        tax=rules.taxconverter.output
+        tax=rules.taxconverter.output,
     output:
         os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_good.tsv"),
     log:
@@ -73,8 +78,10 @@ rule tax_add_missing:
             for line in f:
                 if line.startswith(">"):
                     contigs.append(line[1:].strip().split()[0])
-        
-        tax_df = pd.read_csv(input[1], sep="\t", header=None, names=["contigs", "predictions"])
+
+        tax_df = pd.read_csv(
+            input[1], sep="\t", header=None, names=["contigs", "predictions"]
+        )
 
         all_df = pd.DataFrame({"contigs": contigs})
 

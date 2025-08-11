@@ -75,7 +75,7 @@ if "genome_face" in STEPS:
 
 if "binning_refinement" in STEPS:
 
-    include: "rules/binette.smk"
+    include: "rules/dastool.smk"
 
     TARGETS += ["status/binning_refinement.done"]
 

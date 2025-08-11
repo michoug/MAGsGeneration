@@ -59,11 +59,11 @@ if "mags_generation" in STEPS:
     TARGETS += ["status/mags_generation.done"]
 
 
-if "dastool" in STEPS:
+if "binning_refinement" in STEPS:
 
     include: "rules/dastool.smk"
 
-    TARGETS += ["status/dastool.done"]
+    TARGETS += ["status/binning_refinement.done"]
 
 
 # CheckM
