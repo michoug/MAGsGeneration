@@ -48,10 +48,10 @@ rule mags_generation:
             ),
             sample=ASSEMBLY,
         ),
-        # expand(
-        #     os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
-        #     sample=ASSEMBLY,
-        # ),
+        expand(
+            os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
+            sample=ASSEMBLY,
+        ),
     output:
         touch("status/mags_generation.done"),
 
@@ -455,7 +455,7 @@ rule semibin:
     log:
         out=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.err.log"),
-    threads: 10
+    threads: 20
     resources:
         runtime=60 * 48,
         mem_mb=get_mem_mb,
