@@ -1,3 +1,4 @@
-PAMIR_DNA_1_S1
-PAMIR_DNA_2_S2
-PAMIR_DNA_3_S3
+iceDNA_Arolla_S42
+iceDNA_PetitCombin_S41
+iceDNA_Valsorey_S44
+iceDNA_Zinal_S43

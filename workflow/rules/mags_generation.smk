@@ -212,7 +212,9 @@ rule metabinner_prepare:
     output:
         cont_t=temp(os.path.join(RESULTS_DIR, "/Assembly/{sample}_filter_1500.fa")),
         cont=os.path.join(RESULTS_DIR, "/Bins/{sample}/{sample}_metabinner_1500.fa"),
-        kmer_t=temp(os.path.join(RESULTS_DIR, "/Assembly/{sample}_filter_kmer_4_f1500.csv")),
+        kmer_t=temp(
+            os.path.join(RESULTS_DIR, "/Assembly/{sample}_filter_kmer_4_f1500.csv")
+        ),
         kmer=os.path.join(RESULTS_DIR, "/Bins/{sample}/{sample}_kmer_4_f1500.csv"),
     localrule: True
     conda:
@@ -455,7 +457,7 @@ rule semibin:
     log:
         out=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.err.log"),
-    threads: 10
+    threads: 20
     resources:
         runtime=60 * 48,
         mem_mb=get_mem_mb,

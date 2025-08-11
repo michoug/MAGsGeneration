@@ -73,11 +73,11 @@ if "genome_face" in STEPS:
     TARGETS += ["status/genome_face.done"]
 
 
-if "dastool" in STEPS:
+if "binning_refinement" in STEPS:
 
     include: "rules/dastool.smk"
 
-    TARGETS += ["status/dastool.done"]
+    TARGETS += ["status/binning_refinement.done"]
 
 
 # CheckM
