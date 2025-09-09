@@ -1,11 +1,11 @@
-rule dastool:
+rule binning_refinement:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/das_DASTool_summary.tsv"),
             sample=ASSEMBLY,
         ),
     output:
-        touch("status/dastool.done"),
+        touch("status/binning_refinement.done"),
 
 
 rule prepare_dasTool:
