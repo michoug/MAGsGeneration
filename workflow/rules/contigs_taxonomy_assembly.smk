@@ -21,29 +21,28 @@ rule taxonomy:
         fasta=os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
         file=rules.download_tax_db.output.file,
     output:
-        taxonomy=os.path.join(
-            RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_raw.tsv"
+        tax_report=os.path.join(
+            RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_report.tsv"
         ),
-        tmp=temp(directory(os.path.join(RESULTS_DIR, "Assembly/{sample}_tmp"))),
-        dbfasta=temp(
-            os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_fasta")
+        tax_class=os.path.join(
+            RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_classifications.tsv"
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.err.log"),
-    threads: 55
+    threads: 20
     resources:
         runtime=60 * 5,
         mem_mb=get_mem_mb,
     conda:
-        os.path.join(WORK_DIR, "envs/mmseqs.yaml")
-    params: "GTDB_mmseqs"
+        os.path.join(WORK_DIR, "envs/metabuli.yaml")
     shell:
-        '(date && name=$(echo $(basename {output.taxonomy}) | sed "s/_tax.tsv//g") && '
-        "rm -rf $(dirname {output.dbfasta})/* && "
-        "mmseqs createdb  {input.fasta} {output.dbfasta} && "
-        "mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/{params} $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 && "
-        "mmseqs createtsv {output.dbfasta} $(dirname {output.taxonomy})/$name {output.taxonomy} && date) 2> {log.err} > {log.out}"
+        """
+        (date
+        name=$(echo $(basename {output.tax_report}) | sed "s/_report.tsv//g")
+        metabuli classify {input.fasta} $(dirname {input.file}) $(dirname {output.tax_report}) $name --threads {threads} --max-ram 130 --seq-mode 1
+        date) 2> {log.err} > {log.out}
+        """
 
 use rule taxonomy as taxonomy_euk with:
     input:
@@ -77,25 +76,11 @@ rule taxconverter:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.err.log"),
     localrule: True
-    threads: 20
     conda:
         os.path.join(WORK_DIR, "envs/taxconverter.yaml")
     shell:
         "(date && "
-        "taxconverter mmseqs2 -i {input.tax} -o {output} && date) 2> {log.err} > {log.out}"
-
-use rule taxconverter as taxconverter_euk with:
-    input:
-        tax=rules.taxonomy_euk.output.taxonomy,
-    output:
-        temp(
-            os.path.join(
-                RESULTS_DIR, "Assembly/{sample}_taxonomy_euk/{sample}_tax_temp.tsv"
-            )
-        ),
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/taxonomy_convert_euk/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/taxonomy_convert_euk/{sample}.err.log"),
+        "taxconverter metabuli -c {input.report} -r {input.classif} -o {output} && date) 2> {log.err} > {log.out}"
 
 
 rule tax_add_missing:
@@ -103,7 +88,7 @@ rule tax_add_missing:
         fasta=os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
         tax=rules.taxconverter.output,
     output:
-        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax.tsv"),
+        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_good.tsv"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.err.log"),
@@ -127,14 +112,3 @@ rule tax_add_missing:
         merged["predictions"].fillna("unknown", inplace=True)
 
         merged.to_csv(output[0], sep="\t", index=False, header=True)
-
-
-use rule tax_add_missing as tax_add_missing_euk with:
-    input:
-        fasta=os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
-        tax=rules.taxconverter_euk.output,
-    output:
-        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy_euk/{sample}_tax.tsv"),
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/taxonomy_missing_euk/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/taxonomy_missing_euk/{sample}.err.log"),

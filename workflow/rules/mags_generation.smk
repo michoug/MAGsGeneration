@@ -11,6 +11,10 @@ rule mags_generation:
             number=[100, 125, 150, 250, 400],
         ),
         expand(
+            os.path.join(RESULTS_DIR, "Assembly/index_{sample}.done"),
+            sample=ASSEMBLY,
+        ),
+        expand(
             os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
             sample=ASSEMBLY,
             sample_2=SAMPLES,
@@ -94,12 +98,11 @@ rule indexAssembly:
 rule checkIndexAssembyDone:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-            sample=ASSEMBLY,
+            os.path.join(RESULTS_DIR, "Assembly/{{sample}}_filter.fasta.r{number}.sti"),
             number=[100, 125, 150, 250, 400],
         ),
     output:
-        os.path.join(RESULTS_DIR, "Assembly/index.done"),
+        os.path.join(RESULTS_DIR, "Assembly/index_{sample}.done"),
     localrule: True
     shell:
         "touch {output}"
@@ -499,7 +502,7 @@ rule semibin:
     log:
         out=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.err.log"),
-    threads: 10
+    threads: 20
     resources:
         runtime=60 * 48,
         mem_mb=get_mem_mb,

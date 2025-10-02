@@ -49,7 +49,7 @@ conda env create -f requirements.yaml -n "snakemake"
 ### Run Setup
 
 * Place your reads (e.g. `sample_R1_001.fastq.gz` and `sample_R2_001.fastq.gz` files) in a `reads` folder
-* Fill the `config/all_samples.txt` file with the name of your samples (e.g. `{sample}_R2_001.fastq.gz`)
+* Fill the `config/sample_list.txt` file with the name of your samples (e.g. `{sample}_R2_001.fastq.gz`)
 * Modify the `config/config.yaml` file to change the different paths and eventually the different options
 
 ### Without Slurm

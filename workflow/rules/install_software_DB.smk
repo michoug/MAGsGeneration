@@ -1,6 +1,6 @@
 rule install_software:
     input:
-        # os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
+        os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
         os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
         os.path.join(RESULTS_DIR, "DB/MicroEuk_v3/MicroEuk90"),
         os.path.join(RESULTS_DIR, "DB/db_euk.done"),
@@ -74,11 +74,31 @@ rule downloadHuman:
 #         """
 
 
+# rule download_tax_db:
+#     output:
+#         file=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
+#         look=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs.lookup"),
+#         tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
+#     log:
+#         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
+#         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
+#     resources:
+#         mem_mb=get_mem_mb,
+#         runtime=6 * 60,
+#     threads: 20
+#     conda:
+#         os.path.join(WORK_DIR, "envs/mmseqs.yaml")
+#     shell:
+#         '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
+#         "rm -f $(dirname {output.file})/$name* && "
+#         "mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
+
+
 rule download_tax_db:
     output:
-        file=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
-        look=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs.lookup"),
-        tmp=temp(directory(os.path.join(RESULTS_DIR, "GTDB_tmp"))),
+        file=os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
+        folder=directory(os.path.join(RESULTS_DIR, "DB/gtdb")),
+        tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
     log:
         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
@@ -87,11 +107,13 @@ rule download_tax_db:
         runtime=6 * 60,
     threads: 20
     conda:
-        os.path.join(WORK_DIR, "envs/mmseqs.yaml")
+        os.path.join(WORK_DIR, "envs/metabuli.yaml")
     shell:
-        '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
-        "rm -f $(dirname {output.file})/$name* && "
-        "mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
+        """
+        (date
+        metabuli databases GTDB $(dirname {output.folder}) {output.tmp} --threads {threads}
+        date) 2> {log.err} > {log.out}
+        """
 
 
 rule download_tax_db_euk:
@@ -111,54 +133,12 @@ rule download_tax_db_euk:
         runtime=6 * 60,
     threads: 20
     conda:
-        os.path.join(WORK_DIR, "envs/mmseqs.yaml")
+        os.path.join(WORK_DIR, "envs/metabuli.yaml")
     shell:
         """
-        (date 
-        wget -v -O {output.gzip} https://zenodo.org/records/10139451/files/MicroEuk_v3.tar.gz?download=1 
-        tar xvzf {output.gzip} -C {output.db}
-        gzip -v -d {output.db}/MicroEuk_v3/MicroEuk100.faa.gz
-        gzip -v -d -c {output.db}/MicroEuk_v3/MicroEuk90_clusters.tsv.gz | cut -f1  > {output.db}/MicroEuk90.list
-        seqkit faidx -j 4 -l {output.db}/MicroEuk90.list {output.db}/MicroEuk_v3/MicroEuk100.faa > {output.db}/MicroEuk90.faa
-        mmseqs createdb --compressed 1 {output.db}/MicroEuk90.faa {output.final}
+        (date
+        metabuli databases GTDB $(dirname {output.folder}) {output.tmp} --threads {threads}
         date) 2> {log.err} > {log.out}
-        """
-
-
-rule create_tax_db_euk:
-    input:
-        seq=rules.download_tax_db_euk.output.final,
-        file=rules.download_tax_db_euk.output.prot_id,
-        tax=rules.download_tax_db_euk.output.db,
-    output:
-        file=os.path.join(RESULTS_DIR, "DB/db_euk.done"),
-        ids_micro=temp(os.path.join(RESULTS_DIR, "DB/MicroEuk_v3/ids_micro.txt")),
-        ids=os.path.join(RESULTS_DIR, "DB/MicroEuk_v3/ids.txt"),
-        tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
-        mapping=os.path.join(RESULTS_DIR, "DB/MicroEuk_v3/MicroEuk90_mapping"),
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/create_tax_db_euk.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/create_tax_db_euk.err.log"),
-    resources:
-        mem_mb=get_mem_mb,
-        runtime=60 * 12,
-    conda:
-        os.path.join(WORK_DIR, "envs/mmseqs.yaml")
-    threads: 20
-    shell:
-        """
-        (date &&
-        zcat {input.file} | cut -f3,4 > {output.ids_micro}
-        perl -ne 'print "$2\t$1\n" if /jgi\\|.*\\|(\\d+)\\|[^\t]+\t([a-f0-9]{{32}})/' {output.ids_micro} > {output.ids}
-        rm -rf {input.tax}/taxdump.tar.gz
-        wget -O {input.tax}/taxdump.tar.gz ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz
-        tar -xzvf {input.tax}/taxdump.tar.gz -C {input.tax}
-        mmseqs createtaxdb {input.seq} {output.tmp} --ncbi-tax-dump {input.tax} --tax-mapping-file {output.ids}
-        mv {input.tax}/nodes.dmp {input.tax}/MicroEuk90_nodes.dmp
-        mv {input.tax}/names.dmp {input.tax}/MicroEuk90_names.dmp
-        mv {input.tax}/merged.dmp {input.tax}/MicroEuk90_merged.dmp
-        touch {output.file}
-        ) 2> {log.err} > {log.out}
         """
 
 
