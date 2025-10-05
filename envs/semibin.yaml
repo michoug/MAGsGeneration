@@ -3,4 +3,4 @@ channels:
   - bioconda
   - au-eoed
 dependencies:
-  - semibin=2.1
+  - semibin=2.2

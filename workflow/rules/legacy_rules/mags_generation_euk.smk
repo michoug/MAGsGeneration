@@ -281,6 +281,7 @@ rule taxvamb:
         "vamb bin taxvamb --outdir $(dirname {output}) -m 1501 --fasta {input.contig} --taxonomy {input.tax} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} -o && "
         "date) 2> {log.err} > {log.out}"
 
+
 use rule taxvamb as taxvamb_euk with:
     input:
         file=rules.vamb_install.output,
@@ -289,7 +290,8 @@ use rule taxvamb as taxvamb_euk with:
         cov=rules.vamb_coverage.output,
     output:
         os.path.join(
-            RESULTS_DIR, "Bins/{sample}/Vamb/Vamb_Results_euk/vaevae_clusters_unsplit.tsv"
+            RESULTS_DIR,
+            "Bins/{sample}/Vamb/Vamb_Results_euk/vaevae_clusters_unsplit.tsv",
         ),
     conda:
         os.path.join(WORK_DIR, "envs/vamb.yaml")

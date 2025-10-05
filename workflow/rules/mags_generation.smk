@@ -20,12 +20,6 @@ rule mags_generation:
             sample_2=SAMPLES,
         ),
         expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample=ASSEMBLY),
-        # expand(
-        #     os.path.join(
-        #         RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"
-        #     ),
-        #     sample=ASSEMBLY,
-        # ),
         expand(
             os.path.join(
                 RESULTS_DIR,
@@ -33,32 +27,32 @@ rule mags_generation:
             ),
             sample=ASSEMBLY,
         ),
-        expand(
-            os.path.join(
-                RESULTS_DIR,
-                "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
-            ),
-            sample=ASSEMBLY,
-        ),
         # expand(
         #     os.path.join(
         #         RESULTS_DIR,
-        #         "Bins/{sample}/Vamb/Vamb_Results_euk/vaevae_clusters_unsplit.tsv",
+        #         "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
         #     ),
         #     sample=ASSEMBLY,
         # ),
+        expand(
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/{sample}/Vamb/Vamb_Results_euk/vaevae_clusters_unsplit.tsv",
+            ),
+            sample=ASSEMBLY,
+        ),
         expand(
             os.path.join(
                 RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"
             ),
             sample=ASSEMBLY,
         ),
-        expand(
-            os.path.join(
-                RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"
-            ),
-            sample=ASSEMBLY,
-        ),
+        # expand(
+        #     os.path.join(
+        #         RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"
+        #     ),
+        #     sample=ASSEMBLY,
+        # ),
         expand(
             os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
             sample=ASSEMBLY,
@@ -98,7 +92,9 @@ rule indexAssembly:
 rule checkIndexAssembyDone:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/{{sample}}_filter.fasta.r{number}.sti"),
+            os.path.join(
+                RESULTS_DIR, "Assembly/{{sample}}_filter.fasta.r{number}.sti"
+            ),
             number=[100, 125, 150, 250, 400],
         ),
     output:
@@ -290,7 +286,7 @@ rule rosella:
         err=os.path.join(RESULTS_DIR, "logs/rosella/{sample}.err.log"),
     threads: 14
     resources:
-        runtime=60 * 8,
+        runtime=60 * 16,
         mem_mb=get_mem_mb,
     message:
         "Running Rosella"
@@ -356,7 +352,7 @@ rule vamb_filter:
 
 use rule vamb_filter as vamb_filter_euk with:
     input:
-        rules.tax_add_missing_euk.output,
+        rules.fix_taxonomy_euk.output,
         rules.vamb_length.output,
     output:
         temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_tax_euk.tsv")),
@@ -390,6 +386,7 @@ rule taxvamb:
         "vamb bin taxvamb --outdir $(dirname {output}) -m 1501 --fasta {input.contig} --taxonomy {input.tax} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} -o && "
         "date) 2> {log.err} > {log.out}"
 
+
 use rule taxvamb as taxvamb_euk with:
     input:
         file=rules.vamb_install.output,
@@ -398,7 +395,8 @@ use rule taxvamb as taxvamb_euk with:
         cov=rules.vamb_coverage.output,
     output:
         os.path.join(
-            RESULTS_DIR, "Bins/{sample}/Vamb/Vamb_Results_euk/vaevae_clusters_unsplit.tsv"
+            RESULTS_DIR,
+            "Bins/{sample}/Vamb/Vamb_Results_euk/vaevae_clusters_unsplit.tsv",
         ),
     conda:
         os.path.join(WORK_DIR, "envs/vamb.yaml")
@@ -409,7 +407,6 @@ use rule taxvamb as taxvamb_euk with:
     log:
         out=os.path.join(RESULTS_DIR, "logs/vamb_euk/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/vamb_euk/{sample}.err.log"),
-
 
 
 rule concoct_prepare:
@@ -431,7 +428,7 @@ rule concoct_prepare:
     message:
         "Preparing files for Concoct"
     resources:
-        runtime= 60 * 5,
+        runtime=60 * 5,
     shell:
         "(date && rm -f {output.bed} {output.cont} {output.cov} && cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
         "concoct_coverage_table.py {output.bed} {input.bam} > {output.cov} && [[ -s {output.cov} ]] && "

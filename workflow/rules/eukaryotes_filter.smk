@@ -1,24 +1,42 @@
+# ------------------------
+# Rule: eukaryotes_filter
+# ------------------------
 rule eukaryotes_filter:
     input:
-        expand(os.path.join(RESULTS_DIR, "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt"), sample=ASSEMBLY),
+        expand(
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt",
+            ),
+            sample=ASSEMBLY,
+        ),
         os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags"),
         os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_whokaryote.txt"),
         os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_deepmicroclass.txt"),
     output:
-        touch("status/eukaryotes_filter.done")
+        touch("status/eukaryotes_filter.done"),
 
+
+# ------------------------
+# Rule: get_all_mags
+# ------------------------
 rule get_all_mags:
     input:
         contigs=rules.filter_length.output.out,
         metabat=rules.metabat2.output,
         rosella=rules.rosella.output,
-        # taxvamb=rules.taxvamb_euk.output,
         concoct=rules.concoct.output,
         semibin=rules.semibin.output,
     output:
-        dir=temp(directory(os.path.join(RESULTS_DIR, "Bins/euk_potential_mags/{sample}"))),
+        dir=temp(
+            directory(os.path.join(RESULTS_DIR, "Bins/euk_potential_mags/{sample}"))
+        ),
         done=os.path.join(RESULTS_DIR, "Bins/euk_potential_mags/{sample}/done.txt"),
-        concoct=temp(os.path.join(RESULTS_DIR, "Bins/euk_potential_mags/{sample}/concoct_list.txt")),
+        concoct=temp(
+            os.path.join(
+                RESULTS_DIR, "Bins/euk_potential_mags/{sample}/concoct_list.txt"
+            )
+        ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/euk_potential/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/euk_potential/{sample}.err.log"),
@@ -30,7 +48,6 @@ rule get_all_mags:
         value="{sample}",
     shell:
         """
-        (
         set -euo pipefail
         date
         mkdir -p {output.dir}
@@ -39,35 +56,36 @@ rule get_all_mags:
         perl -pe 's/,(\\d+)/,concoct_$1/g' {input.concoct} > {output.concoct}
         extract_fasta_bins.py {input.contigs} {output.concoct} --output_path {output.dir}
         cp $(dirname {input.semibin})/output_bins/*.fa.gz {output.dir}
-        for file in {output.dir}/*gz; do
-            if [[ -f "$file" && "$file" == *.gz ]]; then
-                gunzip "$file"
-            fi
-        done
-        for file in {output.dir}/*.fna; do
-            if [[ -f "$file" ]]; then
-                mv "$file" "${{file%.fna}}.fa"
-            fi
-        done
+        for file in {output.dir}/*gz; do [[ -f "$file" && "$file" == *.gz ]] && gunzip "$file"; done
+        for file in {output.dir}/*.fna; do [[ -f "$file" ]] && mv "$file" "${{file%.fna}}.fa"; done
         touch {output.done}
-        date) 2> {log.err} > {log.out}
+        date
         """
 
+
+# ------------------------
+# Rule: rename_mags
+# ------------------------
 rule rename_mags:
     input:
         rules.get_all_mags.output.dir,
     output:
-        temp(directory(os.path.join(RESULTS_DIR, "Bins/euk_potential_mags_renamed/{sample}_renamed"))),
-    message:
-        "Renaming the MAGs"
+        temp(
+            directory(
+                os.path.join(
+                    RESULTS_DIR, "Bins/euk_potential_mags_renamed/{sample}_renamed"
+                )
+            )
+        ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/rename_mags/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/rename_mags/{sample}.err.log"),
+    message:
+        "Renaming the MAGs"
     params:
         value="{sample}",
     shell:
         """
-        (
         set -euo pipefail
         date
         mkdir -p {output}
@@ -75,15 +93,27 @@ rule rename_mags:
             base=$(basename "$file")
             mv "$file" "{output}/{params}_$base"
         done
-        date) 2> {log.err} > {log.out}
+        date
         """
 
+
+# ------------------------
+# Rule: get_length
+# ------------------------
 rule get_length:
     input:
         rules.rename_mags.output,
     output:
-        txt=temp(os.path.join(RESULTS_DIR, "Bins/euk_potential_mags_length/{sample}_stats_fasta_all.txt")),
-        final=os.path.join(RESULTS_DIR, "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt"),
+        txt=temp(
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/euk_potential_mags_length/{sample}_stats_fasta_all.txt",
+            )
+        ),
+        final=os.path.join(
+            RESULTS_DIR,
+            "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt",
+        ),
     conda:
         os.path.join(WORK_DIR, "envs/seqkit.yaml")
     threads: 4
@@ -94,20 +124,29 @@ rule get_length:
         err=os.path.join(RESULTS_DIR, "logs/get_length/{sample}.err.log"),
     shell:
         """
-        (date && seqkit stats -j {threads} {input}/*fa -T > {output.txt} &&
-        awk '$5>=2500000 && $7 >= 2500' {output.txt} | cut -f1 | tail -n +2 > {output.final} && 
-        date) 2> {log.err} > {log.out}
+        date
+        seqkit stats -j {threads} {input}/*fa -T > {output.txt}
+        awk '$5>=2500000 && $7 >= 2500' {output.txt} | cut -f1 | tail -n +2 > {output.final}
+        date
         """
 
 
+# ------------------------
+# Checkpoint: get_filtered_mags
+# ------------------------
 checkpoint get_filtered_mags:
     input:
         list=expand(
-            os.path.join(RESULTS_DIR, "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt"),
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt",
+            ),
             sample=ASSEMBLY,
         ),
-        dirs = expand(
-            os.path.join(RESULTS_DIR, "Bins/euk_potential_mags_renamed/{sample}_renamed"),
+        dirs=expand(
+            os.path.join(
+                RESULTS_DIR, "Bins/euk_potential_mags_renamed/{sample}_renamed"
+            ),
             sample=ASSEMBLY,
         ),
     output:
@@ -117,7 +156,6 @@ checkpoint get_filtered_mags:
         err=os.path.join(RESULTS_DIR, "logs/get_filter_euk.err.log"),
     shell:
         """
-        (
         set -euo pipefail
         date
         mkdir -p {output.files}
@@ -125,25 +163,36 @@ checkpoint get_filtered_mags:
             base=$(basename "$line")
             cp $line {output.files}/$base
         done
-        date) 2> {log.err} > {log.out}
+        date
         """
 
 
+# ------------------------
+# Helper functions
+# ------------------------
 def get_file_names_mm(wildcards):
     ck_output = checkpoints.get_filtered_mags.get(**wildcards).output[0]
     return expand(
-        os.path.join(RESULTS_DIR, "Bins/whokaryote/collated_output/{mags}_percentage.txt"),
+        os.path.join(
+            RESULTS_DIR, "Bins/whokaryote/collated_output/{mags}_percentage.txt"
+        ),
         mags=glob_wildcards(os.path.join(ck_output, "{mags}.fa")).mags,
     )
+
 
 def get_file_names_mm_deepmicroclass(wildcards):
     ck_output = checkpoints.get_filtered_mags.get(**wildcards).output[0]
     return expand(
-        os.path.join(RESULTS_DIR, "Bins/deepmicroclass/collated_output/{mags}_percentage.txt"),
+        os.path.join(
+            RESULTS_DIR, "Bins/deepmicroclass/collated_output/{mags}_percentage.txt"
+        ),
         mags=glob_wildcards(os.path.join(ck_output, "{mags}.fa")).mags,
     )
 
-# Running WHOKARYOTE
+
+# ------------------------
+# Rule: whokaryote
+# ------------------------
 rule whokaryote:
     input:
         os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags/{mags}.fa"),
@@ -161,7 +210,11 @@ rule whokaryote:
     message:
         "Running WHOKARYOTE on {wildcards.mags}"
     shell:
-        "(date && whokaryote.py --contigs {input} --outdir $(dirname {output}) --minsize 2500 --threads {threads} && date) 2> {log.err} > {log.out}"
+        """
+        date
+        whokaryote.py --contigs {input} --outdir $(dirname {output}) --minsize 2500 --threads {threads}
+        date
+        """
 
 
 rule percentage_whokaryote:
@@ -178,6 +231,7 @@ rule percentage_whokaryote:
     localrule: True
     run:
         import pandas as pd
+
         df = pd.read_csv(input.pred, sep="\t", header=0)
 
         count = pd.DataFrame(df.groupby("class_fst_stage")["class_fst_stage"].count())
@@ -226,16 +280,19 @@ rule concatenate_whokaryote:
 
                 # Filter and save eukaryotic bins
                 eukaryotic_bins = concatenated[concatenated["eukarya"] >= 80]
-                eukaryotic_bins[["bin"]].to_csv(output.final_list, sep="\t", index=False)
+                eukaryotic_bins[["bin"]].to_csv(
+                    output.final_list, sep="\t", index=False
+                )
                 print(f"Eukaryotic bins written to: {output.final_list}")
-
 
 
 rule deepmicroclass:
     input:
         os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags/{mags}.fa"),
     output:
-        os.path.join(RESULTS_DIR, "Bins/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv"),
+        os.path.join(
+            RESULTS_DIR, "Bins/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv"
+        ),
     conda:
         os.path.join(WORK_DIR, "envs/deepmicroclass.yaml")
     threads: 3
@@ -243,8 +300,12 @@ rule deepmicroclass:
         runtime=30,
         mem_mb=get_mem_mb,
     log:
-        out=os.path.join(RESULTS_DIR, "logs/deepmicroclass/deepmicroclass_{mags}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/deepmicroclass/deepmicroclass_{mags}.err.log"),
+        out=os.path.join(
+            RESULTS_DIR, "logs/deepmicroclass/deepmicroclass_{mags}.out.log"
+        ),
+        err=os.path.join(
+            RESULTS_DIR, "logs/deepmicroclass/deepmicroclass_{mags}.err.log"
+        ),
     message:
         "Running DeepMicroClass on {wildcards.mags}"
     shell:
@@ -253,7 +314,9 @@ rule deepmicroclass:
 
 rule deepmicroclass_percentage:
     input:
-        pred=os.path.join(RESULTS_DIR, "Bins/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv"),
+        pred=os.path.join(
+            RESULTS_DIR, "Bins/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv"
+        ),
     output:
         percent=os.path.join(
             RESULTS_DIR, "Bins/deepmicroclass/collated_output/{mags}_percentage.txt"
@@ -273,21 +336,20 @@ rule deepmicroclass_percentage:
             2: "Eukaryote",
             3: "Prokaryote",
             4: "Prokaryote",
-            5: "Prokaryote"
+            5: "Prokaryote",
         }
 
         df["pred"] = df["best_choice"].map(choice_labels)
 
         count = pd.DataFrame(df.groupby("pred")["pred"].count())
 
-        count["percent"] = (
-                    count["pred"] / count["pred"].sum()
-                ) * 100
+        count["percent"] = (count["pred"] / count["pred"].sum()) * 100
 
         count_trans = count.transpose()
         count_trans["bin"] = os.path.basename(input.pred)
         count_trans_edited = count_trans.drop(labels="pred")
         count_trans_edited.to_csv(output.percent, sep="\t", header=True)
+
 
 rule concatenate_deepmicroclass:
     input:
@@ -323,5 +385,7 @@ rule concatenate_deepmicroclass:
 
                 # Filter and save eukaryotic bins
                 eukaryotic_bins = concatenated[concatenated["Eukaryote"] >= 80]
-                eukaryotic_bins[["bin"]].to_csv(output.final_list, sep="\t", index=False)
+                eukaryotic_bins[["bin"]].to_csv(
+                    output.final_list, sep="\t", index=False
+                )
                 print(f"Eukaryotic bins written to: {output.final_list}")
