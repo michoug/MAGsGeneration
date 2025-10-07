@@ -1,6 +1,3 @@
-# ------------------------
-# Rule: eukaryotes_filter
-# ------------------------
 rule eukaryotes_filter:
     input:
         expand(
@@ -8,7 +5,7 @@ rule eukaryotes_filter:
                 RESULTS_DIR,
                 "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt",
             ),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
         os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags"),
         os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_whokaryote.txt"),
@@ -17,9 +14,6 @@ rule eukaryotes_filter:
         touch("status/eukaryotes_filter.done"),
 
 
-# ------------------------
-# Rule: get_all_mags
-# ------------------------
 rule get_all_mags:
     input:
         contigs=rules.filter_length.output.out,
@@ -27,6 +21,7 @@ rule get_all_mags:
         rosella=rules.rosella.output,
         concoct=rules.concoct.output,
         semibin=rules.semibin.output,
+        vamb=rules.taxvamb.output,
     output:
         dir=temp(
             directory(os.path.join(RESULTS_DIR, "Bins/euk_potential_mags/{sample}"))
@@ -53,6 +48,10 @@ rule get_all_mags:
         mkdir -p {output.dir}
         cp {input.metabat}/*.fa {output.dir}
         cp $(dirname {input.rosella})/*.fna {output.dir}
+        for file in "$(dirname {input.vamb})"/bins/*.fna; do
+            base=$(basename "$file" .fna)
+            cp "$file" "{output.dir}/vamb_${{base}}.fa"
+        done
         perl -pe 's/,(\\d+)/,concoct_$1/g' {input.concoct} > {output.concoct}
         extract_fasta_bins.py {input.contigs} {output.concoct} --output_path {output.dir}
         cp $(dirname {input.semibin})/output_bins/*.fa.gz {output.dir}
@@ -63,9 +62,6 @@ rule get_all_mags:
         """
 
 
-# ------------------------
-# Rule: rename_mags
-# ------------------------
 rule rename_mags:
     input:
         rules.get_all_mags.output.dir,
@@ -97,9 +93,6 @@ rule rename_mags:
         """
 
 
-# ------------------------
-# Rule: get_length
-# ------------------------
 rule get_length:
     input:
         rules.rename_mags.output,
@@ -131,9 +124,6 @@ rule get_length:
         """
 
 
-# ------------------------
-# Checkpoint: get_filtered_mags
-# ------------------------
 checkpoint get_filtered_mags:
     input:
         list=expand(
@@ -141,13 +131,13 @@ checkpoint get_filtered_mags:
                 RESULTS_DIR,
                 "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt",
             ),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
         dirs=expand(
             os.path.join(
                 RESULTS_DIR, "Bins/euk_potential_mags_renamed/{sample}_renamed"
             ),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
     output:
         files=directory(os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags")),
@@ -167,9 +157,6 @@ checkpoint get_filtered_mags:
         """
 
 
-# ------------------------
-# Helper functions
-# ------------------------
 def get_file_names_mm(wildcards):
     ck_output = checkpoints.get_filtered_mags.get(**wildcards).output[0]
     return expand(
@@ -190,14 +177,11 @@ def get_file_names_mm_deepmicroclass(wildcards):
     )
 
 
-# ------------------------
-# Rule: whokaryote
-# ------------------------
 rule whokaryote:
     input:
         os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags/{mags}.fa"),
     output:
-        os.path.join(RESULTS_DIR, "Bins/whokaryote/{mags}/tiara_pred.txt"),
+        os.path.join(RESULTS_DIR, "Bins/whokaryote/{mags}/whokaryote_predictions_T.tsv"),
     conda:
         os.path.join(WORK_DIR, "envs/whokaryote.yaml")
     threads: 3
@@ -219,7 +203,9 @@ rule whokaryote:
 
 rule percentage_whokaryote:
     input:
-        pred=os.path.join(RESULTS_DIR, "Bins/whokaryote/{mags}/tiara_pred.txt"),
+        pred=os.path.join(
+            RESULTS_DIR, "Bins/whokaryote/{mags}/whokaryote_predictions_T.tsv"
+        ),
     output:
         percent=os.path.join(
             RESULTS_DIR, "Bins/whokaryote/collated_output/{mags}_percentage.txt"
@@ -227,22 +213,20 @@ rule percentage_whokaryote:
     log:
         os.path.join(RESULTS_DIR, "logs/collate/{mags}.log"),
     message:
-        "Getting the percentage for contigs identified as 'eukarya' in {wildcards.mags}"
+        "Getting the percentage for contigs identified as 'eukaryote' in {wildcards.mags}"
     localrule: True
     run:
         import pandas as pd
 
         df = pd.read_csv(input.pred, sep="\t", header=0)
 
-        count = pd.DataFrame(df.groupby("class_fst_stage")["class_fst_stage"].count())
+        count = pd.DataFrame(df.groupby("predicted")["predicted"].count())
 
-        count["percent"] = (
-            count["class_fst_stage"] / count["class_fst_stage"].sum()
-        ) * 100
+        count["percent"] = (count["predicted"] / count["predicted"].sum()) * 100
 
         count_trans = count.transpose()
         count_trans["bin"] = os.path.basename(os.path.dirname(input.pred))
-        count_trans_edited = count_trans.drop(labels="class_fst_stage")
+        count_trans_edited = count_trans.drop(labels="predicted")
         count_trans_edited.to_csv(output.percent, sep="\t", header=True)
 
 
@@ -279,7 +263,7 @@ rule concatenate_whokaryote:
                 print(f"Collated output written to: {output.collated}")
 
                 # Filter and save eukaryotic bins
-                eukaryotic_bins = concatenated[concatenated["eukarya"] >= 80]
+                eukaryotic_bins = concatenated[concatenated["eukaryote"] >= 80]
                 eukaryotic_bins[["bin"]].to_csv(
                     output.final_list, sep="\t", index=False
                 )

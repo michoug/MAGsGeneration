@@ -1,9 +1,7 @@
 rule contigs_taxonomy:
     input:
         expand(
-            os.path.join(
-                RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax.tsv"
-            ),
+            os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax.tsv"),
             sample=ASSEMBLY,
         ),
         expand(
@@ -44,6 +42,7 @@ rule taxonomy:
         date) 2> {log.err} > {log.out}
         """
 
+
 use rule taxonomy as taxonomy_euk with:
     input:
         fasta=os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
@@ -59,8 +58,8 @@ use rule taxonomy as taxonomy_euk with:
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_contig_euk/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_contig_euk/{sample}.err.log"),
-    params: "MicroEuk90"
-
+    params:
+        "MicroEuk90",
 
 
 rule taxconverter:
@@ -81,6 +80,7 @@ rule taxconverter:
     shell:
         "(date && "
         "taxconverter metabuli -c {input.report} -r {input.classif} -o {output} && date) 2> {log.err} > {log.out}"
+
 
 use rule taxconverter as taxconverter_euk with:
     input:
@@ -125,6 +125,7 @@ rule tax_add_missing:
         merged["predictions"].fillna("unknown", inplace=True)
 
         merged.to_csv(output[0], sep="\t", index=False, header=True)
+
 
 use rule tax_add_missing as tax_add_missing_euk with:
     input:
