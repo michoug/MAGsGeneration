@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - mmseqs2=15-6f452
+  - seqkit=2.8

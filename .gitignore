@@ -23,6 +23,8 @@ status/*
 *overview_*
 gtdb_ref_sketch.msh
 coverm*
+scripts/Other
+ncbi_dataset.zip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

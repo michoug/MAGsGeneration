@@ -13,7 +13,7 @@ rule contigs_taxonomy:
 rule taxonomy:
     input:
         fasta=rules.assembly_megahit.output.final,
-        file=rules.download_tax_db.output.file,
+        file=os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
     output:
         tax_report=os.path.join(
             RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_report.tsv"
@@ -44,11 +44,7 @@ rule taxconverter:
         report=rules.taxonomy.output.tax_report,
         classif=rules.taxonomy.output.tax_class,
     output:
-        temp(
-            os.path.join(
-                RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_temp.tsv"
-            )
-        ),
+        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_temp.tsv"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.err.log"),
@@ -57,7 +53,7 @@ rule taxconverter:
         os.path.join(WORK_DIR, "envs/taxconverter.yaml")
     shell:
         "(date && "
-        "taxconverter metabuli -c {input.report} -r {input.classif} -o {output} && date) 2> {log.err} > {log.out}"
+        "taxconverter metabuli -c {input.classif} -r {input.report} -o {output} && date) 2> {log.err} > {log.out}"
 
 
 rule tax_add_missing:

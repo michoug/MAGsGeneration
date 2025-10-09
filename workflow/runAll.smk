@@ -80,6 +80,13 @@ if "binning_refinement" in STEPS:
     TARGETS += ["status/binning_refinement.done"]
 
 
+if "eukaryotes_filter" in STEPS:
+
+    include: "rules/eukaryotes_filter.smk"
+
+    TARGETS += ["status/eukaryotes_filter.done"]
+
+
 # CheckM
 if "checkm" in STEPS:
 

@@ -3,58 +3,52 @@ rule mags_generation:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
             number=[100, 125, 150, 250, 400],
         ),
         expand(
             os.path.join(RESULTS_DIR, "Assembly/index_{sample}.done"),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
         expand(
             os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
             sample_2=SAMPLES,
         ),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample=ASSEMBLY),
-        # expand(
-        #     os.path.join(
-        #         RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"
-        #     ),
-        #     sample=ASSEMBLY,
-        # ),
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample=SAMPLES),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png",
             ),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
             ),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"
             ),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
-        expand(
-            os.path.join(
-                RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"
-            ),
-            sample=ASSEMBLY,
-        ),
+        # expand(
+        #     os.path.join(
+        #         RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"
+        #     ),
+        #     sample=SAMPLES,
+        # ),
         expand(
             os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
     output:
         touch("status/mags_generation.done"),
@@ -91,7 +85,9 @@ rule indexAssembly:
 rule checkIndexAssembyDone:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/{{sample}}_filter.fasta.r{number}.sti"),
+            os.path.join(
+                RESULTS_DIR, "Assembly/{{sample}}_filter.fasta.r{number}.sti"
+            ),
             number=[100, 125, 150, 250, 400],
         ),
     output:
@@ -124,6 +120,7 @@ rule mapping:
         rm -f {output}.tmp*
         strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
         samtools sort -@ {threads} -o {output}
+        sleep 30
         samtools index {output}
         date ) 2> {log.err} > {log.out}
         """
@@ -282,7 +279,7 @@ rule rosella:
         err=os.path.join(RESULTS_DIR, "logs/rosella/{sample}.err.log"),
     threads: 14
     resources:
-        runtime=60 * 8,
+        runtime=60 * 16,
         mem_mb=get_mem_mb,
     message:
         "Running Rosella"
@@ -390,6 +387,8 @@ rule concoct_prepare:
         err=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.err.log"),
     message:
         "Preparing files for Concoct"
+    resources:
+        runtime=60 * 5,
     shell:
         "(date && rm -f {output.bed} {output.cont} {output.cov} && cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
         "concoct_coverage_table.py {output.bed} {input.bam} > {output.cov} && [[ -s {output.cov} ]] && "
@@ -469,7 +468,7 @@ rule semibin:
     shell:
         """
         (date
-        SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads}
+        SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster
         touch {output}
         date) 2> {log.err} > {log.out}
         """

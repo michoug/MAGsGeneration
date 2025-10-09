@@ -1,5 +1,6 @@
 channels:
   - conda-forge
   - bioconda
+  - au-eoed
 dependencies:
-  - mmseqs2=15-6f452
+  - busco=6
