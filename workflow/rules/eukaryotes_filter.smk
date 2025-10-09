@@ -9,6 +9,8 @@ rule eukaryotes_filter:
         ),
         os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags"),
         os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_deepmicroclass.txt"),
+        os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags/done.txt"),
+        os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/done.txt"),
     output:
         touch("status/eukaryotes_filter.done"),
 
@@ -79,6 +81,7 @@ rule rename_mags:
         "Renaming the MAGs"
     params:
         value="{sample}",
+    localrule: True
     shell:
         """
         set -euo pipefail
@@ -146,13 +149,13 @@ checkpoint get_filtered_mags:
     shell:
         """
         set -euo pipefail
-        date
+        (date
         mkdir -p {output.files}
         cat {input.list} | while read -r line; do
             base=$(basename "$line")
             cp $line {output.files}/$base
         done
-        date
+        date) 2> {log.err} > {log.out}
         """
 
 
@@ -227,6 +230,7 @@ rule deepmicroclass_percentage:
 
         count_trans = count.transpose()
         count_trans["bin"] = os.path.basename(input.pred)
+        count_trans["bin"] = count_trans["bin"].str.replace("_pred_one-hot_hybrid.tsv", "")
         count_trans_edited = count_trans.drop(labels="pred")
         count_trans_edited.to_csv(output.percent, sep="\t", header=True)
 
@@ -266,6 +270,81 @@ rule concatenate_deepmicroclass:
                 # Filter and save eukaryotic bins
                 eukaryotic_bins = concatenated[concatenated["Eukaryote"] >= 80]
                 eukaryotic_bins[["bin"]].to_csv(
-                    output.final_list, sep="\t", index=False
+                    output.final_list, sep="\t", index=False, header=False
                 )
                 print(f"Eukaryotic bins written to: {output.final_list}")
+
+checkpoint get_eukaryotes_mags:
+    input:
+        folder=rules.get_filtered_mags.output.files,
+        deep=os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_deepmicroclass.txt"),
+    output:
+        dir=directory(os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags")),
+        done=os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags/done.txt"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/get_eukaryotic_mags.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/get_eukaryotic_mags.err.log"),
+    message:
+        "Getting the final eukaryotic MAGs",
+    localrule: True
+    shell:
+        """
+        set -euo pipefail
+        (date
+        mkdir -p {output.dir}
+        cat {input.deep} | while read -r line; do
+            base=$(basename "$line")
+            cp {input.folder}/$base {output.dir}/$base
+        done
+        touch {output.done}
+        date) 2> {log.err} > {log.out}
+        """
+
+def get_file_eukaryotes(wildcards):
+    ck_output = checkpoints.get_eukaryotes_mags.get(**wildcards).output[0]
+    return expand(
+        os.path.join(
+            RESULTS_DIR, "Bins/eukaryotic_mags_busco/{mags}/{mags}.done"
+        ),
+        mags=glob_wildcards(os.path.join(ck_output, "{mags}.fa")).mags,
+    )
+
+rule busco:
+    input:
+        folder = os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags/{mags}.fa"),
+        db = rules.busco_db_euk.output.dir,
+    output:
+        folder = directory(os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/{mags}")),
+        done = os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/{mags}/{mags}.done"),
+    conda:
+        os.path.join(WORK_DIR, "envs/busco.yaml")
+    threads: 10
+    resources:
+        runtime= 2 * 60,
+        mem_mb=get_mem_mb,
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/busco/busco_{mags}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/busco/busco_{mags}.err.log"),
+    message:
+        "Running BUSCO on the eukaryotic MAGs"
+    shell:
+        """
+        (date
+        busco -i {input.folder} -o {output.folder} -m genome --auto-lineage -c 10 -f --metaeuk --download_path {input.db} || echo "BUSCO failed (possibly no genes found) — continuing anyway"
+        touch {output.done}
+        date) 2> {log.err} > {log.out}
+        """
+
+rule busco_done:
+    input:
+        get_file_eukaryotes,
+    output:
+        os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/done.txt"),
+    message:
+        "All BUSCO runs on eukaryotic MAGs are done"
+    localrule: True
+    shell:
+        """
+        touch {output}
+        """
+

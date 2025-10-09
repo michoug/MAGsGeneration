@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - bioconda
+  - au-eoed
+dependencies:
+  - busco=6

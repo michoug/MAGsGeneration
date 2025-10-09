@@ -2,14 +2,13 @@ rule install_software:
     input:
         os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
         os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
-        os.path.join(RESULTS_DIR, "DB/MicroEuk_v3/MicroEuk90"),
-        os.path.join(RESULTS_DIR, "DB/db_euk.done"),
         os.path.join(RESULTS_DIR, "DB/vamb.done"),
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
         os.path.join(
             RESULTS_DIR,
             "DB/SingleM/S5.4.0.GTDB_r226.metapackage_20250331.smpkg.zb/CONTENTS.json",
         ),
+        os.path.join(RESULTS_DIR, "DB/Busco_euk.done"),
     output:
         touch("status/install_software.done"),
 
@@ -136,4 +135,26 @@ rule singlem_data:
         (date
         singlem data --output-directory $(dirname {output.folder})
         date) 2> {log.err} > {log.out}
+        """
+
+rule busco_db_euk:
+    output:
+        dir=directory(os.path.join(RESULTS_DIR, "DB/Busco_euk")),
+        file=os.path.join(RESULTS_DIR, "DB/Busco_euk.done"),
+    conda:
+        os.path.join(WORK_DIR, "envs/busco.yaml")
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/busco_db_euk.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/busco_db_euk.err.log"),
+    resources:
+        mem_mb=get_mem_mb,
+        runtime=2 * 60,
+    threads: 2
+    shell:
+        """
+        (date
+        rm -rf {output.dir}
+        busco --download_path {output.dir}
+        date) 2> {log.err} > {log.out}
+        touch {output.file}
         """
