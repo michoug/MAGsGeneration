@@ -8,7 +8,7 @@ rule eukaryotes_filter:
             sample=SAMPLES,
         ),
         os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags"),
-        os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_whokaryote.txt")
+        os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_whokaryote.txt"),
     output:
         touch("status/eukaryotes_filter.done"),
 
@@ -257,4 +257,3 @@ rule concatenate_whokaryote:
                     output.final_list, sep="\t", index=False
                 )
                 print(f"Eukaryotic bins written to: {output.final_list}")
-

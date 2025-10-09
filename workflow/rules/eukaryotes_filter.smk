@@ -230,7 +230,9 @@ rule deepmicroclass_percentage:
 
         count_trans = count.transpose()
         count_trans["bin"] = os.path.basename(input.pred)
-        count_trans["bin"] = count_trans["bin"].str.replace("_pred_one-hot_hybrid.tsv", "")
+        count_trans["bin"] = count_trans["bin"].str.replace(
+            "_pred_one-hot_hybrid.tsv", ""
+        )
         count_trans_edited = count_trans.drop(labels="pred")
         count_trans_edited.to_csv(output.percent, sep="\t", header=True)
 
@@ -274,6 +276,7 @@ rule concatenate_deepmicroclass:
                 )
                 print(f"Eukaryotic bins written to: {output.final_list}")
 
+
 checkpoint get_eukaryotes_mags:
     input:
         folder=rules.get_filtered_mags.output.files,
@@ -285,7 +288,7 @@ checkpoint get_eukaryotes_mags:
         out=os.path.join(RESULTS_DIR, "logs/get_eukaryotic_mags.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/get_eukaryotic_mags.err.log"),
     message:
-        "Getting the final eukaryotic MAGs",
+        "Getting the final eukaryotic MAGs"
     localrule: True
     shell:
         """
@@ -300,27 +303,27 @@ checkpoint get_eukaryotes_mags:
         date) 2> {log.err} > {log.out}
         """
 
+
 def get_file_eukaryotes(wildcards):
     ck_output = checkpoints.get_eukaryotes_mags.get(**wildcards).output[0]
     return expand(
-        os.path.join(
-            RESULTS_DIR, "Bins/eukaryotic_mags_busco/{mags}/{mags}.done"
-        ),
+        os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/{mags}/{mags}.done"),
         mags=glob_wildcards(os.path.join(ck_output, "{mags}.fa")).mags,
     )
 
+
 rule busco:
     input:
-        folder = os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags/{mags}.fa"),
-        db = rules.busco_db_euk.output.dir,
+        folder=os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags/{mags}.fa"),
+        db=rules.busco_db_euk.output.dir,
     output:
-        folder = directory(os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/{mags}")),
-        done = os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/{mags}/{mags}.done"),
+        folder=directory(os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/{mags}")),
+        done=os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/{mags}/{mags}.done"),
     conda:
         os.path.join(WORK_DIR, "envs/busco.yaml")
     threads: 10
     resources:
-        runtime= 2 * 60,
+        runtime=2 * 60,
         mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/busco/busco_{mags}.out.log"),
@@ -335,6 +338,7 @@ rule busco:
         date) 2> {log.err} > {log.out}
         """
 
+
 rule busco_done:
     input:
         get_file_eukaryotes,
@@ -347,4 +351,3 @@ rule busco_done:
         """
         touch {output}
         """
-

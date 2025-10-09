@@ -137,6 +137,7 @@ rule singlem_data:
         date) 2> {log.err} > {log.out}
         """
 
+
 rule busco_db_euk:
     output:
         dir=directory(os.path.join(RESULTS_DIR, "DB/Busco_euk")),
