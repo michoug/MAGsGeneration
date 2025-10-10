@@ -11,6 +11,7 @@ rule eukaryotes_filter:
         os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_deepmicroclass.txt"),
         os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags/done.txt"),
         os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/done.txt"),
+        os.path.join(RESULTS_DIR, "qc/multiqc_busco.html"),
     output:
         touch("status/eukaryotes_filter.done"),
 
@@ -333,7 +334,7 @@ rule busco:
     shell:
         """
         (date
-        busco -i {input.folder} -o {output.folder} -m genome --auto-lineage -c 10 -f --metaeuk --download_path {input.db} || echo "BUSCO failed (possibly no genes found) — continuing anyway"
+        busco -i {input.folder} --out_path {output.folder} -m genome --auto-lineage -c 10 -f --metaeuk --download_path {input.db} --offline || echo "BUSCO failed (possibly no genes found) — continuing anyway"
         touch {output.done}
         date) 2> {log.err} > {log.out}
         """
@@ -351,3 +352,19 @@ rule busco_done:
         """
         touch {output}
         """
+
+rule busco_multiqc:
+    input:
+        rules.busco_done.output,
+    output:
+        os.path.join(RESULTS_DIR, "qc/multiqc_busco.html"),
+        directory(os.path.join(RESULTS_DIR, "qc/multiqc_busco_data")),
+    params:
+        extra="--verbose --ignore auto_lineage/",  # Optional: extra parameters for multiqc.
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
+    log:
+        "logs/multiqc.log",
+    wrapper:
+        "v7.6.1/bio/multiqc"
