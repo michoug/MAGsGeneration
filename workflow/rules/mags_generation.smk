@@ -3,59 +3,53 @@ rule mags_generation:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
             number=[100, 125, 150, 250, 400],
         ),
         expand(
             os.path.join(RESULTS_DIR, "Assembly/index_{sample}.done"),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
         expand(
             os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
             sample_2=SAMPLES,
         ),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample=ASSEMBLY),
-        # expand(
-        #     os.path.join(
-        #         RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"
-        #     ),
-        #     sample=ASSEMBLY,
-        # ),
+        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample=SAMPLES),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png",
             ),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
             ),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"
             ),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"
             ),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
-        # expand(
-        #     os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
-        #     sample=ASSEMBLY,
-        # ),
+        expand(
+            os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
+            sample=SAMPLES,
+        ),
     output:
         touch("status/mags_generation.done"),
 
@@ -91,7 +85,9 @@ rule indexAssembly:
 rule checkIndexAssembyDone:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/{{sample}}_filter.fasta.r{number}.sti"),
+            os.path.join(
+                RESULTS_DIR, "Assembly/{{sample}}_filter.fasta.r{number}.sti"
+            ),
             number=[100, 125, 150, 250, 400],
         ),
     output:
@@ -124,6 +120,7 @@ rule mapping:
         rm -f {output}.tmp*
         strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
         samtools sort -@ {threads} -o {output}
+        sleep 30
         samtools index {output}
         date ) 2> {log.err} > {log.out}
         """
@@ -207,62 +204,6 @@ rule metabinner_coverage:
         date) 2> {log.err} > {log.out}
         """
 
-
-rule metabinner_prepare:
-    input:
-        contig=rules.filter_length.output.out,
-        bin=rules.metabinner_install.output.file,
-    output:
-        cont_t=temp(os.path.join(RESULTS_DIR, "/Assembly/{sample}_filter_1500.fa")),
-        cont=os.path.join(RESULTS_DIR, "/Bins/{sample}/{sample}_metabinner_1500.fa"),
-        kmer_t=temp(
-            os.path.join(RESULTS_DIR, "/Assembly/{sample}_filter_kmer_4_f1500.csv")
-        ),
-        kmer=os.path.join(RESULTS_DIR, "/Bins/{sample}/{sample}_kmer_4_f1500.csv"),
-    localrule: True
-    conda:
-        os.path.join(WORK_DIR, "envs/metabinner.yaml")
-    params:
-        length=1500,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.err.log"),
-    message:
-        "Prepare fasta and kmer file for Metabinner"
-    shell:
-        "(date && python $(dirname {input.bin})/scripts/Filter_tooshort.py {input.contig} {params} && "
-        "cp {output.cont_t} {output.cont} && "
-        "python $(dirname {input.bin})/scripts/gen_kmer.py {input.contig} {params} 4 && "
-        "cp {output.kmer_t} {output.kmer} && date) 2> {log.err} > {log.out}"
-
-
-rule metabinner:
-    priority: 20
-    input:
-        cont=rules.metabinner_prepare.output.cont,
-        cov=rules.metabinner_coverage.output.final,
-        kmer=rules.metabinner_prepare.output.kmer,
-        path=rules.metabinner_install.output.file,
-    output:
-        os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/metabinner.yaml")
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.err.log"),
-    threads: 14
-    resources:
-        runtime=60 * 6,
-        mem_mb=get_mem_mb,
-    message:
-        "Running Metabinner"
-    shell:
-        "(date && run_metabinner.sh -a {input.cont} -d {input.cov} -k {input.kmer} -p $(dirname {input.path}) -o $(dirname {output}) -t {threads} -s huge && "
-        "mv $(dirname {output})/metabinner_res/* $(dirname {output}) && "
-        "rm -r $(dirname {output})/metabinner_res/ $(dirname {output})/intermediate_result $(dirname {output})/unitem_profile $(dirname {output})/ensemble_res "
-        "&& date) 2> {log.err} > {log.out}"
-
-
 rule rosella:
     input:
         cont=rules.filter_length.output.out,
@@ -282,7 +223,7 @@ rule rosella:
         err=os.path.join(RESULTS_DIR, "logs/rosella/{sample}.err.log"),
     threads: 14
     resources:
-        runtime=60 * 8,
+        runtime=60 * 16,
         mem_mb=get_mem_mb,
     message:
         "Running Rosella"
@@ -390,6 +331,8 @@ rule concoct_prepare:
         err=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.err.log"),
     message:
         "Preparing files for Concoct"
+    resources:
+        runtime=60 * 5,
     shell:
         "(date && rm -f {output.bed} {output.cont} {output.cov} && cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
         "concoct_coverage_table.py {output.bed} {input.bam} > {output.cov} && [[ -s {output.cov} ]] && "
@@ -469,7 +412,7 @@ rule semibin:
     shell:
         """
         (date
-        SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads}
+        SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster
         touch {output}
         date) 2> {log.err} > {log.out}
         """

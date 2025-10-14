@@ -8,6 +8,7 @@ rule install_software:
             RESULTS_DIR,
             "DB/SingleM/S5.4.0.GTDB_r226.metapackage_20250331.smpkg.zb/CONTENTS.json",
         ),
+        os.path.join(RESULTS_DIR, "DB/Busco_euk.done"),
     output:
         touch("status/install_software.done"),
 
@@ -44,59 +45,12 @@ rule downloadHuman:
         """
 
 
-# rule taxconverter_install:
-#     # input:
-#     #     rules.create_db_folder.output.file
-#     output:
-#         folder=directory(os.path.join(RESULTS_DIR, "DB/taxconverter")),
-#         file=os.path.join(RESULTS_DIR, "DB/taxconverter/taxconverter.done"),
-#     log:
-#         out=os.path.join(RESULTS_DIR, "logs/taxconverter_install.out.log"),
-#         err=os.path.join(RESULTS_DIR, "logs/taxconverter_install.err.log"),
-#     conda:
-#         os.path.join(WORK_DIR, "envs/taxconverter.yaml")
-#     priority: 20
-#     localrule: True
-#     shell:
-#         """
-#         (date
-#         rm -rf {output.folder}
-#         rm -rf taxconverter
-#         git lfs install
-#         git clone https://github.com/RasmussenLab/taxconverter.git
-#         mv taxconverter $(dirname {output.folder})
-#         pip install -e {output.folder}
-#         unzip {output.folder}/data/lineage.zip -d {output.folder}/data
-#         touch {output.file}
-#         date) 2> {log.err} > {log.out}
-#         """
-
-
-# rule download_tax_db:
-#     output:
-#         file=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
-#         look=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs.lookup"),
-#         tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
-#     log:
-#         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
-#         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
-#     resources:
-#         mem_mb=get_mem_mb,
-#         runtime=6 * 60,
-#     threads: 20
-#     conda:
-#         os.path.join(WORK_DIR, "envs/mmseqs.yaml")
-#     shell:
-#         '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
-#         "rm -f $(dirname {output.file})/$name* && "
-#         "mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
-
-
 rule download_tax_db:
     output:
         file=os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
         folder=directory(os.path.join(RESULTS_DIR, "DB/gtdb")),
         tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
+        done=touch(os.path.join(RESULTS_DIR, "DB/gtdb/gtdb.done")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
@@ -110,6 +64,7 @@ rule download_tax_db:
         """
         (date
         metabuli databases GTDB $(dirname {output.folder}) {output.tmp} --threads {threads}
+        touch {output.done}
         date) 2> {log.err} > {log.out}
         """
 
@@ -181,5 +136,29 @@ rule singlem_data:
         """
         (date
         singlem data --output-directory $(dirname {output.folder})
+        date) 2> {log.err} > {log.out}
+        """
+
+
+rule busco_db_euk:
+    output:
+        dir=directory(os.path.join(RESULTS_DIR, "DB/Busco_euk")),
+        file=os.path.join(RESULTS_DIR, "DB/Busco_euk/file_versions.tsv"),
+        done=touch(os.path.join(RESULTS_DIR, "DB/Busco_euk/busco_euk.done")),
+    conda:
+        os.path.join(WORK_DIR, "envs/busco.yaml")
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/busco_db_euk.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/busco_db_euk.err.log"),
+    resources:
+        mem_mb=get_mem_mb,
+        runtime=2 * 60,
+    threads: 2
+    shell:
+        """
+        (date
+        rm -rf {output.dir}
+        busco --download_path {output.dir}
+        touch {output.done}
         date) 2> {log.err} > {log.out}
         """

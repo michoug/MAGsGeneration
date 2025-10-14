@@ -11,7 +11,6 @@ rule binning_refinement:
 rule prepare_dasTool:
     input:
         metabat=rules.metabat2.output,
-        # metabinner=rules.metabinner.output,
         rosella=rules.rosella.output,
         taxvamb=rules.taxvamb.output,
         concoct=rules.concoct.output,
@@ -19,9 +18,6 @@ rule prepare_dasTool:
         semibin=rules.semibin.output,
     output:
         metabatout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/metabat_das.tsv"),
-        # metabinnerout=os.path.join(
-        #     RESULTS_DIR, "Bins/{sample}/DasTool/metabinner_das.tsv"
-        # ),
         rosellaout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/rosella_das.tsv"),
         taxvambout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/taxvamb_das.tsv"),
         concoctout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/concoct_das.tsv"),
@@ -50,13 +46,11 @@ rule prepare_dasTool:
         perl -pe 's/\t/\t{params.value}_semibin_/g' {input.semibin} | tail -n +2 > {output.semibinout}
         date) 2> {log.err} > {log.out}
         """
-        # perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout}
 
 
 rule dasTool_run:
     input:
         metabat=rules.prepare_dasTool.output.metabatout,
-        # metabinner=rules.prepare_dasTool.output.metabinnerout,
         taxvamb=rules.prepare_dasTool.output.taxvambout,
         rosella=rules.prepare_dasTool.output.rosellaout,
         concoct=rules.prepare_dasTool.output.concoctout,
