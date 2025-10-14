@@ -51,7 +51,6 @@ rule prepare_dasTool:
 rule dasTool_run:
     input:
         metabat=rules.prepare_dasTool.output.metabatout,
-        # metabinner=rules.prepare_dasTool.output.metabinnerout,
         taxvamb=rules.prepare_dasTool.output.taxvambout,
         rosella=rules.prepare_dasTool.output.rosellaout,
         concoct=rules.prepare_dasTool.output.concoctout,

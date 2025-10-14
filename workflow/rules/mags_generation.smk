@@ -40,12 +40,12 @@ rule mags_generation:
             ),
             sample=SAMPLES,
         ),
-        # expand(
-        #     os.path.join(
-        #         RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"
-        #     ),
-        #     sample=SAMPLES,
-        # ),
+        expand(
+            os.path.join(
+                RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"
+            ),
+            sample=SAMPLES,
+        ),
         expand(
             os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
             sample=SAMPLES,
@@ -203,62 +203,6 @@ rule metabinner_coverage:
         cat {output.temp} | awk '{{if ($2>{params.length}) print $0 }}' | cut -f -1,4- > {output.final} && 
         date) 2> {log.err} > {log.out}
         """
-
-
-rule metabinner_prepare:
-    input:
-        contig=rules.filter_length.output.out,
-        bin=rules.metabinner_install.output.file,
-    output:
-        cont_t=temp(os.path.join(RESULTS_DIR, "/Assembly/{sample}_filter_1500.fa")),
-        cont=os.path.join(RESULTS_DIR, "/Bins/{sample}/{sample}_metabinner_1500.fa"),
-        kmer_t=temp(
-            os.path.join(RESULTS_DIR, "/Assembly/{sample}_filter_kmer_4_f1500.csv")
-        ),
-        kmer=os.path.join(RESULTS_DIR, "/Bins/{sample}/{sample}_kmer_4_f1500.csv"),
-    localrule: True
-    conda:
-        os.path.join(WORK_DIR, "envs/metabinner.yaml")
-    params:
-        length=1500,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.err.log"),
-    message:
-        "Prepare fasta and kmer file for Metabinner"
-    shell:
-        "(date && python $(dirname {input.bin})/scripts/Filter_tooshort.py {input.contig} {params} && "
-        "cp {output.cont_t} {output.cont} && "
-        "python $(dirname {input.bin})/scripts/gen_kmer.py {input.contig} {params} 4 && "
-        "cp {output.kmer_t} {output.kmer} && date) 2> {log.err} > {log.out}"
-
-
-rule metabinner:
-    priority: 20
-    input:
-        cont=rules.metabinner_prepare.output.cont,
-        cov=rules.metabinner_coverage.output.final,
-        kmer=rules.metabinner_prepare.output.kmer,
-        path=rules.metabinner_install.output.file,
-    output:
-        os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/metabinner.yaml")
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.err.log"),
-    threads: 14
-    resources:
-        runtime=60 * 6,
-        mem_mb=get_mem_mb,
-    message:
-        "Running Metabinner"
-    shell:
-        "(date && run_metabinner.sh -a {input.cont} -d {input.cov} -k {input.kmer} -p $(dirname {input.path}) -o $(dirname {output}) -t {threads} -s huge && "
-        "mv $(dirname {output})/metabinner_res/* $(dirname {output}) && "
-        "rm -r $(dirname {output})/metabinner_res/ $(dirname {output})/intermediate_result $(dirname {output})/unitem_profile $(dirname {output})/ensemble_res "
-        "&& date) 2> {log.err} > {log.out}"
-
 
 rule rosella:
     input:

@@ -353,6 +353,7 @@ rule busco_done:
         touch {output}
         """
 
+
 rule busco_multiqc:
     input:
         rules.busco_done.output,

@@ -50,6 +50,7 @@ rule download_tax_db:
         file=os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
         folder=directory(os.path.join(RESULTS_DIR, "DB/gtdb")),
         tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
+        done=touch(os.path.join(RESULTS_DIR, "DB/gtdb/gtdb.done")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
@@ -63,6 +64,7 @@ rule download_tax_db:
         """
         (date
         metabuli databases GTDB $(dirname {output.folder}) {output.tmp} --threads {threads}
+        touch {output.done}
         date) 2> {log.err} > {log.out}
         """
 
@@ -141,7 +143,8 @@ rule singlem_data:
 rule busco_db_euk:
     output:
         dir=directory(os.path.join(RESULTS_DIR, "DB/Busco_euk")),
-        file=os.path.join(RESULTS_DIR, "DB/Busco_euk.done"),
+        file=os.path.join(RESULTS_DIR, "DB/Busco_euk/file_versions.tsv"),
+        done=touch(os.path.join(RESULTS_DIR, "DB/Busco_euk/busco_euk.done")),
     conda:
         os.path.join(WORK_DIR, "envs/busco.yaml")
     log:
@@ -156,6 +159,6 @@ rule busco_db_euk:
         (date
         rm -rf {output.dir}
         busco --download_path {output.dir}
+        touch {output.done}
         date) 2> {log.err} > {log.out}
-        touch {output.file}
         """

@@ -32,7 +32,7 @@ rule rosella_ref:
     log:
         out=os.path.join(RESULTS_DIR, "logs/refine/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/refine/{sample}.err.log"),
-    threads: 14
+    threads: 20
     resources:
         runtime=60 * 12,
         mem_mb=get_mem_mb,

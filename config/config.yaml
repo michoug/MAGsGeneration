@@ -5,10 +5,10 @@
 # ORDER of STEPS: ["checkm", "dereplicate", "drep_checkm", "coverage", "gtdbtk", "eggnog", "metabolic", "mgthermometer"]
 #
 
-steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy","check_assembly","mags_generation", "eukaryotes_filter"]#, "binning_refinement", "eukaryotes_filter"]
-#,"dastool","checkm",
-  # "refine_all","dereplicate","coverage","annotations",
-  # "quality","mgthermometer","eggnog","singlem_all"]
+steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy","check_assembly","mags_generation",  "binning_refinement", "eukaryotes_filter",
+  "dastool","checkm",
+  "refine_all","dereplicate","coverage","annotations",
+  "quality","mgthermometer","eggnog","singlem_all"]
 #,"genome_face",
 
 ############################################################
