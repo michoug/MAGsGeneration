@@ -24,8 +24,8 @@ rule concatenate_mags:
 
 rule mapping_all:
     input:
-        read1=rules.getfinalreads.output.read1,
-        read2=rules.getfinalreads.output.read2,
+        read1=rules.getdedupreads.output.read1,
+        read2=rules.getdedupreads.output.read2,
         cont=rules.concatenate_mags.output,
     output:
         temp(os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample}_1.fq.gz.bam")),

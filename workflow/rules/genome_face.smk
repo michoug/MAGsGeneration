@@ -76,8 +76,8 @@ rule checkindexAssemblyGenomeFaceDone:
 
 rule coverage_genome_face_bam:
     input:
-        read1=rules.getfinalreads.output.read1,
-        read2=rules.getfinalreads.output.read2,
+        read1=rules.getdedupreads.output.read1,
+        read2=rules.getdedupreads.output.read2,
         cont=os.path.join(RESULTS_DIR, "Bins/GenomeFace/concat_assembly.fa"),
         index=os.path.join(RESULTS_DIR, "Bins/GenomeFace/index.done"),
     output:

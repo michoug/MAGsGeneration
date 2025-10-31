@@ -9,8 +9,8 @@ rule assembly_all:
 
 rule assembly_megahit:
     input:
-        read1=rules.getfinalreads.output.read1,
-        read2=rules.getfinalreads.output.read2,
+        read1=rules.getdedupreads.output.read1,
+        read2=rules.getdedupreads.output.read2,
     output:
         fasta=os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit/final.contigs.fa"),
         final=os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit.fa"),

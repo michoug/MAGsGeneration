@@ -8,7 +8,7 @@ rule install_software:
             RESULTS_DIR,
             "DB/SingleM/S5.4.0.GTDB_r226.metapackage_20250331.smpkg.zb/CONTENTS.json",
         ),
-        os.path.join(RESULTS_DIR, "DB/Busco_euk.done"),
+        os.path.join(RESULTS_DIR, "DB/Busco_euk/busco_euk.done"),
     output:
         touch("status/install_software.done"),
 

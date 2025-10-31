@@ -99,8 +99,8 @@ rule checkIndexAssembyDone:
 
 rule mapping:
     input:
-        read1=os.path.join(RESULTS_DIR, "TrimFinal/{sample_2}_1.fq.gz"),
-        read2=os.path.join(RESULTS_DIR, "TrimFinal/{sample_2}_2.fq.gz"),
+        read1=rules.getdedupreads.output.read1,
+        read2=rules.getdedupreads.output.read2,
         fasta=rules.filter_length.output.out,
         index=rules.checkIndexAssembyDone.output,
     output:

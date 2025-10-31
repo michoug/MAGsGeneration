@@ -52,7 +52,7 @@ rule prepare_binning_refinement:
         # perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout}
        
 
-rule BinRef_run:
+rule binref:
     input:
         metabat=rules.prepare_binning_refinement.output.metabatout,
         # metabinner=rules.prepare_binning_refinement.output.metabinnerout,
@@ -67,8 +67,8 @@ rule BinRef_run:
     conda:
         os.path.join(WORK_DIR, "envs/binette.yaml")
     log:
-        out=os.path.join(RESULTS_DIR, "logs/BinRef/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/BinRef/{sample}.err.log"),
+        out=os.path.join(RESULTS_DIR, "logs/binref/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/binref/{sample}.err.log"),
     threads: 20
     resources:
         runtime=60 * 12,
