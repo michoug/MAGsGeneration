@@ -8,7 +8,7 @@ rule trim_reads:
         #     os.path.join(RESULTS_DIR, "Trim/{sample}_R1_001_val_1.fq.gz"),
         #     sample=SAMPLES,
         # ),
-        expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"), sample=SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "TrimDedup/{sample}_1.fq.gz"), sample=SAMPLES),
     output:
         touch("status/trimming.done"),
 
@@ -123,12 +123,12 @@ rule removeHuman:
         """
 
 
-rule getfinalreads:
+rule getcleanreads:
     input:
         rules.removeHuman.output,
     output:
-        read1=os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"),
-        read2=os.path.join(RESULTS_DIR, "TrimFinal/{sample}_2.fq.gz"),
+        read1=os.path.join(RESULTS_DIR, "TrimClean/{sample}_1.fq.gz"),
+        read2=os.path.join(RESULTS_DIR, "TrimClean/{sample}_2.fq.gz"),
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
@@ -137,11 +137,35 @@ rule getfinalreads:
         mem_mb=get_mem_mb,
     priority: 20
     log:
-        out=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/getfinalreads/{sample}.err.log"),
+        out=os.path.join(RESULTS_DIR, "logs/getcleanreads/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/getcleanreads/{sample}.err.log"),
     shell:
         """
         (date
         samtools fastq -@ {threads} -1 {output.read1} -2 {output.read2} {input} &&
+        date ) 2> {log.err} > {log.out}
+        """
+
+
+rule getdedupreads:
+    input:
+        read1=rules.getcleanreads.output.read1,
+        read2=rules.getcleanreads.output.read2,
+    output:
+        read1=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_1.fq.gz"),
+        read2=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_2.fq.gz"),
+    conda:
+        os.path.join(WORK_DIR, "envs/fastp.yaml")
+    threads: 4
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/getdedupreads/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/getdedupreads/{sample}.err.log"),
+    shell:
+        """
+        (date
+        fastp -i {input.read1} -I {input.read2} -o {output.read1} -O {output.read2} --dedup --thread {threads} &&
         date ) 2> {log.err} > {log.out}
         """

@@ -6,24 +6,24 @@
 #
 
 steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy","check_assembly","mags_generation",  "binning_refinement", "eukaryotes_filter",
-  "dastool","checkm",
-  "refine_all","dereplicate","coverage","annotations",
-  "quality","mgthermometer","eggnog","singlem_all"]
+ "checkm",
+ "refine_all","dereplicate","coverage","annotations",
+ "quality","mgthermometer","eggnog","singlem_all"]
 #,"genome_face",
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
 # Directory where the workflow exists
-work_dir: "/scratch/gmichoud/NOMIS_Euk/MAGsGeneration/"
+work_dir: "/scratch/gmichoud/GlacierIce/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/gmichoud/NOMIS_Euk/Assembly"
+assembly_dir: "/scratch/gmichoud/GlacierIce/Assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/NOMIS_Euk/mags_all"  
+results_dir: "/scratch/gmichoud/GlacierIce/mags_all"  
 
 # Directory for raw reads
-reads_dir: "/scratch/gmichoud/NOMIS_Euk/Reads"
+reads_dir: "/scratch/gmichoud/GlacierIce/reads"
 
 
 ### Memory per cpus for your cluster

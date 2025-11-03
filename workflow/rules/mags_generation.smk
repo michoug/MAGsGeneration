@@ -99,8 +99,8 @@ rule checkIndexAssembyDone:
 
 rule mapping:
     input:
-        read1=os.path.join(RESULTS_DIR, "TrimFinal/{sample_2}_1.fq.gz"),
-        read2=os.path.join(RESULTS_DIR, "TrimFinal/{sample_2}_2.fq.gz"),
+        read1=rules.getdedupreads.output.read1,
+        read2=rules.getdedupreads.output.read2,
         fasta=rules.filter_length.output.out,
         index=rules.checkIndexAssembyDone.output,
     output:
@@ -203,6 +203,7 @@ rule metabinner_coverage:
         cat {output.temp} | awk '{{if ($2>{params.length}) print $0 }}' | cut -f -1,4- > {output.final} && 
         date) 2> {log.err} > {log.out}
         """
+
 
 rule rosella:
     input:
