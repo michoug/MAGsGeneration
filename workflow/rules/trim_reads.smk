@@ -146,6 +146,7 @@ rule getcleanreads:
         date ) 2> {log.err} > {log.out}
         """
 
+
 rule getdedupreads:
     input:
         read1=rules.getcleanreads.output.read1,

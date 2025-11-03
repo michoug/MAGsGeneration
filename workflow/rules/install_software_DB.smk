@@ -158,7 +158,7 @@ rule busco_db_euk:
         """
         (date
         rm -rf {output.dir}
-        busco --download_path {output.dir}
+        busco --download all --download_path {output.dir}
         touch {output.done}
         date) 2> {log.err} > {log.out}
         """

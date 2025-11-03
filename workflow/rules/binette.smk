@@ -1,7 +1,9 @@
 rule binning_refinement:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Bins/{sample}/BinRef/final_bins_quality_reports.tsv"),
+            os.path.join(
+                RESULTS_DIR, "Bins/{sample}/BinRef/final_bins_quality_reports.tsv"
+            ),
             sample=ASSEMBLY,
         ),
     output:
@@ -29,7 +31,7 @@ rule prepare_binning_refinement:
         semibinout=os.path.join(RESULTS_DIR, "Bins/{sample}/BinRef/semibin_das.tsv"),
     params:
         value="{sample}",
-        script = os.path.join(WORK_DIR, "scripts/Fasta_to_Scaffolds2Bin.sh")
+        script=os.path.join(WORK_DIR, "scripts/Fasta_to_Scaffolds2Bin.sh"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/prepare_BinRef/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/prepare_BinRef/{sample}.err.log"),
@@ -50,7 +52,7 @@ rule prepare_binning_refinement:
         date) 2> {log.err} > {log.out}
         """
         # perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout}
-       
+
 
 rule binref:
     input:
@@ -80,7 +82,9 @@ rule binref:
     shell:
         """
         (date && 
-        binette -b {input.metabat} {input.taxvamb} {input.rosella} {input.concoct} {input.comebin} {input.semibin} -c {input.cont} -o $(dirname {output}) -t {threads} --checkm2_db {params.db} -m 50 --verbose && 
+        binette -b {input.metabat} {input.taxvamb} {input.rosella} {input.concoct} {input.comebin} {input.semibin} -c {input.cont} -o $(dirname {output}) -t {threads} --checkm2_db {params.db} --min_completeness 50 --max_length 20000000 --verbose && 
         date) 2> {log.err} > {log.out}        
         """
-		# 
+
+
+#

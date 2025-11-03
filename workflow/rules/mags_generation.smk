@@ -204,6 +204,7 @@ rule metabinner_coverage:
         date) 2> {log.err} > {log.out}
         """
 
+
 rule rosella:
     input:
         cont=rules.filter_length.output.out,
