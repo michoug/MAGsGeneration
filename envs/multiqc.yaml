@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - bioconda
+  - au-eoed
+dependencies:
+  - multiqc=1.32

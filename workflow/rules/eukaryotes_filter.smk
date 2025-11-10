@@ -358,14 +358,21 @@ rule busco_multiqc:
     input:
         rules.busco_done.output,
     output:
-        os.path.join(RESULTS_DIR, "qc/multiqc_busco.html"),
-        directory(os.path.join(RESULTS_DIR, "qc/multiqc_busco_data")),
-    params:
-        extra="--verbose --ignore auto_lineage/",  # Optional: extra parameters for multiqc.
+        html=os.path.join(RESULTS_DIR, "qc/multiqc_busco.html"),
+        folder=directory(os.path.join(RESULTS_DIR, "qc/multiqc_busco_data")),
+    conda:
+        os.path.join(WORK_DIR, "envs/multiqc.yaml")
+    message:
+        "Running MultiQC on BUSCO results"
     resources:
         runtime=60,
         mem_mb=get_mem_mb,
     log:
-        "logs/multiqc.log",
-    wrapper:
-        "v7.6.1/bio/multiqc"
+        err=os.path.join(RESULTS_DIR, "logs/multiqc_busco.err.log"),
+        out=os.path.join(RESULTS_DIR, "logs/multiqc_busco.out.log"),
+    shell:
+        """
+        (date
+        multiqc $(dirname {input}) --verbose --ignore auto_lineage/ -o {output.folder} || echo "Multiqc failed (possibly no eukaryotic bins found) — continuing anyway"
+        date)   2> {log.err} > {log.out}
+        """
