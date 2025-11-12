@@ -11,7 +11,7 @@ rule eukaryotes_filter:
         os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_deepmicroclass.txt"),
         os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags/done.txt"),
         os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/done.txt"),
-        os.path.join(RESULTS_DIR, "qc/multiqc_busco.html"),
+        os.path.join(RESULTS_DIR, "qc/busco/multiqc_report.html"),
     output:
         touch("status/eukaryotes_filter.done"),
 
@@ -358,8 +358,8 @@ rule busco_multiqc:
     input:
         rules.busco_done.output,
     output:
-        html=os.path.join(RESULTS_DIR, "qc/multiqc_busco.html"),
-        folder=directory(os.path.join(RESULTS_DIR, "qc/multiqc_busco_data")),
+        html=os.path.join(RESULTS_DIR, "qc/busco/multiqc_report.html"),
+        folder=directory(os.path.join(RESULTS_DIR, "qc/busco/")),
     conda:
         os.path.join(WORK_DIR, "envs/multiqc.yaml")
     message:

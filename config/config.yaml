@@ -6,8 +6,7 @@
 #
 
 steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy","check_assembly","mags_generation",  "binning_refinement", "eukaryotes_filter",
- "checkm",
- "refine_all","dereplicate","coverage","annotations",
+ "checkm","refine_all","dereplicate","syntracker","coverage","annotations",
  "quality","mgthermometer","eggnog","singlem_all"]
 #,"genome_face",
 

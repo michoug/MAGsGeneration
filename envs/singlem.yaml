@@ -3,5 +3,5 @@ channels:
   - bioconda
   - conda-forge
 dependencies:
-  - singlem=0.18.3
+  - singlem=0.19
   - expressbetadiversity=1.0.10
