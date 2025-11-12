@@ -25,7 +25,7 @@ rule galah_prepare:
 
 
 # Dereplicating the genomes
-rule galah:
+checkpoint galah:
     input:
         bins=rules.cp_mags.output,
         check=rules.galah_prepare.output.final,

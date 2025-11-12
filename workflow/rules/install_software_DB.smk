@@ -9,6 +9,7 @@ rule install_software:
             "DB/SingleM/S5.4.0.GTDB_r226.metapackage_20250331.smpkg.zb/CONTENTS.json",
         ),
         os.path.join(RESULTS_DIR, "DB/Busco_euk/busco_euk.done"),
+        os.path.join(RESULTS_DIR, "DB/SynTracker/syntracker.done"),
     output:
         touch("status/install_software.done"),
 
@@ -161,4 +162,23 @@ rule busco_db_euk:
         busco --download all --download_path {output.dir}
         touch {output.done}
         date) 2> {log.err} > {log.out}
+        """
+
+rule syntracker_install:
+    output:
+        dbs=directory(os.path.join(RESULTS_DIR, "DB/SynTracker")),
+        file=os.path.join(RESULTS_DIR, "DB/SynTracker/syntracker.done"),
+    localrule: True
+    conda:
+        os.path.join(WORK_DIR, "envs/syntracker.yaml")
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/syntracker_install.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/syntracker_install.err.log"),
+    priority: 20
+    shell:
+        """
+        (date &&  rm -rf SynTracker
+        git clone https://github.com/leylabmpi/SynTracker.git &> /dev/null
+        mv SynTracker $(dirname {output.dbs})
+        touch {output.file} ) 2> {log.err} > {log.out}
         """

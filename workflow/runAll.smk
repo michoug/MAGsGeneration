@@ -118,6 +118,11 @@ if "dereplicate" in STEPS:
 
     TARGETS += ["status/dereplicate.done"]
 
+if "syntracker" in STEPS:
+
+    include: "rules/syntracker.smk"
+
+    TARGETS += ["status/syntracker.done"]
 
 if "annotations" in STEPS:
 
