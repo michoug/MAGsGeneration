@@ -2,24 +2,32 @@
 
 ## Pipeline description
 
-- This pipeline expect raw reads (`_R1_001.fastq.gz` or `_R2_001.fastq.gz` files) in the `reads_dir`.
-- The reads are trimmed with trim_galore and human reads are removed with [strobealign](https://github.com/ksahlin/strobealign) and [samtools](https://github.com/samtools/samtools).
-- The trimmed reads are then assembled with [megahit](https://github.com/voutcn/megahit).
-- The coverage is calculated with [strobealign](https://github.com/ksahlin/strobealign) and [CoverM](https://github.com/wwood/CoverM) for binning that speeds up the process greatly
-- Bins are generated with [Metabat2](https://bitbucket.org/berkeleylab/metabat), [Metabinner](https://github.com/ziyewang/MetaBinner), [Rosella](https://github.com/rhysnewell/rosella) [taxvamb](https://github.com/RasmussenLab/vamb), [Concoct](https://github.com/BinPro/CONCOCT), and [Comebin](https://github.com/ziyewang/COMEBin) per sample.
-- [DAS Tool](https://github.com/cmks/DAS_Tool) is then used to generate a non redudant set of bins per samples.
+There are two main options of this pipeline, either you have assemblies and want to bin them, or you have raw reads and want to go from reads to MAGs. 
+
+### Mandatory steps
+
+- The reads are trimmed with trim_galore and human reads are removed with [strobealign](https://github.com/ksahlin/strobealign) and [samtools](https://github.com/samtools/samtools) across the human genome (hg38, GCF_000001405.40).
+- The trimmed reads are then assembled with [megahit](https://github.com/voutcn/megahit) (`runAll` pipeline) or not (`alreadyAssemble` pipeline).
+- The coverage is calculated with [strobealign](https://github.com/ksahlin/strobealign) for bay mapping all the reads across all assemblies.
+- Bins are generated with [Comebin](https://github.com/ziyewang/COMEBin), [Concoct](https://github.com/BinPro/CONCOCT), [Metabat2](https://bitbucket.org/berkeleylab/metabat), [Rosella](https://github.com/rhysnewell/rosella), [Sembin2](https://github.com/BigDataBiology/SemiBin) and [Taxvamb](https://github.com/RasmussenLab/vamb) per sample.
+- [Binetter](https://github.com/genotoul-bioinfo/Binette) is then used to generate a non redudant set of bins per samples.
 - These redundant sets are refined using [Rosella](https://github.com/rhysnewell/rosella).
 - All bins from all samples are then combined in a single folder and [Checkm2](https://github.com/chklovski/CheckM2) is used to estimate quality (completeness and contamination)
 - All the bins that passes a quality threshold of 70% completeness and <10% contamination are dereplicated with [Galah](https://github.com/wwood/galah).
 - [CheckM2](https://github.com/chklovski/CheckM2) and [GtdbTk](https://github.com/Ecogenomics/GTDBTk) are then used to estimate the quality and taxonomy of the final MAGs.
-- Read mapping of all samples against the final sets of MAGs are done using [CoverM](https://github.com/wwood/CoverM). 
+- Read mapping of all samples against the final sets of MAGs are done using [CoverM](https://github.com/wwood/CoverM).
+
+### Optional steps
+
 - Annotations of the MAGs is done with [pyrodigal](https://github.com/althonos/pyrodigal) and [eggnog-mapper](https://github.com/eggnogdb/eggnog-mapper/)
 - [MGThermometer](https://doi.org/10.1101/2022.07.14.499854) is used to measure the `optimal growth rate` based on the relative abundance of `FIVYWREL` aminoacids
   - Optimal growth rate is measured as follows,
 ```math
 OGT = 937 * F_{IVYWREL} − 335
 ```
-
+- [SynTracker](https://github.com/leylabmpi/SynTracker) is used to track strains across samples based on synteny
+- [SingleM](https://github.com/wwood/singlem) is a read-based software used to profile the samples based on single copy marker genes (mostly ribosomal) and assess how much of the diversity is captured in the MAGs
+- Putative eukaryotics bins are first filtered based on size (>2.5Mb) and then with [DeepMicroClass](https://github.com/chengsly/DeepMicroClass) that classifies contigs as prokaryotic or eukaryotic. Bins with >80% of eukaryotic contigs are considered eukaryotic bins. Their completeness and contamination are then estimated with [Busco](https://busco.ezlab.org/)
 
 ## Setup
 
@@ -34,7 +42,7 @@ chmod u+x Miniconda3-latest-Linux-x86_64.sh
 ./Miniconda3-latest-Linux-x86_64.sh # follow the instructions
 ```
 
-Getting the repository including sub-modules
+Getting the repository
 ```bash
 git clone https://github.com/michoug/MAGsGeneration.git
 ```
@@ -49,14 +57,112 @@ conda env create -f requirements.yaml -n "snakemake"
 ### Run Setup
 
 * Place your reads (e.g. `sample_R1_001.fastq.gz` and `sample_R2_001.fastq.gz` files) in a `reads` folder
+* Eventually, place your assemblies (e.g. `sample.fna` files) in an `assemblies` folder
 * Fill the `config/sample_list.txt` file with the name of your samples (e.g. `{sample}_R2_001.fastq.gz`)
-* Modify the `config/config.yaml` file to change the different paths and eventually the different options
+* Modify the `config/config.yaml` file to change the different paths and eventually the different options, especially `work_dir`, `results_dir`, `reads_dir` and `assemblies_dir`
 
-### Without Slurm
+## Running the pipeline
+
+### Via Python script
+
+This Python script provides a flexible launcher for running the NOMIS MAGs analysis pipelines with Snakemake. It supports **local execution**, **Slurm cluster execution**, **optional steps**, **continuation of failed runs**, and **dry-run previews**.
+
+
+#### Usage
+
+##### Local Execution
+
+```bash
+./MAGsGeneration.py -p <pipeline> -c <config.yaml> --output <results_path> [options]
+```
+
+##### Slurm Execution
+
+```bash
+./MAGsGeneration.py -p <pipeline> -c <config.yaml> --output <results_path> --slurm [options]
+```
+
+##### Dry-Run
+
+Preview the steps without executing:
+
+```bash
+./MAGsGeneration.py -c <results_path>/config_run.yaml --continue --dryrun --cores 4
+```
+
+##### Continue Failed Run
+
+Resume unfinished or failed steps:
+
+```bash
+./MAGsGeneration.py -c <results_path>/config_run.yaml --continue --cores 4
+```
+
+---
+
+#### Arguments
+
+| Argument         | Description                                                                   |
+| ---------------- | ----------------------------------------------------------------------------- |
+| `-p, --pipeline` | Pipeline to run (`runAll`, `alreadyAssemble`). Not required for continuation. |
+| `-c, --config`   | Path to the base or previous run YAML config.                                 |
+| `--steps`        | Optional steps to include (defaults to all optional steps).                   |
+| `--output`       | Path to the results folder (full or relative path).                           |
+| `--dryrun`       | Perform a dry-run to preview steps.                                           |
+| `--profile`      | Base Snakemake profile directory (default: `profile/`).                       |
+| `--slurm`        | Use the Slurm profile for execution.                                          |
+| `--use-conda`    | Enable `--use-conda` in Snakemake.                                            |
+| `--conda-prefix` | Conda environment prefix path.                                                |
+| `--cores`        | Number of cores to use.                                                       |
+| `--continue`     | Continue previous run using the same results folder.                          |
+
+---
+
+#### Optional Steps
+
+By default, all steps are included. The following **optional steps** can be toggled via `--steps`:
+
+* `eggnog`
+* `eukaryotes_filter`
+* `mgthermometer`
+* `singlem_all`
+* `syntracker`
+
+Mandatory steps are always executed. The launcher prints a summary before running:
+
+```
+🚀 Steps to be executed:
+  Mandatory steps: ['install_software', 'trim_reads', 'assembly_all', 'checkm']
+  Optional steps:  ['syntracker', 'eggnog']
+```
+
+---
+
+#### Output and Metadata
+
+* The **results folder** is specified via `--output`.
+
+* The **run configuration** is saved as `config_run.yaml` inside the results folder.
+
+* A **metadata file** `run_info.txt` is generated including:
+
+  * Timestamp
+  * Snakefile used
+  * Profile path
+  * Steps executed
+  * Dry-run status
+
+* Using the same `--output` folder allows **continuation** of failed runs or dry-runs without creating new directories.
+
+
+### Via Snakemake
+To run the pipeline, you can use the following command:
+
+#### Without Slurm
 
 `snakemake -s workflow/runAll.smk --configfile config/config.yaml`
 
-### With Slurm
+#### With Slurm
 
 `snakemake -s workflow/runAll.smk --configfile config/config.yaml --profile profile/`
 

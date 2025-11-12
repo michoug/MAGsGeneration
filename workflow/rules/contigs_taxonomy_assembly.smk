@@ -4,12 +4,6 @@ rule contigs_taxonomy:
             os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax.tsv"),
             sample=ASSEMBLY,
         ),
-        expand(
-            os.path.join(
-                RESULTS_DIR, "Assembly/{sample}_taxonomy_euk/{sample}_tax.tsv"
-            ),
-            sample=ASSEMBLY,
-        ),
     output:
         touch("status/taxonomy.done"),
 
@@ -43,34 +37,12 @@ rule taxonomy:
         """
 
 
-use rule taxonomy as taxonomy_euk with:
-    input:
-        fasta=os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
-        file=rules.create_tax_db_euk.output.mapping,
-    output:
-        taxonomy=os.path.join(
-            RESULTS_DIR, "Assembly/{sample}_taxonomy_euk/{sample}_tax_raw.tsv"
-        ),
-        tmp=temp(directory(os.path.join(RESULTS_DIR, "Assembly/{sample}_tmp_euk"))),
-        dbfasta=temp(
-            os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy_euk/{sample}_fasta")
-        ),
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/taxonomy_contig_euk/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/taxonomy_contig_euk/{sample}.err.log"),
-    params:
-        "MicroEuk90",
-
-
 rule taxconverter:
     input:
-        tax=rules.taxonomy.output.taxonomy,
+        report=rules.taxonomy.output.tax_report,
+        classif=rules.taxonomy.output.tax_class,
     output:
-        temp(
-            os.path.join(
-                RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_temp.tsv"
-            )
-        ),
+        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_temp.tsv"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.err.log"),
@@ -79,21 +51,7 @@ rule taxconverter:
         os.path.join(WORK_DIR, "envs/taxconverter.yaml")
     shell:
         "(date && "
-        "taxconverter metabuli -c {input.report} -r {input.classif} -o {output} && date) 2> {log.err} > {log.out}"
-
-
-use rule taxconverter as taxconverter_euk with:
-    input:
-        tax=rules.taxonomy_euk.output.taxonomy,
-    output:
-        temp(
-            os.path.join(
-                RESULTS_DIR, "Assembly/{sample}_taxonomy_euk/{sample}_tax_temp.tsv"
-            )
-        ),
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/taxonomy_convert_euk/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/taxonomy_convert_euk/{sample}.err.log"),
+        "taxconverter metabuli -c {input.classif} -r {input.report} -o {output} && date) 2> {log.err} > {log.out}"
 
 
 rule tax_add_missing:
@@ -125,14 +83,3 @@ rule tax_add_missing:
         merged["predictions"].fillna("unknown", inplace=True)
 
         merged.to_csv(output[0], sep="\t", index=False, header=True)
-
-
-use rule tax_add_missing as tax_add_missing_euk with:
-    input:
-        fasta=os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
-        tax=rules.taxconverter_euk.output,
-    output:
-        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy_euk/{sample}_tax.tsv"),
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/taxonomy_missing_euk/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/taxonomy_missing_euk/{sample}.err.log"),

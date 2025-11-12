@@ -2,7 +2,6 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - conda=24
+  - conda=25
   - snakemake=8.27
-  - mamba=2.0.5
   - snakemake-executor-plugin-slurm=0.15.0

@@ -66,13 +66,6 @@ if "mags_generation" in STEPS:
     TARGETS += ["status/mags_generation.done"]
 
 
-if "genome_face" in STEPS:
-
-    include: "rules/genome_face.smk"
-
-    TARGETS += ["status/genome_face.done"]
-
-
 if "binning_refinement" in STEPS:
 
     include: "rules/binette.smk"
@@ -118,11 +111,13 @@ if "dereplicate" in STEPS:
 
     TARGETS += ["status/dereplicate.done"]
 
+
 if "syntracker" in STEPS:
 
     include: "rules/syntracker.smk"
 
     TARGETS += ["status/syntracker.done"]
+
 
 if "annotations" in STEPS:
 

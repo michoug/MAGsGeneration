@@ -61,9 +61,16 @@ if "mags_generation" in STEPS:
 
 if "binning_refinement" in STEPS:
 
-    include: "rules/dastool.smk"
+    include: "rules/binette.smk"
 
     TARGETS += ["status/binning_refinement.done"]
+
+
+if "eukaryotes_filter" in STEPS:
+
+    include: "rules/eukaryotes_filter.smk"
+
+    TARGETS += ["status/eukaryotes_filter.done"]
 
 
 # CheckM
@@ -96,6 +103,13 @@ if "dereplicate" in STEPS:
     include: "rules/galah.smk"
 
     TARGETS += ["status/dereplicate.done"]
+
+
+if "syntracker" in STEPS:
+
+    include: "rules/syntracker.smk"
+
+    TARGETS += ["status/syntracker.done"]
 
 
 if "annotations" in STEPS:

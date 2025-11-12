@@ -164,6 +164,7 @@ rule busco_db_euk:
         date) 2> {log.err} > {log.out}
         """
 
+
 rule syntracker_install:
     output:
         dbs=directory(os.path.join(RESULTS_DIR, "DB/SynTracker")),
