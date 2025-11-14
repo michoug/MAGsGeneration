@@ -39,8 +39,6 @@ rule get_all_mags:
         err=os.path.join(RESULTS_DIR, "logs/euk_potential/{sample}.err.log"),
     message:
         "Collecting all the MAGs from different binning tools"
-    conda:
-        os.path.join(WORK_DIR, "envs/concoct.yaml")
     params:
         value="{sample}",
     shell:
@@ -55,7 +53,7 @@ rule get_all_mags:
             cp "$file" "{output.dir}/vamb_${{base}}.fa"
         done
         perl -pe 's/,(\\d+)/,concoct_$1/g' {input.concoct} > {output.concoct}
-        extract_fasta_bins.py {input.contigs} {output.concoct} --output_path {output.dir}
+        pixi r -e concoct extract_fasta_bins.py {input.contigs} {output.concoct} --output_path {output.dir}
         cp $(dirname {input.semibin})/output_bins/*.fa.gz {output.dir}
         for file in {output.dir}/*gz; do [[ -f "$file" && "$file" == *.gz ]] && gunzip "$file"; done
         for file in {output.dir}/*.fna; do [[ -f "$file" ]] && mv "$file" "${{file%.fna}}.fa"; done
@@ -110,8 +108,6 @@ rule get_length:
             RESULTS_DIR,
             "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt",
         ),
-    conda:
-        os.path.join(WORK_DIR, "envs/seqkit.yaml")
     threads: 4
     message:
         "Get the length of all the MAGs"
@@ -121,7 +117,7 @@ rule get_length:
     shell:
         """
         date
-        seqkit stats -j {threads} {input}/*fa -T > {output.txt}
+        pixi r -e seqkit seqkit stats -j {threads} {input}/*fa -T > {output.txt}
         awk '$5>=2500000 && $7 >= 2500' {output.txt} | cut -f1 | tail -n +2 > {output.final}
         date
         """
@@ -177,8 +173,6 @@ rule deepmicroclass:
         os.path.join(
             RESULTS_DIR, "Bins/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv"
         ),
-    conda:
-        os.path.join(WORK_DIR, "envs/deepmicroclass.yaml")
     threads: 3
     resources:
         runtime=30,
@@ -193,7 +187,7 @@ rule deepmicroclass:
     message:
         "Running DeepMicroClass on {wildcards.mags}"
     shell:
-        "(date && DeepMicroClass predict --input {input} --output_dir $(dirname {output}) --device cpu --cpu_thread {threads} && date) 2> {log.err} > {log.out}"
+        "(date && pixi r -e deepmicroclass DeepMicroClass predict --input {input} --output_dir $(dirname {output}) --device cpu --cpu_thread {threads} && date) 2> {log.err} > {log.out}"
 
 
 rule deepmicroclass_percentage:
@@ -320,8 +314,6 @@ rule busco:
     output:
         folder=directory(os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/{mags}")),
         done=os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_busco/{mags}/{mags}.done"),
-    conda:
-        os.path.join(WORK_DIR, "envs/busco.yaml")
     threads: 10
     resources:
         runtime=2 * 60,
@@ -334,7 +326,7 @@ rule busco:
     shell:
         """
         (date
-        busco -i {input.folder} --out_path {output.folder} -m genome --auto-lineage -c 10 -f --metaeuk --download_path {input.db} --offline || echo "BUSCO failed (possibly no genes found) — continuing anyway"
+        pixi r -e busco busco -i {input.folder} --out_path {output.folder} -m genome --auto-lineage -c 10 -f --metaeuk --download_path {input.db} --offline || echo "BUSCO failed (possibly no genes found) — continuing anyway"
         touch {output.done}
         date) 2> {log.err} > {log.out}
         """
@@ -360,8 +352,6 @@ rule busco_multiqc:
     output:
         html=os.path.join(RESULTS_DIR, "qc/busco/multiqc_report.html"),
         folder=directory(os.path.join(RESULTS_DIR, "qc/busco/")),
-    conda:
-        os.path.join(WORK_DIR, "envs/multiqc.yaml")
     message:
         "Running MultiQC on BUSCO results"
     resources:
@@ -373,6 +363,6 @@ rule busco_multiqc:
     shell:
         """
         (date
-        multiqc $(dirname {input}) --verbose --ignore auto_lineage/ -o {output.folder} || echo "Multiqc failed (possibly no eukaryotic bins found) — continuing anyway"
+        pixi r -e multiqc multiqc $(dirname {input}) --verbose --ignore auto_lineage/ -o {output.folder} || echo "Multiqc failed (possibly no eukaryotic bins found) — continuing anyway"
         date)   2> {log.err} > {log.out}
         """

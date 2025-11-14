@@ -31,8 +31,6 @@ rule annotation:
         nucl=os.path.join(RESULTS_DIR, "Bins/Annotation/{mags}.ffn"),
     params:
         prefix="{mags}",
-    conda:
-        os.path.join(WORK_DIR, "envs/annotations.yaml")
     resources:
         runtime=60,
         mem_mb=get_mem_mb,
@@ -44,7 +42,7 @@ rule annotation:
         "Prodigal annotation for {wildcards.mags}"
     shell:
         "(date && "
-        "pyrodigal -a {output.protein} -j {threads} -d {output.nucl} -f gff -i {input.fasta} -o {output.gff} && "
+        "pixi r -e annotations pyrodigal -a {output.protein} -j {threads} -d {output.nucl} -f gff -i {input.fasta} -o {output.gff} && "
         "date) 2> {log.err} > {log.out}"
 
 

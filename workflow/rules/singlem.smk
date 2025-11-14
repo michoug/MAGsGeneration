@@ -27,8 +27,6 @@ rule singlem_reads:
     output:
         table=os.path.join(RESULTS_DIR, "SingleM/all/{sample}_otu.tsv"),
         profile=os.path.join(RESULTS_DIR, "SingleM/all/{sample}_profile.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/singlem.yaml")
     threads: 8
     resources:
         runtime=60 * 4,
@@ -40,7 +38,7 @@ rule singlem_reads:
         """
         (date
         export SINGLEM_METAPACKAGE_PATH={input.db}
-        singlem pipe --threads {threads} -1 {input.read1} -2 {input.read2} --otu-table {output.table} -p {output.profile} --metapackage {input.db}
+        pixi r -e singlem singlem pipe --threads {threads} -1 {input.read1} -2 {input.read2} --otu-table {output.table} -p {output.profile} --metapackage {input.db}
         date ) 2> {log.err} > {log.out}
         """
 
@@ -52,8 +50,6 @@ rule singlem_cluster:
         ),
     output:
         os.path.join(RESULTS_DIR, "SingleM/clustered_all.otu_table.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/singlem.yaml")
     threads: 2
     resources:
         runtime=60 * 6,
@@ -64,7 +60,7 @@ rule singlem_cluster:
     shell:
         """
         (date
-        singlem summarise --input-otu-tables {input} --cluster --clustered-output-otu-table {output}
+        pixi r -e singlem singlem summarise --input-otu-tables {input} --cluster --clustered-output-otu-table {output}
         date ) 2> {log.err} > {log.out}
         """
 
@@ -74,8 +70,6 @@ rule singlem_unifrac:
         rules.singlem_cluster.output,
     output:
         os.path.join(RESULTS_DIR, "SingleM/Unifrac/otu_table.S3.35.RNA_SBDS.unifrac"),
-    conda:
-        os.path.join(WORK_DIR, "envs/singlem.yaml")
     threads: 2
     resources:
         runtime=60 * 1,
@@ -88,7 +82,7 @@ rule singlem_unifrac:
     shell:
         """
         (date
-        singlem summarise --input-otu-table {input} --unifrac-by-otu $(dirname {output})/{params}
+        pixi r -e singlem singlem summarise --input-otu-table {input} --unifrac-by-otu $(dirname {output})/{params}
         date ) 2> {log.err} > {log.out}
         """
 
@@ -99,8 +93,6 @@ rule singlem_betadiv:
     output:
         ebd=os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.ebd"),
         tree=os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.tre"),
-    conda:
-        os.path.join(WORK_DIR, "envs/singlem.yaml")
     threads: 2
     resources:
         runtime=60 * 1,
@@ -114,8 +106,8 @@ rule singlem_betadiv:
         """
         (date
         for file in $(dirname {input})/*.unifrac; do
-            convertToEBD.py $file $(dirname {output.ebd})/$(basename $file .unifrac).ebd
-            ExpressBetaDiversity -s $(dirname {output.tree})/$(basename $file .unifrac).ebd -c Bray-Curtis -p $(dirname {output.tree})/$(basename $file .unifrac)
+            pixi r -e singlem convertToEBD.py $file $(dirname {output.ebd})/$(basename $file .unifrac).ebd
+            pixi r -e singlem ExpressBetaDiversity -s $(dirname {output.tree})/$(basename $file .unifrac).ebd -c Bray-Curtis -p $(dirname {output.tree})/$(basename $file .unifrac)
         done
         ) 2> {log.err} > {log.out}
         """
@@ -134,8 +126,6 @@ rule singlem_microbial:
     output:
         profile=os.path.join(RESULTS_DIR, "SingleM/allProfiles.tsv"),
         mf=os.path.join(RESULTS_DIR, "SingleM/SingleM_MF.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/singlem.yaml")
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
@@ -146,8 +136,8 @@ rule singlem_microbial:
         """
         (date
         export SINGLEM_METAPACKAGE_PATH={input.db}
-        singlem summarise --input-taxonomic-profiles {input.profile} --output-taxonomic-profile {output.profile} --metapackage {input.db}
-        singlem microbial_fraction -1 {input.read1} -2 {input.read2} -p {output.profile} > {output.mf} --metapackage {input.db}
+        pixi r -e singlem singlem summarise --input-taxonomic-profiles {input.profile} --output-taxonomic-profile {output.profile} --metapackage {input.db}
+        pixi r -e singlem singlem microbial_fraction -1 {input.read1} -2 {input.read2} -p {output.profile} > {output.mf} --metapackage {input.db}
         date ) 2> {log.err} > {log.out}
         """
 
@@ -158,8 +148,6 @@ rule singlem_genomes:
         db=rules.singlem_data.output.folder,
     output:
         table=os.path.join(RESULTS_DIR, "SingleM/genomes_otu.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/singlem.yaml")
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
@@ -171,7 +159,7 @@ rule singlem_genomes:
         """
         (date
         export SINGLEM_METAPACKAGE_PATH={input.db}
-        singlem pipe --threads {threads} --otu-table {output.table} --genome-fasta-files $(dirname {input.genomes})/finalBins/*fa --metapackage {input.db} &&
+        pixi r -e singlem singlem pipe --threads {threads} --otu-table {output.table} --genome-fasta-files $(dirname {input.genomes})/finalBins/*fa --metapackage {input.db} &&
         date ) 2> {log.err} > {log.out}
         """
 
@@ -185,8 +173,6 @@ rule singlem_appraise:
         db=rules.singlem_data.output.folder,
     output:
         os.path.join(RESULTS_DIR, "SingleM/SingleM_appraise.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/singlem.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_appraise.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_appraise.err.log"),
@@ -195,6 +181,6 @@ rule singlem_appraise:
         """
         (date
         export SINGLEM_METAPACKAGE_PATH={input.db}
-        singlem appraise --metagenome-otu-tables {input.metagenomes} --genome-otu-tables {input.genomes} --imperfect --metapackage {input.db} > {output}
+        pixi r -e singlem singlem appraise --metagenome-otu-tables {input.metagenomes} --genome-otu-tables {input.genomes} --imperfect --metapackage {input.db} > {output}
         date ) 2> {log.err} > {log.out}
         """

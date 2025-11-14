@@ -33,8 +33,6 @@ rule mapping_all:
     resources:
         runtime=60 * 12,
         mem_mb=get_mem_mb,
-    conda:
-        os.path.join(WORK_DIR, "envs/coverm.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}.err.log"),
@@ -43,7 +41,7 @@ rule mapping_all:
     shell:
         "(date && "
         "rm -f {output} && "
-        "TMPDIR=. coverm make -r {input.cont} -t {threads} -o $(dirname {output}) --discard-unmapped -c {input.read1} {input.read2} && "
+        "TMPDIR=. pixi r -e coverm coverm make -r {input.cont} -t {threads} -o $(dirname {output}) --discard-unmapped -c {input.read1} {input.read2} && "
         "date) 2> {log.err} > {log.out}"
 
 
@@ -53,8 +51,6 @@ rule coverage:
         os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample}_1.fq.gz.bam"),
     output:
         final=os.path.join(RESULTS_DIR, "Bins/cat_mags_cov_{sample}.txt"),
-    conda:
-        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
     resources:
         runtime=60 * 2,
@@ -66,7 +62,7 @@ rule coverage:
     message:
         "Estimating coverage for concatenated MAGs"
     shell:
-        "(date && coverm contig -b {input} -m trimmed_mean -t {threads} -o {output.final} && date)"
+        "(date && pixi r -e coverm coverm contig -b {input} -m trimmed_mean -t {threads} -o {output.final} && date)"
         " 2> {log.err} > {log.out}"
 
 

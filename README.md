@@ -66,7 +66,7 @@ conda env create -f requirements.yaml -n "snakemake"
 ### Via Python script
 
 This Python script provides a flexible launcher for running the NOMIS MAGs analysis pipelines with Snakemake. It supports **local execution**, **Slurm cluster execution**, **optional steps**, **continuation of failed runs**, and **dry-run previews**.
-
+The pipeline works with **[Pixi](https://prefix.dev/pixi)** to manage environments for each step. It installs **Pixi** if it's missing and then installs all required environments from `pixi.toml`.
 
 #### Usage
 

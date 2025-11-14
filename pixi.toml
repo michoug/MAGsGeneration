@@ -1,0 +1,276 @@
+[workspace]
+authors = ["Gregoire Michoud <gregoire.michoud@gmail.com>"]
+channels = ["conda-forge", "bioconda"]
+name = "MAGsGeneration"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+
+snakemake= "8.30.*"
+snakemake-executor-plugin-slurm= "0.15.*"
+snakefmt = "0.11.*"
+
+[feature.annotations]
+channels = ["conda-forge", "bioconda"]
+
+[feature.annotations.dependencies]
+prodigal = "2.6.3.*"
+pyrodigal = "3.5.*"
+
+[feature.binette]
+channels = ["conda-forge", "bioconda"]
+
+[feature.binette.dependencies]
+binette = "1.2.*"
+
+[feature.busco]
+channels = ["conda-forge", "bioconda"]
+
+[feature.busco.dependencies]
+busco = "6.*"
+
+[feature.checkm2]
+channels = ["conda-forge", "bioconda"]
+
+[feature.checkm2.dependencies]
+checkm2 = "1.1.*"
+
+[feature.comebin]
+channels = ["conda-forge", "bioconda"]
+
+[feature.comebin.dependencies]
+comebin = "1.0.3.*"
+
+[feature.concoct]
+channels = ["conda-forge", "bioconda"]
+
+[feature.concoct.dependencies]
+concoct = "1.1.0.*"
+
+[feature.coverm]
+channels = ["conda-forge", "bioconda"]
+
+[feature.coverm.dependencies]
+coverm = "0.7.0.*"
+samtools = "1.9.*"
+strobealign = "0.14.*"
+
+[feature.datasets]
+channels = ["conda-forge", "bioconda"]
+
+[feature.datasets.dependencies]
+ncbi-datasets-cli = "16.40.*"
+
+[feature.deepmicroclass]
+channels = ["conda-forge", "bioconda"]
+
+[feature.deepmicroclass.dependencies]
+pip = "25.*"
+python = "3.10.*"
+requests = "2.*"
+
+[feature.deepmicroclass.pypi-dependencies]
+biopython = "==1.85"
+deepmicroclass = "==1.0.6.2"
+
+[feature.eggnog]
+channels = ["conda-forge", "bioconda"]
+
+[feature.eggnog.dependencies]
+eggnog-mapper = "2.1.9.*"
+setuptools = "*"
+
+[feature.fastp]
+channels = ["conda-forge", "bioconda"]
+
+[feature.fastp.dependencies]
+fastp = "1.0.*"
+
+[feature.galah]
+channels = ["conda-forge", "bioconda"]
+
+[feature.galah.dependencies]
+python = "3.8.*"
+galah = "0.4.*"
+gsl = { version = "==2.7", build = "he838d99_0" }
+dashing = "0.4.*"
+
+[feature.gtdbtk]
+channels = ["conda-forge", "bioconda"]
+
+[feature.gtdbtk.dependencies]
+gtdbtk = "2.4.*"
+mash = "2.2.2.*"
+
+[feature.megahit]
+channels = ["conda-forge", "bioconda"]
+
+[feature.megahit.dependencies]
+megahit = "1.2.9.*"
+
+[feature.metabat]
+channels = ["conda-forge", "bioconda"]
+
+[feature.metabat.dependencies]
+metabat2 = "2.15.*"
+
+[feature.metabinner]
+channels = ["conda-forge", "bioconda"]
+
+[feature.metabinner.dependencies]
+metabinner = "1.4.3.*"
+
+[feature.metabuli]
+channels = ["conda-forge", "bioconda"]
+
+[feature.metabuli.dependencies]
+metabuli = "1.1.*"
+
+[feature.mgthermometer]
+channels = ["conda-forge", "bioconda"]
+
+[feature.mgthermometer.dependencies]
+perl-bioperl = "1.7.8.*"
+perl-file-slurp = "*"
+perl-list-moreutils = "*"
+
+[feature.microtrait]
+channels = ["conda-forge", "bioconda"]
+
+[feature.microtrait.dependencies]
+prodigal = "2.6.3.*"
+hmmer = "3.4.*"
+infernal = "1.1.5.*"
+trnascan-se = "2.*"
+bedtools = "2.31.*"
+bioconductor-cordon = "1.24.0.*"
+r-tidyverse = "*"
+r-ape = "*"
+r-base = "4.*"
+r-corrplot = "0.95.*"
+r-rcolorbrewer = "1.1_3.*"
+"r-r.utils" = "2.13.0.*"
+r-checkmate = "==2.3.2"
+r-doparallel = "==1.0.17"
+r-gtools = "*"
+r-lazyeval = "*"
+r-pheatmap = "1.0.*"
+r-tictoc = "1.2.*"
+"r-futile.logger" = "1.4.*"
+bioconductor-complexheatmap = "*"
+bioconductor-biostrings = "2.74.0.*"
+r-devtools = "2.4.5.*"
+r-seqinr = "*"
+r-vegan = "*"
+
+[feature.multiqc]
+channels = ["conda-forge", "bioconda"]
+
+[feature.multiqc.dependencies]
+multiqc = "1.32.*"
+
+[feature.rosella]
+channels = ["conda-forge", "numba", "bioconda"]
+
+[feature.rosella.dependencies]
+rosella = "==0.5.4"
+umap-learn = "0.5.3.*"
+
+[feature.r]
+channels = ["conda-forge", "bioconda"]
+
+[feature.r.dependencies]
+r-base = "4.4.*"
+r-ape = "*"
+r-tidyverse = "*"
+r-ggfortify = "*"
+r-ggrepel = "*"
+
+[feature.semibin]
+channels = ["conda-forge", "bioconda"]
+
+[feature.semibin.dependencies]
+semibin = "2.1.*"
+
+[feature.seqkit]
+channels = ["conda-forge", "bioconda"]
+
+[feature.seqkit.dependencies]
+seqkit = "2.8.*"
+
+[feature.singlem]
+channels = ["conda-forge", "bioconda"]
+
+[feature.singlem.dependencies]
+singlem = "0.19.*"
+expressbetadiversity = "1.0.10.*"
+
+[feature.syntracker]
+channels = ["conda-forge", "bioconda"]
+
+[feature.syntracker.dependencies]
+python = "3.14.0.*"
+r-base = "4.0.5.*"
+bioconductor-decipher = "2.18.1.*"
+r-tidyverse = "1.3.0.*"
+blast = "2.17.0.*"
+
+[feature.taxconverter]
+channels = ["conda-forge", "bioconda"]
+
+[feature.taxconverter.dependencies]
+pip = "25.1.1.*"
+python = "3.10.17.*"
+
+[feature.taxconverter.pypi-dependencies]
+taxconverter = "==1.1.0"
+
+[feature.vamb]
+channels = ["conda-forge", "bioconda"]
+
+[feature.vamb.dependencies]
+python = "3.10.*"
+
+[feature.vamb.pypi-dependencies]
+vamb = ">=5.0.4"
+
+[feature.trimgalore]
+channels = ["conda-forge", "bioconda"]
+
+[feature.trimgalore.dependencies]
+trim-galore = "0.6.10.*"
+perl = "5.32.*"
+
+[environments]
+annotations = { features = ["annotations"], no-default-feature = true }
+binette = { features = ["binette"], no-default-feature = true }
+busco = { features = ["busco"], no-default-feature = true }
+checkm2 = { features = ["checkm2"], no-default-feature = true }
+comebin = { features = ["comebin"], no-default-feature = true }
+concoct = { features = ["concoct"], no-default-feature = true }
+coverm = { features = ["coverm"], no-default-feature = true }
+datasets = { features = ["datasets"], no-default-feature = true }
+deepmicroclass = { features = ["deepmicroclass"], no-default-feature = true }
+eggnog = { features = ["eggnog"], no-default-feature = true }
+fastp = { features = ["fastp"], no-default-feature = true }
+galah = { features = ["galah"], no-default-feature = true }
+gtdbtk = { features = ["gtdbtk"], no-default-feature = true }
+megahit = { features = ["megahit"], no-default-feature = true }
+metabat = { features = ["metabat"], no-default-feature = true }
+metabinner = { features = ["metabinner"], no-default-feature = true }
+metabuli = { features = ["metabuli"], no-default-feature = true }
+mgthermometer = { features = ["mgthermometer"], no-default-feature = true }
+microtrait = { features = ["microtrait"], no-default-feature = true }
+multiqc = { features = ["multiqc"], no-default-feature = true }
+rosella = { features = ["rosella"], no-default-feature = true }
+r = { features = ["r"], no-default-feature = true }
+semibin = { features = ["semibin"], no-default-feature = true }
+seqkit = { features = ["seqkit"], no-default-feature = true }
+singlem = { features = ["singlem"], no-default-feature = true }
+syntracker = { features = ["syntracker"], no-default-feature = true }
+taxconverter = { features = ["taxconverter"], no-default-feature = true }
+vamb = { features = ["vamb"], no-default-feature = true }
+trimgalore = { features = ["trimgalore"], no-default-feature = true }

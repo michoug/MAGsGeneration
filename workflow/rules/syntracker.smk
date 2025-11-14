@@ -32,8 +32,6 @@ rule syntracker_blast:
     output:
         dir=directory(os.path.join(RESULTS_DIR, "SynTracker/blastDB")),
         done=touch(os.path.join(RESULTS_DIR, "SynTracker/blastDB.done")),
-    conda:
-        os.path.join(WORK_DIR, "envs/syntracker.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/syntracker_blast.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/syntracker_blast.err.log"),
@@ -45,7 +43,7 @@ rule syntracker_blast:
         """
         (date
         rm -rf {output.dir}
-        python {input.syntracker}/syntracker_makeDB.py -target {input.assembly} -out {output.dir}
+        pixi r -e syntracker python {input.syntracker}/syntracker_makeDB.py -target {input.assembly} -out {output.dir}
         touch {output.done}
         date ) 2> {log.err} > {log.out}
         """
@@ -76,8 +74,6 @@ rule syntracker_run:
         folder=directory(
             os.path.join(RESULTS_DIR, "SynTracker/temp/syntracker_output_{mags}")
         ),
-    conda:
-        os.path.join(WORK_DIR, "envs/syntracker.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/syntracker/syntracker_run_{mags}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/syntracker/syntracker_run_{mags}.err.log"),
@@ -90,7 +86,7 @@ rule syntracker_run:
         (date
         mkdir -p {output.folder}_mag
         cp {input.mags} {output.folder}_mag/
-        python {input.syntracker}/syntracker.py -ref {output.folder}_mag -mode new -blastDB {input.blastdb} -out {output.folder} -cores {threads} -length 2500
+        pixi r -e syntracker python {input.syntracker}/syntracker.py -ref {output.folder}_mag -mode new -blastDB {input.blastdb} -out {output.folder} -cores {threads} -length 2500
         rm -r {output.folder}_mag
         date ) 2> {log.err} > {log.out}
         """

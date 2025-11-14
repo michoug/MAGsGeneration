@@ -32,8 +32,6 @@ checkpoint galah:
     output:
         final=directory(os.path.join(RESULTS_DIR, "Bins/finalBins")),
         cluster=os.path.join(RESULTS_DIR, "Bins/cluster_galah.txt"),
-    conda:
-        os.path.join(WORK_DIR, "envs/galah.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/galah/galah.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/galah/galah.err.log"),
@@ -48,5 +46,5 @@ checkpoint galah:
         "Running Galah on all NOMIS MAGs"
     shell:
         "(date && "
-        "galah cluster --genome-fasta-directory {input.bins} -x fa --genome-info {input.check} --min-completeness {params.comp} --max-contamination {params.cont} --output-representative-fasta-directory-copy {output.final} --output-cluster-definition {output.cluster} -t {threads} && "
+        "pixi r -e galah galah cluster --genome-fasta-directory {input.bins} -x fa --genome-info {input.check} --min-completeness {params.comp} --max-contamination {params.cont} --output-representative-fasta-directory-copy {output.final} --output-cluster-definition {output.cluster} -t {threads} && "
         "date) 2> {log.err} > {log.out}"

@@ -59,8 +59,6 @@ rule indexAssembly:
         fa=rules.filter_length.output.out,
     output:
         os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-    conda:
-        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
     resources:
         runtime=60,
@@ -77,7 +75,7 @@ rule indexAssembly:
     shell:
         """
         (date 
-        strobealign --create-index -t {threads} {input.fa} -r {params.numb}
+        pixi r -e coverm strobealign --create-index -t {threads} {input.fa} -r {params.numb}
         date ) 2> {log.err} > {log.out}
         """
 
@@ -105,8 +103,6 @@ rule mapping:
         index=rules.checkIndexAssembyDone.output,
     output:
         os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
-    conda:
-        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 8
     resources:
         runtime=60 * 2,
@@ -118,10 +114,10 @@ rule mapping:
         """
         (date
         rm -f {output}.tmp*
-        strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
-        samtools sort -@ {threads} -o {output}
+        pixi r -e coverm strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
+        pixi r -e coverm samtools sort -@ {threads} -o {output}
         sleep 30
-        samtools index {output}
+        pixi r -e coverm samtools index {output}
         date ) 2> {log.err} > {log.out}
         """
 
@@ -134,8 +130,6 @@ rule metabat2_mapping:
         ),
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),
-    conda:
-        os.path.join(WORK_DIR, "envs/metabat.yaml")
     threads: 10
     resources:
         runtime=60 * 2,
@@ -146,7 +140,7 @@ rule metabat2_mapping:
     message:
         "Running the first part of metabat2 to estimate the coverage"
     shell:
-        "(date && jgi_summarize_bam_contig_depths --outputDepth {output} {input} && "
+        "(date && pixi r -e metabat jgi_summarize_bam_contig_depths --outputDepth {output} {input} && "
         "date) 2> {log.err} > {log.out}"
 
 
@@ -157,8 +151,6 @@ rule metabat2:
         cov=rules.metabat2_mapping.output,
     output:
         directory(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat/")),
-    conda:
-        os.path.join(WORK_DIR, "envs/metabat.yaml")
     threads: 10
     resources:
         runtime=60 * 2,
@@ -169,7 +161,7 @@ rule metabat2:
     message:
         "Running metabat2 to obtain bins"
     shell:
-        "(date && metabat2 -i {input.contig} -a {input.cov} -o {output}/metabat -t {threads} && "
+        "(date && pixi r -e metabat metabat2 -i {input.contig} -a {input.cov} -o {output}/metabat -t {threads} && "
         "date) 2> {log.err} > {log.out}"
 
 
@@ -184,8 +176,6 @@ rule metabinner_coverage:
             os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_temp.txt")
         ),
         final=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_cov.txt"),
-    conda:
-        os.path.join(WORK_DIR, "envs/metabat.yaml")
     threads: 14
     resources:
         runtime=60,
@@ -199,7 +189,7 @@ rule metabinner_coverage:
         "Running the first part of metabinner to estimate the coverage"
     shell:
         """
-        (date && jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input} && 
+        (date && pixi r -e metabat jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input} && 
         cat {output.temp} | awk '{{if ($2>{params.length}) print $0 }}' | cut -f -1,4- > {output.final} && 
         date) 2> {log.err} > {log.out}
         """
@@ -217,8 +207,6 @@ rule rosella:
             RESULTS_DIR,
             "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png",
         ),
-    conda:
-        os.path.join(WORK_DIR, "envs/rosella.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/rosella/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/rosella/{sample}.err.log"),
@@ -230,7 +218,7 @@ rule rosella:
         "Running Rosella"
     shell:
         "(date && rm -r $(dirname {output}) && "
-        "rosella recover -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
+        "pixi r -e rosella rosella recover -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
         "&& date) 2> {log.err} > {log.out}"
 
 
@@ -255,14 +243,12 @@ rule vamb_length:
         rules.filter_length.output.out,
     output:
         temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter_vamb.fasta")),
-    conda:
-        os.path.join(WORK_DIR, "envs/seqkit.yaml")
     threads: 4
     localrule: True
     message:
         "Remove contigs less than 1501 bp for Vamb"
     shell:
-        "seqkit seq -j {threads} --remove-gaps -o {output} -m 1501 {input}"
+        "pixi r -e seqkit seqkit seq -j {threads} --remove-gaps -o {output} -m 1501 {input}"
 
 
 rule vamb_filter:
@@ -290,7 +276,6 @@ rule vamb_filter:
 
 rule taxvamb:
     input:
-        file=rules.vamb_install.output,
         contig=rules.vamb_length.output,
         tax=rules.vamb_filter.output,
         cov=rules.vamb_coverage.output,
@@ -298,8 +283,6 @@ rule taxvamb:
         os.path.join(
             RESULTS_DIR, "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv"
         ),
-    conda:
-        os.path.join(WORK_DIR, "envs/vamb.yaml")
     threads: 14
     resources:
         runtime=60 * 24,
@@ -310,7 +293,7 @@ rule taxvamb:
     shell:
         "(date && "
         "rm -r $(dirname {output}) && "
-        "vamb bin taxvamb --outdir $(dirname {output}) -m 1501 --fasta {input.contig} --taxonomy {input.tax} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} -o && "
+        "pixi r -e vamb vamb bin taxvamb --outdir $(dirname {output}) -m 1501 --fasta {input.contig} --taxonomy {input.tax} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} -o && "
         "date) 2> {log.err} > {log.out}"
 
 
@@ -325,8 +308,6 @@ rule concoct_prepare:
         bed=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_10k.bed"),
         cont=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_10k.fa"),
         cov=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_concoct_cov.txt"),
-    conda:
-        os.path.join(WORK_DIR, "envs/concoct.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.err.log"),
@@ -336,7 +317,7 @@ rule concoct_prepare:
         runtime=60 * 5,
     shell:
         "(date && rm -f {output.bed} {output.cont} {output.cov} && cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
-        "concoct_coverage_table.py {output.bed} {input.bam} > {output.cov} && [[ -s {output.cov} ]] && "
+        "pixi r -e concoct concoct_coverage_table.py {output.bed} {input.bam} > {output.cov} && [[ -s {output.cov} ]] && "
         "date) 2> {log.err} > {log.out}"
 
 
@@ -346,8 +327,6 @@ rule concoct:
         cov=rules.concoct_prepare.output.cov,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/concoct.yaml")
     threads: 20
     resources:
         runtime=60 * 8,
@@ -358,8 +337,8 @@ rule concoct:
     message:
         "Running concoct to obtain bins"
     shell:
-        "(date && concoct --composition_file {input.contig} --coverage_file {input.cov} -b $(dirname {output})/concoct -t {threads} && "
-        "merge_cutup_clustering.py $(dirname {output})/concoct_clustering_gt1000.csv > {output} && "
+        "(date && pixi r -e concoct concoct --composition_file {input.contig} --coverage_file {input.cov} -b $(dirname {output})/concoct -t {threads} && "
+        "pixi r -e concoct merge_cutup_clustering.py $(dirname {output})/concoct_clustering_gt1000.csv > {output} && "
         "date) 2> {log.err} > {log.out}"
 
 
@@ -369,8 +348,6 @@ rule comebin:
         tmp=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),  # To make sure that the bam files are there
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/comebin.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/comebin/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/comebin/{sample}.err.log"),
@@ -386,7 +363,7 @@ rule comebin:
     shell:
         "(date && "
         "rm -r {params.folder} && "
-        "run_comebin.sh -a {input.cont} -o {params.folder} -t {threads} -p {params.bam}"
+        "pixi r -e comebin run_comebin.sh -a {input.cont} -o {params.folder} -t {threads} -p {params.bam}"
         "&& date) 2> {log.err} > {log.out}"
 
 
@@ -399,8 +376,6 @@ rule semibin:
         ),
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/semibin.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.err.log"),
@@ -413,7 +388,7 @@ rule semibin:
     shell:
         """
         (date
-        SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster
+        pixi r -e semibin SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster
         touch {output}
         date) 2> {log.err} > {log.out}
         """

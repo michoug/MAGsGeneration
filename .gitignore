@@ -159,3 +159,6 @@ dmypy.json
 # pixi environments
 .pixi
 *.egg-info
+# pixi environments
+.pixi/*
+!.pixi/config.toml

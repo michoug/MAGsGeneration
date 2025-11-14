@@ -66,8 +66,6 @@ rule binref:
         cont=rules.filter_length.output.out,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/BinRef/final_bins_quality_reports.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/binette.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/binref/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/binref/{sample}.err.log"),
@@ -82,7 +80,7 @@ rule binref:
     shell:
         """
         (date && 
-        binette -b {input.metabat} {input.taxvamb} {input.rosella} {input.concoct} {input.comebin} {input.semibin} -c {input.cont} -o $(dirname {output}) -t {threads} --checkm2_db {params.db} --min_completeness 50 --max_length 20000000 --verbose && 
+        pixi r -e binette binette -b {input.metabat} {input.taxvamb} {input.rosella} {input.concoct} {input.comebin} {input.semibin} -c {input.cont} -o $(dirname {output}) -t {threads} --checkm2_db {params.db} --min_completeness 50 --max_length 20000000 --verbose && 
         date) 2> {log.err} > {log.out}        
         """
 

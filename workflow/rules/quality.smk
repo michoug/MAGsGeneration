@@ -14,8 +14,6 @@ rule gtdbtk:
         directory(os.path.join(RESULTS_DIR, "Bins/gtdbtk_final")),
     log:
         os.path.join(RESULTS_DIR, "logs/gtdbtk.log"),
-    conda:
-        os.path.join(WORK_DIR, "envs/gtdbtk.yaml")
     params:
         db=config["gtdbtk"]["path"],
     threads: 30
@@ -25,7 +23,7 @@ rule gtdbtk:
     message:
         "Running GTDB on MAGs"
     shell:
-        "(date && export GTDBTK_DATA_PATH={params.db} && gtdbtk classify_wf --cpus {threads} -x fa --genome_dir {input} --out_dir {output} --mash_db $(dirname {params.db})/gtdb_ref_sketch.msh && date) &> >(tee {log})"
+        "(date && export GTDBTK_DATA_PATH={params.db} && pixi r -e gtdbtk gtdbtk classify_wf --cpus {threads} -x fa --genome_dir {input} --out_dir {output} --mash_db $(dirname {params.db})/gtdb_ref_sketch.msh && date) &> >(tee {log})"
 
 
 use rule checkm2_refine as checkm2_final with:

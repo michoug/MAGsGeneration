@@ -14,8 +14,6 @@ rule assembly_megahit:
     output:
         fasta=os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit/final.contigs.fa"),
         final=os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit.fa"),
-    conda:
-        os.path.join(WORK_DIR, "envs/megahit.yaml")
     params:
         folder=directory(os.path.join(RESULTS_DIR, "Assembly/{sample}_megahit")),
         name="{sample}",
@@ -30,7 +28,7 @@ rule assembly_megahit:
         """
         (date
         rm -rf {params}
-        megahit -1 {input.read1} -2 {input.read2} -o {params.folder} --min-contig-len 1000 -t {threads}
+        pixi r -e megahit megahit -1 {input.read1} -2 {input.read2} -o {params.folder} --min-contig-len 1000 -t {threads}
         perl -pe "s/>/>{params.name}_/" {output.fasta} > {output.final}
         date ) 2> {log.err} > {log.out}
         """

@@ -14,12 +14,10 @@ rule multi_to_single:
         rules.prepare4egg.output,
     output:
         fixed_fa=os.path.join(RESULTS_DIR, "EggNOG/cat_proteins.faa"),
-    conda:
-        os.path.join(WORK_DIR, "envs/seqkit.yaml")
     message:
         "Converting multi-line FASTA to single line FASTA files"
     shell:
-        "(date && seqkit seq $(dirname {input})/*faa > {output.fixed_fa} && date)"
+        "(date && pixi r -e seqkit seqkit seq $(dirname {input})/*faa > {output.fixed_fa} && date)"
 
 
 # Preparing EGGNOG run
@@ -34,10 +32,8 @@ checkpoint prep_eggnog:
     localrule: True
     message:
         "Splitting the large concactenated protein file into chunks of 1000000"
-    conda:
-        os.path.join(WORK_DIR, "envs/seqkit.yaml")
     shell:
-        "(date && rm -f {output.dir}/* && seqkit split -s 1000000 -O {output.dir} {input.fa} "
+        "(date && rm -f {output.dir}/* && pixi r -e seqkit seqkit split -s 1000000 -O {output.dir} {input.fa} "
         "&& date) 2> {log.err} > {log.out}"
 
 
@@ -64,8 +60,6 @@ rule emapper:
             RESULTS_DIR,
             "EggNOG/split/temp/cat_proteins.part_{i}.emapper.seed_orthologs",
         ),
-    conda:
-        os.path.join(WORK_DIR, "envs/eggnog.yaml")
     threads: 10
     resources:
         mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
@@ -80,7 +74,7 @@ rule emapper:
     shell:
         "(date && "
         "rm -f {input}.emapper.hits && "
-        "emapper.py -m diamond --data_dir {params.db} --no_annot --no_file_comments --cpu {threads} -i {input} -o {input} && "
+        "pixi r -e eggnog emapper.py -m diamond --data_dir {params.db} --no_annot --no_file_comments --cpu {threads} -i {input} -o {input} && "
         "mv {input}.emapper.hits {output.hits} && mv {input}.emapper.seed_orthologs {output.seed} && "
         "date) 2> {log.err} > {log.out}"
 
@@ -102,8 +96,6 @@ rule emapper_final:
         os.path.join(RESULTS_DIR, "EggNOG/allMAGs.emapper_orthologs"),
     output:
         os.path.join(RESULTS_DIR, "EggNOG/allMAGs_egg.txt.emapper.annotations"),
-    conda:
-        os.path.join(WORK_DIR, "envs/eggnog.yaml")
     threads: 10
     resources:
         runtime=60 * 12,
@@ -117,5 +109,5 @@ rule emapper_final:
         "Running EggNog-mapper on All MAGs"
     shell:
         "(date && "
-        "emapper.py --data_dir {params.db} --annotate_hits_table {input} --no_file_comments -o $(echo {output} | sed 's/.emapper.annotations//g' ) --cpu {threads} --dbmem && "
+        "pixi r -e eggnog emapper.py --data_dir {params.db} --annotate_hits_table {input} --no_file_comments -o $(echo {output} | sed 's/.emapper.annotations//g' ) --cpu {threads} --dbmem && "
         "date) 2> {log.err} > {log.out}"

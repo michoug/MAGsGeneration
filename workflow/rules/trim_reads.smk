@@ -20,8 +20,6 @@ rule trimming:
     output:
         trim1=temp(os.path.join(RESULTS_DIR, "Trim/{sample}_R1_001_val_1.fq.gz")),
         trim2=temp(os.path.join(RESULTS_DIR, "Trim/{sample}_R2_001_val_2.fq.gz")),
-    conda:
-        os.path.join(WORK_DIR, "envs/trim_galore.yaml")
     threads: 4
     resources:
         runtime=60 * 3,
@@ -32,7 +30,7 @@ rule trimming:
         err=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.err.log"),
     shell:
         "(date && "
-        "trim_galore --paired -j {threads} --output_dir $(dirname {output.trim1}) {input.read1} {input.read2} && "
+        "pixi r -e trimgalore trim_galore --paired -j {threads} --output_dir $(dirname {output.trim1}) {input.read1} {input.read2} && "
         "date) 2> {log.err} > {log.out}"
 
 
@@ -41,8 +39,6 @@ rule indexHuman:
         fa=rules.downloadHuman.output,
     output:
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"),
-    conda:
-        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
     resources:
         runtime=60,
@@ -56,7 +52,7 @@ rule indexHuman:
     shell:
         """
         (date
-        strobealign --create-index -t {threads} {input.fa} -r {params.numb}
+        pixi r -e coverm strobealign --create-index -t {threads} {input.fa} -r {params.numb}
         date ) 2> {log.err} > {log.out}
         """
 
@@ -80,8 +76,6 @@ rule mappingHuman:
         index=rules.checkIndexDone.output,
     output:
         temp(os.path.join(RESULTS_DIR, "TrimHuman/{sample}.bam")),
-    conda:
-        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
     priority: 20
     resources:
@@ -93,8 +87,8 @@ rule mappingHuman:
     shell:
         """
         (date
-        strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
-        samtools view -@ {threads} -bS - > {output} &&
+        pixi r -e coverm strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
+        pixi r -e coverm samtools view -@ {threads} -bS - > {output} &&
         date ) 2> {log.err} > {log.out}
         """
 
@@ -104,8 +98,6 @@ rule removeHuman:
         rules.mappingHuman.output,
     output:
         temp(os.path.join(RESULTS_DIR, "TrimHuman/{sample}.noHuman.bam")),
-    conda:
-        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
     priority: 20
     resources:
@@ -118,7 +110,7 @@ rule removeHuman:
         """
         (date
         rm -f {output}.tmp*
-        samtools view -@ {threads} -b -f 12 -F 256 {input} | samtools sort -@ {threads} - -o {output}
+        pixi r -e coverm samtools view -@ {threads} -b -f 12 -F 256 {input} | pixi r -e coverm samtools sort -@ {threads} - -o {output}
         date ) 2> {log.err} > {log.out}
         """
 
@@ -129,8 +121,6 @@ rule getcleanreads:
     output:
         read1=os.path.join(RESULTS_DIR, "TrimClean/{sample}_1.fq.gz"),
         read2=os.path.join(RESULTS_DIR, "TrimClean/{sample}_2.fq.gz"),
-    conda:
-        os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
     resources:
         runtime=60,
@@ -142,7 +132,7 @@ rule getcleanreads:
     shell:
         """
         (date
-        samtools fastq -@ {threads} -1 {output.read1} -2 {output.read2} {input} &&
+        pixi r -e coverm samtools fastq -@ {threads} -1 {output.read1} -2 {output.read2} {input} &&
         date ) 2> {log.err} > {log.out}
         """
 
@@ -154,8 +144,6 @@ rule getdedupreads:
     output:
         read1=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_1.fq.gz"),
         read2=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_2.fq.gz"),
-    conda:
-        os.path.join(WORK_DIR, "envs/fastp.yaml")
     threads: 4
     resources:
         runtime=60,
@@ -166,6 +154,6 @@ rule getdedupreads:
     shell:
         """
         (date
-        fastp -i {input.read1} -I {input.read2} -o {output.read1} -O {output.read2} --dedup --thread {threads} &&
+        pixi r -e fastp fastp -i {input.read1} -I {input.read2} -o {output.read1} -O {output.read2} --dedup --thread {threads} &&
         date ) 2> {log.err} > {log.out}
         """

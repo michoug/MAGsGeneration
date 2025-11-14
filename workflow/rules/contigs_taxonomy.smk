@@ -28,13 +28,11 @@ rule taxonomy:
         runtime=60 * 5,
         mem_mb=get_mem_mb,
     threads: 20
-    conda:
-        os.path.join(WORK_DIR, "envs/metabuli.yaml")
     shell:
         """
         (date
         name=$(echo $(basename {output.tax_report}) | sed "s/_report.tsv//g")
-        metabuli classify {input.fasta} $(dirname {input.file}) $(dirname {output.tax_report}) $name --threads {threads} --max-ram 130 --seq-mode 1
+        pixi r -e metabuli metabuli classify {input.fasta} $(dirname {input.file}) $(dirname {output.tax_report}) $name --threads {threads} --max-ram 130 --seq-mode 1
         date) 2> {log.err} > {log.out}
         """
 
@@ -49,11 +47,9 @@ rule taxconverter:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.err.log"),
     localrule: True
-    conda:
-        os.path.join(WORK_DIR, "envs/taxconverter.yaml")
     shell:
         "(date && "
-        "taxconverter metabuli -c {input.classif} -r {input.report} -o {output} && date) 2> {log.err} > {log.out}"
+        "pixi r -e taxconverter taxconverter metabuli -c {input.classif} -r {input.report} -o {output} && date) 2> {log.err} > {log.out}"
 
 
 rule tax_add_missing:

@@ -21,8 +21,6 @@ rule mgthermometer_run:
         proportion=os.path.join(RESULTS_DIR, "mgthermometer/proportion_{mags}.txt"),
     params:
         prefix="{mags}",
-    conda:
-        os.path.join(WORK_DIR, "envs/mgthermometer.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/mgthermometer/{mags}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mgthermometer/{mags}.err.log"),
@@ -31,7 +29,7 @@ rule mgthermometer_run:
     localrule: True
     shell:
         "(date && "
-        "perl {input.script} {input.fasta} {output.proportion} && "
+        "pixi r -e mgthermometer perl {input.script} {input.fasta} {output.proportion} && "
         "date) 2> {log.err} > {log.out}"
 
 

@@ -27,8 +27,6 @@ rule rosella_ref:
         bins=rules.binref.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done"),
-    conda:
-        os.path.join(WORK_DIR, "envs/rosella.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/refine/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/refine/{sample}.err.log"),
@@ -43,7 +41,7 @@ rule rosella_ref:
     shell:
         """
         (date && 
-        rm -rf $(dirname {output})/* && rosella refine --min-bin-size 200000 --checkm-results {input.check} -d $(dirname {input.bins})/final_bins --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) && 
+        rm -rf $(dirname {output})/* && pixi r -e rosella rosella refine --min-bin-size 200000 --checkm-results {input.check} -d $(dirname {input.bins})/final_bins --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) && 
         touch {output} &&
         date) 2> {log.err} > {log.out}
         """
@@ -105,8 +103,6 @@ rule checkm2_refine:
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm_refine.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm_refine.err.log"),
-    conda:
-        os.path.join(WORK_DIR, "envs/checkm2.yaml")
     resources:
         runtime=60 * 24,
         mem_mb=get_mem_mb,
@@ -119,5 +115,5 @@ rule checkm2_refine:
     shell:
         "(date && touch {input} && "
         "export CHECKM2DB={params.db} && "
-        "checkm2 predict --threads {threads} -x {params.ext} --input {input} --output-directory $(dirname {output.tsv}) --force && "
+        "pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input {input} --output-directory $(dirname {output.tsv}) --force && "
         "date) 2> {log.err} > {log.out}"

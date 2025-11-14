@@ -17,8 +17,6 @@ rule checkm2:
         rules.binref.output,
     output:
         tsv=os.path.join(RESULTS_DIR, "Bins/{sample}/checkm2/quality_report.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/checkm2.yaml")
     resources:
         runtime=60 * 4,
         mem_mb=get_mem_mb,
@@ -34,5 +32,5 @@ rule checkm2:
     shell:
         "(date && touch {input} && "
         "export CHECKM2DB={params.db} && "
-        "checkm2 predict --threads {threads} -x {params.ext} --input $(dirname {input})/final_bins --output-directory $(dirname {output.tsv}) --force && "
+        "pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input $(dirname {input})/final_bins --output-directory $(dirname {output.tsv}) --force && "
         "date) 2> {log.err} > {log.out}"
