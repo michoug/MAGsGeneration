@@ -144,6 +144,8 @@ rule getdedupreads:
     output:
         read1=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_1.fq.gz"),
         read2=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_2.fq.gz"),
+        report_html=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_fastp.html"),
+        report_json=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_fastp.json"), 
     threads: 4
     resources:
         runtime=60,
@@ -154,6 +156,6 @@ rule getdedupreads:
     shell:
         """
         (date
-        pixi r -e fastp fastp -i {input.read1} -I {input.read2} -o {output.read1} -O {output.read2} --dedup --thread {threads} &&
+        pixi r -e fastp fastp -i {input.read1} -I {input.read2} -h {output.report_html} -j {output.report_json} -o {output.read1} -O {output.read2} --dedup --thread {threads} &&
         date ) 2> {log.err} > {log.out}
         """

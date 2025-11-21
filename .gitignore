@@ -162,3 +162,10 @@ dmypy.json
 # pixi environments
 .pixi/*
 !.pixi/config.toml
+
+#fastp reports
+fastp.html
+fastp.json
+
+# Ruff files
+.ruff_cache/

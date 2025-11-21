@@ -1,7 +1,7 @@
 rule contigs_taxonomy:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax.tsv"),
+            os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_good.tsv"),
             sample=ASSEMBLY,
         ),
     output:

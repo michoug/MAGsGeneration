@@ -316,7 +316,7 @@ rule concoct_prepare:
     resources:
         runtime=60 * 5,
     shell:
-        "(date && rm -f {output.bed} {output.cont} {output.cov} && cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
+        "(date && rm -f {output.bed} {output.cont} {output.cov} && pixi r -e concoct cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
         "pixi r -e concoct concoct_coverage_table.py {output.bed} {input.bam} > {output.cov} && [[ -s {output.cov} ]] && "
         "date) 2> {log.err} > {log.out}"
 

@@ -1,78 +1,84 @@
-#!/usr/bin/env python3
-
 import os
-import shutil
 import subprocess
 import yaml
 import argparse
-import sys
+import logging
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 # Optional steps
-OPTIONAL_STEPS = {"syntracker", "singlem_all", "eggnog", "mgthermometer", "eukaryotes_filter"}
-
-# Pipeline definitions
+OPTIONAL_STEPS = {
+    "syntracker",
+    "singlem_all",
+    "eggnog",
+    "mgthermometer",
+    "eukaryotes_filter",
+}
 PIPELINES = {
     "runAll": "workflow/runAll.smk",
-    "alreadyAssemble": "workflow/alreadyAssemble.smk"
+    "alreadyAssemble": "workflow/alreadyAssemble.smk",
 }
 
-# ----------------------------------------------------
-# Install Pixi (if missing) + install all Pixi envs
-# ----------------------------------------------------
-def ensure_and_install_pixi_envs(pixi_project_path):
-    pixi_toml = os.path.join(pixi_project_path, "pixi.toml")
 
-    if not os.path.exists(pixi_toml):
-        print(f"ℹ️ No pixi.toml found in {pixi_project_path}, skipping Pixi environment setup.")
-        return
-
-    # Ensure Pixi exists
-    if shutil.which("pixi") is None:
-        print("⚠️ Pixi not found. Attempting automatic installation…")
-        try:
-            subprocess.run(
-                ["curl", "-fsSL", "https://pixi.sh/install.sh", "-o", "install_pixi.sh"],
-                check=True
-            )
-            subprocess.run(["sh", "install_pixi.sh"], check=True)
-            print("✅ Pixi installed successfully.\n")
-        except Exception:
-            print("❌ Failed to auto-install Pixi.\n"
-                  "Please install manually: https://prefix.dev/pixi")
-            sys.exit(1)
-
-    # Install all Pixi environments
-    print("📦 Installing Pixi environments defined in pixi.toml...")
-    try:
-        subprocess.run(["pixi", "install", "-a"], cwd=pixi_project_path, check=True)
-        print("✅ Pixi environments installed.\n")
-    except subprocess.CalledProcessError:
-        print("❌ Pixi environment installation failed.")
-        sys.exit(1)
-
-
-# ---------------------------------------
-# Helper functions
-# ---------------------------------------
 def load_config(path):
-    with open(path) as f:
-        return yaml.safe_load(f)
+    """Load and validate YAML configuration file."""
+    try:
+        with open(path) as f:
+            config = yaml.safe_load(f)
+        if not isinstance(config, dict):
+            raise ValueError("Config must be a dictionary")
+        return config
+    except FileNotFoundError:
+        raise ValueError(f"Config file not found: {path}")
+    except yaml.YAMLError as e:
+        raise ValueError(f"Invalid YAML in config: {e}")
+
 
 def save_config(config, path):
-    with open(path, "w") as f:
-        yaml.safe_dump(config, f, sort_keys=False)
+    """Save configuration to YAML file."""
+    try:
+        with open(path, "w") as f:
+            yaml.safe_dump(config, f, sort_keys=False)
+        logger.info(f"Configuration saved to: {path}")
+    except Exception as e:
+        raise ValueError(f"Failed to save config to {path}: {e}")
 
 
-def run_snakemake(snakefile, configfile, cores=1, use_conda=False,
-                  conda_prefix=None, dryrun=False, continue_run=False,
-                  profile=None, extra_args=None):
+def unlock_snakemake(snakefile, configfile):
+    """Unlock Snakemake working directory before running."""
+    cmd = ["snakemake", "-s", snakefile, "--configfile", configfile, "--unlock"]
+    logger.info("Unlocking Snakemake pipeline...")
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
+        logger.info("Pipeline unlocked successfully")
+    except subprocess.CalledProcessError as e:
+        logger.warning(f"Unlock failed (may be okay if not locked): {e.stderr}")
 
-    cmd = [
-        "snakemake",
-        "-s", snakefile,
-        "--configfile", configfile,
-        "--cores", str(cores)
-    ]
+
+def run_snakemake(
+    snakefile,
+    configfile,
+    cores=1,
+    use_conda=False,
+    conda_prefix=None,
+    dryrun=False,
+    continue_run=False,
+    profile=None,
+):
+    """Execute Snakemake pipeline with specified parameters."""
+    cmd = ["snakemake", "-s", snakefile, "--configfile", configfile]
+
+    # When using a profile (e.g., Slurm), cores should be set to "all"
+    # The actual job resources are controlled by the profile configuration
+    if profile:
+        cmd += ["--cores", "all"]
+        cmd += ["--profile", profile]
+    else:
+        cmd += ["--cores", str(cores)]
 
     if use_conda:
         cmd += ["--use-conda"]
@@ -80,138 +86,261 @@ def run_snakemake(snakefile, configfile, cores=1, use_conda=False,
             cmd += ["--conda-prefix", conda_prefix]
 
     if dryrun:
-        cmd.append("-n")
+        cmd.append("--dry-run")
 
     if continue_run:
         cmd.append("--rerun-incomplete")
 
-    if profile:
-        cmd += ["--profile", profile]
+    logger.info(f"Running Snakemake: {' '.join(cmd)}")
 
-    if extra_args:
-        cmd += extra_args
-
-    print(">>> Running Snakemake command:")
-    print(" ".join(cmd), "\n")
-
-    subprocess.run(cmd, check=True)
+    try:
+        subprocess.run(cmd, check=True)
+        logger.info("Pipeline completed successfully")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Pipeline failed with exit code {e.returncode}")
+        raise
 
 
-# -----------------------------------------
-# Main
-# -----------------------------------------
+def validate_config(config, continue_run=False):
+    """Validate configuration has required keys."""
+    if continue_run:
+        return  # Skip validation for continuation runs
+
+    required_keys = ["results_dir", "steps"]
+    missing = [k for k in required_keys if k not in config]
+    if missing:
+        raise ValueError(f"Config missing required keys: {missing}")
+
+    if not isinstance(config.get("steps"), list):
+        raise ValueError("Config key 'steps' must be a list")
+
+
+def validate_optional_steps(steps):
+    """Validate that provided optional steps are valid."""
+    if not steps:
+        return
+
+    # Allow special keywords
+    if steps == ["all"] or steps == ["none"]:
+        return
+
+    invalid = set(steps) - OPTIONAL_STEPS
+    if invalid:
+        raise ValueError(
+            f"Invalid optional steps: {invalid}. Valid options: {OPTIONAL_STEPS}"
+        )
+
+
+def resolve_optional_steps(args_steps, all_steps):
+    """Resolve optional steps based on command line arguments.
+    
+    Returns the final list of optional steps to include.
+    - If args_steps is None (not provided): default to 'all'
+    - If args_steps is ['all']: include all optional steps
+    - If args_steps is ['none']: include no optional steps
+    - Otherwise: include specified optional steps
+    """
+    optional_in_config = [s for s in all_steps if s in OPTIONAL_STEPS]
+    
+    # Default to 'all' if --steps not provided
+    if args_steps is None:
+        logger.info("No --steps specified, defaulting to 'all' optional steps")
+        return optional_in_config
+    
+    # Handle special keywords
+    if args_steps == ["all"]:
+        logger.info("Using 'all' optional steps")
+        return optional_in_config
+    
+    if args_steps == ["none"]:
+        logger.info("Using 'none' optional steps")
+        return []
+    
+    # Filter to valid optional steps
+    return [s for s in args_steps if s in OPTIONAL_STEPS]
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Unified Snakemake Pipeline Launcher")
-
-    parser.add_argument("-p", "--pipeline", choices=PIPELINES.keys(),
-                        help="Pipeline to use (runAll, alreadyAssemble)")
-    parser.add_argument("-c", "--config", required=True,
-                        help="Main config YAML file")
-    parser.add_argument("-o", "--output",
-                        help="Output/results directory")
-    parser.add_argument("--steps", nargs="+",
-                        help="Optional steps to include")
-    parser.add_argument("--use-conda", action="store_true",
-                        help="Enable Snakemake conda environments")
-    parser.add_argument("--conda-prefix",
-                        default=os.path.join(os.environ.get("CONDA_PREFIX", "/tmp/conda"), "pipeline"),
-                        help="Conda prefix for Snakemake")
-    parser.add_argument("--cores", type=int, default=1,
-                        help="Number of cores")
-    parser.add_argument("--slurm", action="store_true",
-                        help="Use Slurm profile")
-    parser.add_argument("--continue", dest="continue_run", action="store_true",
-                        help="Continue an existing run")
-    parser.add_argument("-n", "--dryrun", action="store_true",
-                        help="Dry run (Snakemake -n)")
-    parser.add_argument("--snakemake-args", nargs=argparse.REMAINDER,
-                        help="Extra arguments to pass directly to Snakemake (e.g., --unlock)")
+    parser = argparse.ArgumentParser(
+        description="Wrapper for running Snakemake bioinformatics pipelines"
+    )
+    parser.add_argument(
+        "-p",
+        "--pipeline",
+        choices=PIPELINES.keys(),
+        help="Pipeline to run (required for new runs)",
+    )
+    parser.add_argument(
+        "-c", "--config", required=True, help="Path to YAML configuration file"
+    )
+    parser.add_argument(
+        "--steps",
+        nargs="+",
+        help=f"Optional steps to include. Use 'all' for all optional steps (default), "
+             f"'none' for no optional steps, or specify individual steps: {', '.join(OPTIONAL_STEPS)}",
+    )
+    parser.add_argument("-o", "--output", help="Results folder path")
+    parser.add_argument(
+        "-n",
+        "--dryrun",
+        action="store_true",
+        help="Perform a dry-run without executing",
+    )
+    parser.add_argument(
+        "--use-conda", action="store_true", help="Use conda environments"
+    )
+    parser.add_argument(
+        "--conda-prefix",
+        default=None,
+        help="Conda prefix directory (default: $CONDA_PREFIX/pipeline or ./conda)",
+    )
+    parser.add_argument(
+        "--cores",
+        type=int,
+        default=1,
+        help="Number of cores for local execution (ignored when using --slurm, default: 1)",
+    )
+    parser.add_argument(
+        "--slurm",
+        action="store_true",
+        help="Use Slurm profile for cluster execution (sets cores to 'all', job resources controlled by profile)",
+    )
+    parser.add_argument(
+        "--profile",
+        help="Path to Snakemake profile directory (overrides --slurm, sets cores to 'all')",
+    )
+    parser.add_argument(
+        "--continue",
+        dest="continue_run",
+        action="store_true",
+        help="Continue an incomplete run",
+    )
 
     args = parser.parse_args()
 
-    # Load config
+    # Load configuration
+    logger.info(f"Loading configuration from: {args.config}")
     config = load_config(args.config)
+    validate_config(config, args.continue_run)
 
-    # ---------------------------------------------------
     # Determine pipeline
-    # ---------------------------------------------------
     if args.continue_run:
-        loaded_cfg = load_config(args.config)
-        pipeline = loaded_cfg.get("pipeline")
+        pipeline = config.get("pipeline")
         if not pipeline:
-            raise ValueError("Existing config is missing 'pipeline'.")
+            raise ValueError("Cannot continue: no pipeline specified in config")
+        logger.info(f"Continuing pipeline: {pipeline}")
     else:
         if not args.pipeline:
-            raise ValueError("Pipeline must be specified when starting a new run.")
+            raise ValueError(
+                "Pipeline must be specified for new runs using -p/--pipeline"
+            )
         pipeline = args.pipeline
+        config["pipeline"] = pipeline
+        logger.info(f"Starting new pipeline: {pipeline}")
+
+    if pipeline not in PIPELINES:
+        raise ValueError(
+            f"Unknown pipeline: {pipeline}. Choose from {list(PIPELINES.keys())}"
+        )
 
     snakefile = PIPELINES[pipeline]
 
-    # ---------------------------------------------------
-    # Determine results/output directory
-    # ---------------------------------------------------
-    results_dir = (config.get("results_dir")
-                   if args.continue_run
-                   else os.path.abspath(args.output or config.get("results_dir")))
+    # Determine results folder
+    if args.continue_run:
+        results_dir = config.get("results_dir")
+        if not results_dir:
+            raise ValueError("Cannot continue: no results_dir in config")
+        results_dir = os.path.abspath(results_dir)
+        if not os.path.exists(results_dir):
+            raise ValueError(
+                f"Cannot continue: results directory does not exist: {results_dir}"
+            )
+    else:
+        results_dir = os.path.abspath(args.output or config.get("results_dir"))
+        os.makedirs(results_dir, exist_ok=True)
+        logger.info(f"Results directory: {results_dir}")
 
-    if not results_dir:
-        raise ValueError("No results directory provided (use -o PATH).")
-
-    os.makedirs(results_dir, exist_ok=True)
     config["results_dir"] = results_dir
 
-    # ---------------------------------------------------
-    # Determine steps
-    # ---------------------------------------------------
+    # Validate and resolve steps
+    validate_optional_steps(args.steps)
+
     all_steps = config.get("steps", [])
     mandatory = [s for s in all_steps if s not in OPTIONAL_STEPS]
-
-    if args.steps:
-        final_steps = mandatory + [s for s in args.steps if s in OPTIONAL_STEPS]
-    else:
-        final_steps = all_steps
-
+    
+    # Resolve which optional steps to include (defaults to 'all')
+    optional_to_include = resolve_optional_steps(args.steps, all_steps)
+    
+    final_steps = mandatory + optional_to_include
     config["steps"] = final_steps
-    config["pipeline"] = pipeline
 
-    # Save run config
+    # Save run config in results folder
     run_config_path = os.path.join(results_dir, "config_run.yaml")
-    save_config(config, run_config_path)
 
-    # ---------------------------------------------------
-    # Print step summary
-    # ---------------------------------------------------
+    # Check if continuing and config exists
+    if args.continue_run:
+        if not os.path.exists(run_config_path):
+            raise ValueError(
+                f"Cannot continue: no config_run.yaml found in {results_dir}"
+            )
+        logger.info(f"Using existing run config: {run_config_path}")
+    else:
+        save_config(config, run_config_path)
+
+    # Print steps summary
     optional_run = [s for s in final_steps if s in OPTIONAL_STEPS]
     mandatory_run = [s for s in final_steps if s not in OPTIONAL_STEPS]
+    logger.info(
+        f"Steps to run:\n  Mandatory: {mandatory_run}\n  Optional: {optional_run}"
+    )
 
-    print("📌 Steps to run:")
-    print("  Mandatory:", mandatory_run)
-    print("  Optional :", optional_run, "\n")
+    # Determine conda prefix
+    if args.conda_prefix:
+        conda_prefix = args.conda_prefix
+    elif args.use_conda:
+        conda_prefix = os.path.join(
+            os.environ.get("CONDA_PREFIX", "./conda"), "pipeline"
+        )
+    else:
+        conda_prefix = None
 
-    # -------------------------------------------------------------
-    # Install Pixi if needed + install all pixi environments
-    # -------------------------------------------------------------
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    ensure_and_install_pixi_envs(script_dir)
+    # Determine profile path for Snakemake
+    # Priority: --profile > --slurm > None
+    profile_path = None
+    if args.profile:
+        profile_path = args.profile
+        if not os.path.exists(profile_path):
+            raise ValueError(f"Profile directory not found: {profile_path}")
+        logger.info(f"Using custom profile: {profile_path}")
+        logger.info("Note: --cores is ignored; job resources defined in profile config")
+    elif args.slurm:
+        profile_path = os.path.join("profile")
+        if not os.path.exists(profile_path):
+            raise ValueError(f"Slurm profile not found at: {profile_path}")
+        logger.info(f"Using Slurm profile: {profile_path}")
+        logger.info("Note: --cores is ignored; job resources defined in profile config")
+    else:
+        logger.info(f"Running locally with {args.cores} cores")
 
-    # Determine profile
-    profile_path = os.path.join("profile") if args.slurm else None
+    # Always unlock before running
+    unlock_snakemake(snakefile=snakefile, configfile=run_config_path)
 
-    # ---------------------------------------------------
     # Run Snakemake
-    # ---------------------------------------------------
     run_snakemake(
         snakefile=snakefile,
         configfile=run_config_path,
         cores=args.cores,
         use_conda=args.use_conda,
-        conda_prefix=args.conda_prefix,
+        conda_prefix=conda_prefix,
         dryrun=args.dryrun,
         continue_run=args.continue_run,
         profile=profile_path,
-        extra_args=args.snakemake_args
     )
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        exit(1)
