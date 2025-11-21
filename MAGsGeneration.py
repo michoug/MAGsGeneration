@@ -3,6 +3,7 @@ import subprocess
 import yaml
 import argparse
 import logging
+import shutil
 
 # Setup logging
 logging.basicConfig(
@@ -57,6 +58,41 @@ def unlock_snakemake(snakefile, configfile):
         logger.info("Pipeline unlocked successfully")
     except subprocess.CalledProcessError as e:
         logger.warning(f"Unlock failed (may be okay if not locked): {e.stderr}")
+
+# ----------------------------------------------------
+# Install Pixi (if missing) + install all Pixi envs
+# ----------------------------------------------------
+def ensure_and_install_pixi_envs(pixi_project_path):
+    pixi_toml = os.path.join(pixi_project_path, "pixi.toml")
+
+    if not os.path.exists(pixi_toml):
+        print(f"ℹ️ No pixi.toml found in {pixi_project_path}, skipping Pixi environment setup.")
+        return
+
+    # Ensure Pixi exists
+    if shutil.which("pixi") is None:
+        print("⚠️ Pixi not found. Attempting automatic installation…")
+        try:
+            subprocess.run(
+                ["curl", "-fsSL", "https://pixi.sh/install.sh", "-o", "install_pixi.sh"],
+                check=True
+            )
+            subprocess.run(["sh", "install_pixi.sh"], check=True)
+            print("✅ Pixi installed successfully.\n")
+        except Exception:
+            print("❌ Failed to auto-install Pixi.\n"
+                  "Please install manually: https://prefix.dev/pixi")
+            sys.exit(1)
+
+    # Install all Pixi environments
+    print("📦 Installing Pixi environments defined in pixi.toml...")
+    try:
+        subprocess.run(["pixi", "install", "-a"], cwd=pixi_project_path, check=True)
+        print("✅ Pixi environments installed.\n")
+    except subprocess.CalledProcessError:
+        print("❌ Pixi environment installation failed.")
+        sys.exit(1)
+
 
 
 def run_snakemake(
@@ -322,6 +358,9 @@ def main():
     else:
         logger.info(f"Running locally with {args.cores} cores")
 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    ensure_and_install_pixi_envs(script_dir)
     # Always unlock before running
     unlock_snakemake(snakefile=snakefile, configfile=run_config_path)
 
