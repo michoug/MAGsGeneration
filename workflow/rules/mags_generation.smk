@@ -107,6 +107,7 @@ rule mapping:
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
+    group: "mapping_group"
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
@@ -116,8 +117,8 @@ rule mapping:
         rm -f {output}.tmp*
         pixi r -e coverm strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
         pixi r -e coverm samtools sort -@ {threads} -o {output}
-        sleep 30
         pixi r -e coverm samtools index {output}
+        touch -r {output} -d '+1 second' {output}.bai
         date ) 2> {log.err} > {log.out}
         """
 
@@ -314,7 +315,9 @@ rule concoct_prepare:
     message:
         "Preparing files for Concoct"
     resources:
-        runtime=60 * 5,
+        runtime=60 * 24,
+        mem_mb=get_mem_mb,
+    threads: 5
     shell:
         "(date && rm -f {output.bed} {output.cont} {output.cov} && pixi r -e concoct cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
         "pixi r -e concoct concoct_coverage_table.py {output.bed} {input.bam} > {output.cov} && [[ -s {output.cov} ]] && "

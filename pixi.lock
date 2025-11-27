@@ -2495,7 +2495,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/qhull-2020.2-h434a139_5.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/readline-8.2-h8c095d6_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.32.5-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/bioconda/linux-64/rosella-0.5.4-h8e1a5b0_0.tar.bz2
+      - conda: https://conda.anaconda.org/bioconda/linux-64/rosella-0.5.5-h8e1a5b0_0.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/linux-64/samtools-1.22.1-h96c455f_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/scikit-bio-0.7.1-py310hf779ad0_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/scikit-learn-1.1.0-py310hffb9edd_0.tar.bz2
@@ -18736,9 +18736,9 @@ packages:
   license_family: MIT
   size: 59317
   timestamp: 1761357519215
-- conda: https://conda.anaconda.org/bioconda/linux-64/rosella-0.5.4-h8e1a5b0_0.tar.bz2
-  sha256: 86dac86a106874824a3fbd4f89a4667db6b905a59e1d0acf051a2f2e3581138a
-  md5: 55e63318a7a876d49510af9d379ddce7
+- conda: https://conda.anaconda.org/bioconda/linux-64/rosella-0.5.5-h8e1a5b0_0.tar.bz2
+  sha256: 20aef9145dda57fb44cb4edba5a6a319eaf60db7ecbe0419e78e062607d5d1dd
+  md5: 8498a432006f2152d085c1dfd0c9cfa9
   depends:
   - biopython >=1.81
   - coverm >=0.6.1
@@ -18748,13 +18748,13 @@ packages:
   - joblib >=1.1.0,<=1.3
   - joblib >=1.3.0
   - libblas >=3.9.0,<4.0a0
-  - libgcc-ng >=12
-  - libstdcxx-ng >=12
+  - libgcc >=12
+  - libstdcxx >=12
   - libzlib >=1.2.13,<2.0a0
   - matplotlib-base >=3.8
   - numba >=0.53,<=0.57
   - numpy <=1.24
-  - openssl >=3.3.1,<4.0a0
+  - openssl >=3.3.2,<4.0a0
   - pandas >=1.3
   - pebble >=5.0
   - pynndescent >=0.5.7
@@ -18770,8 +18770,8 @@ packages:
   constrains:
   - __glibc >=2.17
   license: GPL3
-  size: 1427525
-  timestamp: 1721183388061
+  size: 1437336
+  timestamp: 1729556619296
 - conda: https://conda.anaconda.org/conda-forge/linux-64/rpds-py-0.28.0-py312h868fb18_2.conda
   sha256: ae6b9ecf6e13009d44163058360811284a3174c8094421eab3520fd77f5ade77
   md5: b21792d3803edb7ae5467442513c264e

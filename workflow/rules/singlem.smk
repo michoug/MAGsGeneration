@@ -127,7 +127,7 @@ rule singlem_microbial:
         profile=os.path.join(RESULTS_DIR, "SingleM/allProfiles.tsv"),
         mf=os.path.join(RESULTS_DIR, "SingleM/SingleM_MF.tsv"),
     resources:
-        runtime=60 * 2,
+        runtime=60 * 5,
         mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_MF.out.log"),

@@ -4,6 +4,7 @@ import yaml
 import argparse
 import logging
 import shutil
+import sys
 
 # Setup logging
 logging.basicConfig(
@@ -87,7 +88,7 @@ def ensure_and_install_pixi_envs(pixi_project_path):
     # Install all Pixi environments
     print("📦 Installing Pixi environments defined in pixi.toml...")
     try:
-        subprocess.run(["pixi", "install", "-a"], cwd=pixi_project_path, check=True)
+        subprocess.run(["pixi", "install", "--run-post-link-scripts", "-a"], cwd=pixi_project_path, check=True)
         print("✅ Pixi environments installed.\n")
     except subprocess.CalledProcessError:
         print("❌ Pixi environment installation failed.")

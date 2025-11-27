@@ -69,7 +69,7 @@ rule binref:
     log:
         out=os.path.join(RESULTS_DIR, "logs/binref/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/binref/{sample}.err.log"),
-    threads: 20
+    threads: 30
     resources:
         runtime=60 * 12,
         mem_mb=get_mem_mb,
@@ -80,7 +80,7 @@ rule binref:
     shell:
         """
         (date && 
-        pixi r -e binette binette -b {input.metabat} {input.taxvamb} {input.rosella} {input.concoct} {input.comebin} {input.semibin} -c {input.cont} -o $(dirname {output}) -t {threads} --checkm2_db {params.db} --min_completeness 50 --max_length 20000000 --verbose && 
+        pixi r -e binette binette -b {input.metabat} {input.taxvamb} {input.rosella} {input.concoct} {input.comebin} {input.semibin} -c {input.cont} -o $(dirname {output}) -t 20 --checkm2_db {params.db} --min_completeness 50 --max_length 20000000 --verbose && 
         date) 2> {log.err} > {log.out}        
         """
 

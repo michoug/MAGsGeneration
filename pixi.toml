@@ -176,7 +176,7 @@ multiqc = "1.32.*"
 channels = ["conda-forge", "numba", "bioconda"]
 
 [feature.rosella.dependencies]
-rosella = "==0.5.4"
+rosella = "==0.5.5"
 umap-learn = "0.5.3.*"
 
 [feature.r]

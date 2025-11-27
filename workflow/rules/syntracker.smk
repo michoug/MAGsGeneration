@@ -71,9 +71,9 @@ rule syntracker_run:
             RESULTS_DIR,
             "SynTracker/temp/syntracker_output_{mags}/summary_output/synteny_scores_per_region.csv",
         ),
-        folder=directory(
+        folder=temp(directory(
             os.path.join(RESULTS_DIR, "SynTracker/temp/syntracker_output_{mags}")
-        ),
+        )),
     log:
         out=os.path.join(RESULTS_DIR, "logs/syntracker/syntracker_run_{mags}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/syntracker/syntracker_run_{mags}.err.log"),
