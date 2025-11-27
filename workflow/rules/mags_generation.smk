@@ -11,10 +11,6 @@ rule mags_generation:
             number=[100, 125, 150, 250, 400],
         ),
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/index_{sample}.done"),
-            sample=SAMPLES,
-        ),
-        expand(
             os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
             sample=SAMPLES,
             sample_2=SAMPLES,
@@ -79,17 +75,23 @@ rule indexAssembly:
         date ) 2> {log.err} > {log.out}
         """
 
-
-rule checkIndexAssembyDone:
+rule check_reads_assembly_for_mapping:
     input:
         expand(
-            os.path.join(
-                RESULTS_DIR, "Assembly/{{sample}}_filter.fasta.r{number}.sti"
-            ),
+            os.path.join(RESULTS_DIR, "TrimDedup/{sample}_1.fq.gz"),
+            sample=SAMPLES,
+        ),
+        expand(
+            os.path.join(RESULTS_DIR, "TrimDedup/{sample}_2.fq.gz"),
+            sample=SAMPLES,
+        ),
+        expand(
+            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
+            sample=SAMPLES,
             number=[100, 125, 150, 250, 400],
         ),
     output:
-        os.path.join(RESULTS_DIR, "Assembly/index_{sample}.done"),
+        os.path.join(RESULTS_DIR, "Assembly/check_reads_for_mapping.done"),
     localrule: True
     shell:
         "touch {output}"
@@ -97,28 +99,30 @@ rule checkIndexAssembyDone:
 
 rule mapping:
     input:
+        check_reads=rules.check_reads_assembly_for_mapping.output,
         read1=rules.getdedupreads.output.read1,
         read2=rules.getdedupreads.output.read2,
         fasta=rules.filter_length.output.out,
-        index=rules.checkIndexAssembyDone.output,
     output:
-        os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
+        bam=os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
+        bai=os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam.bai"),
     threads: 8
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
-    group: "mapping_group"
+    group:
+        "mapping_group"
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
     shell:
         """
         (date
-        rm -f {output}.tmp*
+        rm -f {output.bam}.tmp*
         pixi r -e coverm strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
-        pixi r -e coverm samtools sort -@ {threads} -o {output}
-        pixi r -e coverm samtools index {output}
-        touch -r {output} -d '+1 second' {output}.bai
+        pixi r -e coverm samtools sort -@ {threads} -o {output.bam}
+        pixi r -e coverm samtools index {output.bam}
+        touch -r {output.bam} -d '+1 second' {output.bai}
         date ) 2> {log.err} > {log.out}
         """
 

@@ -1,13 +1,5 @@
 rule trim_reads:
     input:
-        # expand(
-        #     os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"),
-        #     number=[100, 125, 150, 200, 250, 300],
-        # ),
-        # expand(
-        #     os.path.join(RESULTS_DIR, "Trim/{sample}_R1_001_val_1.fq.gz"),
-        #     sample=SAMPLES,
-        # ),
         expand(os.path.join(RESULTS_DIR, "TrimDedup/{sample}_1.fq.gz"), sample=SAMPLES),
     output:
         touch("status/trimming.done"),
@@ -145,8 +137,9 @@ rule getdedupreads:
         read1=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_1.fq.gz"),
         read2=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_2.fq.gz"),
         report_html=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_fastp.html"),
-        report_json=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_fastp.json"), 
+        report_json=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_fastp.json"),
     threads: 4
+    priority: 20
     resources:
         runtime=60,
         mem_mb=get_mem_mb,
