@@ -20,11 +20,11 @@ channels = ["conda-forge", "bioconda"]
 prodigal = "2.6.3.*"
 pyrodigal = "3.5.*"
 
-[feature.binette]
+[feature.dastool]
 channels = ["conda-forge", "bioconda"]
 
-[feature.binette.dependencies]
-binette = "1.2.*"
+[feature.dastool.dependencies]
+das_tool = "1.1.7.*"
 
 [feature.busco]
 channels = ["conda-forge", "bioconda"]
@@ -246,7 +246,7 @@ perl = "5.32.*"
 
 [environments]
 annotations = { features = ["annotations"], no-default-feature = true }
-binette = { features = ["binette"], no-default-feature = true }
+dastool = { features = ["dastool"], no-default-feature = true }
 busco = { features = ["busco"], no-default-feature = true }
 checkm2 = { features = ["checkm2"], no-default-feature = true }
 comebin = { features = ["comebin"], no-default-feature = true }

@@ -14,7 +14,7 @@ rule checkm_all:
 # Checking bin quality
 rule checkm2:
     input:
-        rules.binref.output,
+        rules.dasTool_run.output,
     output:
         tsv=os.path.join(RESULTS_DIR, "Bins/{sample}/checkm2/quality_report.tsv"),
     resources:
@@ -32,5 +32,5 @@ rule checkm2:
     shell:
         "(date && touch {input} && "
         "export CHECKM2DB={params.db} && "
-        "pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input $(dirname {input})/final_bins --output-directory $(dirname {output.tsv}) --force && "
+        "pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input $(dirname {input})/das_DASTool_bins --output-directory $(dirname {output.tsv}) --force && "
         "date) 2> {log.err} > {log.out}"

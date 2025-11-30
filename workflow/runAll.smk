@@ -68,7 +68,7 @@ if "mags_generation" in STEPS:
 
 if "binning_refinement" in STEPS:
 
-    include: "rules/binette.smk"
+    include: "rules/dastool.smk"
 
     TARGETS += ["status/binning_refinement.done"]
 

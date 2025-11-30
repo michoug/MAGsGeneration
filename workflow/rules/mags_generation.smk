@@ -108,10 +108,10 @@ rule mapping:
         bai=os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam.bai"),
     threads: 8
     resources:
-        runtime=60 * 2,
+        runtime=60 * 1,
         mem_mb=get_mem_mb,
-    group:
-        "mapping_group"
+    # group:
+    #     "mapping_group"
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
@@ -126,13 +126,26 @@ rule mapping:
         date ) 2> {log.err} > {log.out}
         """
 
+rule check_bam_files_for_binning:
+    input:
+        expand(
+            os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
+            sample=SAMPLES,
+            sample_2=SAMPLES,
+        ),
+    output:
+        os.path.join(RESULTS_DIR, "BamFiles/check_bam_files_for_binning.done"),
+    localrule: True
+    shell:
+        "touch {output}"
 
 rule metabat2_mapping:
     input:
-        expand(
+        bam = expand(
             os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
+        check = rules.check_bam_files_for_binning.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),
     threads: 10
@@ -145,7 +158,7 @@ rule metabat2_mapping:
     message:
         "Running the first part of metabat2 to estimate the coverage"
     shell:
-        "(date && pixi r -e metabat jgi_summarize_bam_contig_depths --outputDepth {output} {input} && "
+        "(date && pixi r -e metabat jgi_summarize_bam_contig_depths --outputDepth {output} {input.bam} && "
         "date) 2> {log.err} > {log.out}"
 
 
@@ -172,10 +185,11 @@ rule metabat2:
 
 rule metabinner_coverage:
     input:
-        expand(
+        bam = expand(
             os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
+        check = rules.check_bam_files_for_binning.output,
     output:
         temp=temp(
             os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_temp.txt")
@@ -194,7 +208,7 @@ rule metabinner_coverage:
         "Running the first part of metabinner to estimate the coverage"
     shell:
         """
-        (date && pixi r -e metabat jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input} && 
+        (date && pixi r -e metabat jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input.bam} && 
         cat {output.temp} | awk '{{if ($2>{params.length}) print $0 }}' | cut -f -1,4- > {output.final} && 
         date) 2> {log.err} > {log.out}
         """
@@ -207,6 +221,7 @@ rule rosella:
             os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
+        check = rules.check_bam_files_for_binning.output,
     output:
         os.path.join(
             RESULTS_DIR,
@@ -230,6 +245,7 @@ rule rosella:
 rule vamb_coverage:
     input:
         rules.metabinner_coverage.output.final,
+        rules.check_bam_files_for_binning.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Vamb/{sample}_aemb_cov.txt"),
     params:
@@ -309,6 +325,7 @@ rule concoct_prepare:
             os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
+        check = rules.check_bam_files_for_binning.output,
     output:
         bed=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_10k.bed"),
         cont=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_10k.fa"),
@@ -318,13 +335,15 @@ rule concoct_prepare:
         err=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.err.log"),
     message:
         "Preparing files for Concoct"
+    params:
+        script = os.path.join(WORK_DIR, "scripts/concoct_coverage_table_threads.py"),
     resources:
-        runtime=60 * 24,
+        runtime=60 * 10,
         mem_mb=get_mem_mb,
-    threads: 5
+    threads: 10
     shell:
         "(date && rm -f {output.bed} {output.cont} {output.cov} && pixi r -e concoct cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
-        "pixi r -e concoct concoct_coverage_table.py {output.bed} {input.bam} > {output.cov} && [[ -s {output.cov} ]] && "
+        "pixi r -e concoct {params.script} {output.bed} {input.bam} --threads {threads} > {output.cov} && [[ -s {output.cov} ]] && "
         "date) 2> {log.err} > {log.out}"
 
 
@@ -352,7 +371,7 @@ rule concoct:
 rule comebin:
     input:
         cont=rules.filter_length.output.out,
-        tmp=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),  # To make sure that the bam files are there
+        check = rules.check_bam_files_for_binning.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"),
     log:
@@ -381,6 +400,7 @@ rule semibin:
             os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
+        check = rules.check_bam_files_for_binning.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
     log:
@@ -395,6 +415,7 @@ rule semibin:
     shell:
         """
         (date
+        rm -rf $(dirname {output})
         pixi r -e semibin SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster
         touch {output}
         date) 2> {log.err} > {log.out}

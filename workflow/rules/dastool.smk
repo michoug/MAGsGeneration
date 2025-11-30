@@ -25,8 +25,8 @@ rule prepare_dasTool:
         semibinout=os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/semibin_das.tsv"),
     params:
         value="{sample}",
-    conda:
-        os.path.join(WORK_DIR, "envs/dastool.yaml")
+    # conda:
+    #     os.path.join(WORK_DIR, "envs/dastool.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/prepare_dasTool/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/prepare_dasTool/{sample}.err.log"),
@@ -35,11 +35,12 @@ rule prepare_dasTool:
     localrule: True
     shell:
         """
-        (date && Fasta_to_Contig2Bin.sh -e fa -i {input.metabat} > {output.metabatout}
+        (date &&
+        pixi r -e dastool Fasta_to_Contig2Bin.sh -e fa -i {input.metabat} > {output.metabatout}
         perl -pe 's/metabat./{params.value}_metabat_/g' {output.metabatout} > $(dirname {output.metabatout})/t.txt && mv $(dirname {output.metabatout})/t.txt {output.metabatout} 
-        Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.rosella}) >  {output.rosellaout}
+        pixi r -e dastool Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.rosella}) >  {output.rosellaout}
         perl -pe 's/rosella_(bin|refined)_/{params.value}_rosella_/g' {output.rosellaout} > $(dirname {output.metabatout})/t2.txt && mv $(dirname {output.metabatout})/t2.txt {output.rosellaout}
-        Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.taxvamb})/bins > {output.taxvambout}
+        pixi r -e dastool Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.taxvamb})/bins > {output.taxvambout}
         perl -pe 's/\t/\t{params.value}_taxvamb_/g' {output.taxvambout} > $(dirname {output.metabatout})/t3.txt && mv $(dirname {output.metabatout})/t3.txt {output.taxvambout} 
         perl -pe 's/,/\t{params.value}_concoct_/g' {input.concoct} | tail -n +2 > {output.concoctout}
         perl -pe 's/\tgroup/\t{params.value}_comebin_/g' {input.comebin} > {output.comebinout}
@@ -59,8 +60,8 @@ rule dasTool_run:
         cont=rules.filter_length.output.out,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/DasTool/das_DASTool_summary.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/dastool.yaml")
+    # conda:
+    #     os.path.join(WORK_DIR, "envs/dastool.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/dasTool/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/dasTool/{sample}.err.log"),
@@ -73,6 +74,6 @@ rule dasTool_run:
     shell:
         """
         (date && 
-        DAS_Tool -i {input.metabat},{input.taxvamb},{input.rosella},{input.concoct},{input.comebin},{input.semibin} --score_threshold -42 -l metabat,taxvamb,rosella,concoct,comebin,semibin -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
+        pixi r -e dastool DAS_Tool -i {input.metabat},{input.taxvamb},{input.rosella},{input.concoct},{input.comebin},{input.semibin} --score_threshold -42 -l metabat,taxvamb,rosella,concoct,comebin,semibin -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
         date) 2> {log.err} > {log.out}        
         """

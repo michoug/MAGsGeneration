@@ -24,7 +24,7 @@ rule rosella_ref:
             sample_2=SAMPLES,
         ),
         check=rules.checkm2.output,
-        bins=rules.binref.output,
+        bins=rules.dasTool_run.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Refine/rosella.done"),
     log:
@@ -41,7 +41,7 @@ rule rosella_ref:
     shell:
         """
         (date && 
-        rm -rf $(dirname {output})/* && pixi r -e rosella rosella refine --min-bin-size 200000 --checkm-results {input.check} -d $(dirname {input.bins})/final_bins --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) && 
+        rm -rf $(dirname {output})/* && pixi r -e rosella rosella refine --min-bin-size 200000 --checkm-results {input.check} -d $(dirname {input.bins})/das_DASTool_bins --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) && 
         touch {output} &&
         date) 2> {log.err} > {log.out}
         """
