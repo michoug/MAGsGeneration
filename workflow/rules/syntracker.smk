@@ -79,6 +79,7 @@ rule syntracker_run:
     log:
         out=os.path.join(RESULTS_DIR, "logs/syntracker/syntracker_run_{mags}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/syntracker/syntracker_run_{mags}.err.log"),
+    group: "syntracker"
     resources:
         mem_mb=get_mem_mb,
         runtime=60,

@@ -49,6 +49,7 @@ rule get_all_mags:
         cp {input.metabat}/*.fa {output.dir}
         cp $(dirname {input.rosella})/*.fna {output.dir}
         for file in "$(dirname {input.vamb})"/bins/*.fna; do
+            [ -e "$file" ] || continue
             base=$(basename "$file" .fna)
             cp "$file" "{output.dir}/vamb_${{base}}.fa"
         done
@@ -177,6 +178,7 @@ rule deepmicroclass:
     resources:
         runtime=30,
         mem_mb=get_mem_mb,
+    group: "deepmicroclass"
     log:
         out=os.path.join(
             RESULTS_DIR, "logs/deepmicroclass/deepmicroclass_{mags}.out.log"

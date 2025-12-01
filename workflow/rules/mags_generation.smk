@@ -232,7 +232,7 @@ rule rosella:
         err=os.path.join(RESULTS_DIR, "logs/rosella/{sample}.err.log"),
     threads: 14
     resources:
-        runtime=60 * 16,
+        runtime=60 * 24,
         mem_mb=get_mem_mb,
     message:
         "Running Rosella"
