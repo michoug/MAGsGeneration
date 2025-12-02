@@ -178,7 +178,8 @@ rule deepmicroclass:
     resources:
         runtime=30,
         mem_mb=get_mem_mb,
-    group: "deepmicroclass"
+    group:
+        "deepmicroclass"
     log:
         out=os.path.join(
             RESULTS_DIR, "logs/deepmicroclass/deepmicroclass_{mags}.out.log"

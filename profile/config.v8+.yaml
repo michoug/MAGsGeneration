@@ -19,7 +19,7 @@ use-conda: False
 restart-times: 3
 #conda-prefix: snakemake_envs/
 slurm-keep-successful-logs: False
-group-components:
-    mapping_group: 7
-    deepmicroclass: 15
-    syntracker: 10
+# group-components:
+#   mapping_group: 7
+#   deepmicroclass: 15
+#   syntracker: 10

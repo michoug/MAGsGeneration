@@ -75,6 +75,7 @@ rule indexAssembly:
         date ) 2> {log.err} > {log.out}
         """
 
+
 rule check_reads_assembly_for_mapping:
     input:
         expand(
@@ -126,6 +127,7 @@ rule mapping:
         date ) 2> {log.err} > {log.out}
         """
 
+
 rule check_bam_files_for_binning:
     input:
         expand(
@@ -139,13 +141,14 @@ rule check_bam_files_for_binning:
     shell:
         "touch {output}"
 
+
 rule metabat2_mapping:
     input:
-        bam = expand(
+        bam=expand(
             os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
-        check = rules.check_bam_files_for_binning.output,
+        check=rules.check_bam_files_for_binning.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),
     threads: 10
@@ -185,11 +188,11 @@ rule metabat2:
 
 rule metabinner_coverage:
     input:
-        bam = expand(
+        bam=expand(
             os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
-        check = rules.check_bam_files_for_binning.output,
+        check=rules.check_bam_files_for_binning.output,
     output:
         temp=temp(
             os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_temp.txt")
@@ -221,7 +224,7 @@ rule rosella:
             os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
-        check = rules.check_bam_files_for_binning.output,
+        check=rules.check_bam_files_for_binning.output,
     output:
         os.path.join(
             RESULTS_DIR,
@@ -325,7 +328,7 @@ rule concoct_prepare:
             os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
-        check = rules.check_bam_files_for_binning.output,
+        check=rules.check_bam_files_for_binning.output,
     output:
         bed=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_10k.bed"),
         cont=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_10k.fa"),
@@ -336,7 +339,7 @@ rule concoct_prepare:
     message:
         "Preparing files for Concoct"
     params:
-        script = os.path.join(WORK_DIR, "scripts/concoct_coverage_table_threads.py"),
+        script=os.path.join(WORK_DIR, "scripts/concoct_coverage_table_threads.py"),
     resources:
         runtime=60 * 10,
         mem_mb=get_mem_mb,
@@ -371,7 +374,7 @@ rule concoct:
 rule comebin:
     input:
         cont=rules.filter_length.output.out,
-        check = rules.check_bam_files_for_binning.output,
+        check=rules.check_bam_files_for_binning.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"),
     log:
@@ -400,7 +403,7 @@ rule semibin:
             os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
-        check = rules.check_bam_files_for_binning.output,
+        check=rules.check_bam_files_for_binning.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
     log:
