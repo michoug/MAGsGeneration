@@ -1,6 +1,6 @@
 rule trim_reads:
     input:
-        expand(os.path.join(RESULTS_DIR, "TrimDedup/{sample}_1.fq.gz"), sample=SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"), sample=SAMPLES),
     output:
         touch("status/trimming.done"),
 
@@ -10,8 +10,8 @@ rule trimming:
         read1=os.path.join(READS_DIR, "{sample}_R1_001.fastq.gz"),
         read2=os.path.join(READS_DIR, "{sample}_R2_001.fastq.gz"),
     output:
-        trim1=temp(os.path.join(RESULTS_DIR, "Trim/{sample}_R1_001_val_1.fq.gz")),
-        trim2=temp(os.path.join(RESULTS_DIR, "Trim/{sample}_R2_001_val_2.fq.gz")),
+        trim1=temp(os.path.join(RESULTS_DIR, "intermediate/Trim/{sample}_R1_001_val_1.fq.gz")),
+        trim2=temp(os.path.join(RESULTS_DIR, "intermediate/Trim/{sample}_R2_001_val_2.fq.gz")),
     threads: 4
     resources:
         runtime=60 * 3,
@@ -67,7 +67,7 @@ rule mappingHuman:
         fasta=rules.downloadHuman.output,
         index=rules.checkIndexDone.output,
     output:
-        temp(os.path.join(RESULTS_DIR, "TrimHuman/{sample}.bam")),
+        temp(os.path.join(RESULTS_DIR, "intermediate/TrimHuman/{sample}.bam")),
     threads: 10
     priority: 20
     resources:
@@ -89,7 +89,7 @@ rule removeHuman:
     input:
         rules.mappingHuman.output,
     output:
-        temp(os.path.join(RESULTS_DIR, "TrimHuman/{sample}.noHuman.bam")),
+        temp(os.path.join(RESULTS_DIR, "intermediate/TrimHuman/{sample}.noHuman.bam")),
     threads: 10
     priority: 20
     resources:
@@ -111,8 +111,8 @@ rule getcleanreads:
     input:
         rules.removeHuman.output,
     output:
-        read1=os.path.join(RESULTS_DIR, "TrimClean/{sample}_1.fq.gz"),
-        read2=os.path.join(RESULTS_DIR, "TrimClean/{sample}_2.fq.gz"),
+        read1=os.path.join(RESULTS_DIR, "intermediate/TrimClean/{sample}_1.fq.gz"),
+        read2=os.path.join(RESULTS_DIR, "intermediate/TrimClean/{sample}_2.fq.gz"),
     threads: 10
     resources:
         runtime=60,
@@ -134,10 +134,10 @@ rule getdedupreads:
         read1=rules.getcleanreads.output.read1,
         read2=rules.getcleanreads.output.read2,
     output:
-        read1=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_1.fq.gz"),
-        read2=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_2.fq.gz"),
-        report_html=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_fastp.html"),
-        report_json=os.path.join(RESULTS_DIR, "TrimDedup/{sample}_fastp.json"),
+        read1=os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"),
+        read2=os.path.join(RESULTS_DIR, "TrimFinal/{sample}_2.fq.gz"),
+        report_html=os.path.join(RESULTS_DIR, "TrimFinal/Fastp/{sample}_fastp.html"),
+        report_json=os.path.join(RESULTS_DIR, "TrimFinal/Fastp/{sample}_fastp.json"),
     threads: 4
     priority: 20
     resources:

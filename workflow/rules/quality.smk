@@ -1,7 +1,7 @@
 # GTDBTK taxonomy
 rule quality:
     input:
-        expand(os.path.join(RESULTS_DIR, "Bins/gtdbtk_final")),
+        expand(os.path.join(RESULTS_DIR, "Bins/GDTBTk")),
         expand(os.path.join(RESULTS_DIR, "Bins/checkm2/quality_report.tsv")),
     output:
         touch("status/quality.done"),
@@ -11,7 +11,7 @@ rule gtdbtk:
     input:
         rules.galah.output.final,
     output:
-        directory(os.path.join(RESULTS_DIR, "Bins/gtdbtk_final")),
+        directory(os.path.join(RESULTS_DIR, "Bins/GDTBTk")),
     log:
         os.path.join(RESULTS_DIR, "logs/gtdbtk.log"),
     params:

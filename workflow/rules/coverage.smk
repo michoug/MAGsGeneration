@@ -1,7 +1,7 @@
 rule coverage_all:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Bins/cat_mags_cov_{sample}.txt"),
+            os.path.join(RESULTS_DIR, "Bins/intermediate/cat_mags_cov_{sample}.txt"),
             sample=ASSEMBLY,
         ),
         os.path.join(RESULTS_DIR, "cat_mags_cov.txt"),
@@ -14,7 +14,7 @@ rule concatenate_mags:
     input:
         rules.galah.output.final,
     output:
-        os.path.join(RESULTS_DIR, "concat/cat_mags.fa"),
+        os.path.join(RESULTS_DIR, "intermediate/concat/cat_mags.fa"),
     message:
         "Concatenating all dereplicated MAGS"
     localrule: True
@@ -28,7 +28,7 @@ rule mapping_all:
         read2=rules.getdedupreads.output.read2,
         cont=rules.concatenate_mags.output,
     output:
-        temp(os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample}_1.fq.gz.bam")),
+        temp(os.path.join(RESULTS_DIR, "intermediate/Bam/cat_mags.fa.{sample}_1.fq.gz.bam")),
     threads: 10
     resources:
         runtime=60 * 12,
@@ -48,9 +48,9 @@ rule mapping_all:
 # COVERAGE
 rule coverage:
     input:
-        os.path.join(RESULTS_DIR, "Bam/cat_mags.fa.{sample}_1.fq.gz.bam"),
+        os.path.join(RESULTS_DIR, "intermediate/Bam/cat_mags.fa.{sample}_1.fq.gz.bam"),
     output:
-        final=os.path.join(RESULTS_DIR, "Bins/cat_mags_cov_{sample}.txt"),
+        final=os.path.join(RESULTS_DIR, "Bins/intermediate/cat_mags_cov_{sample}.txt"),
     threads: 10
     resources:
         runtime=60 * 2,
@@ -69,7 +69,7 @@ rule coverage:
 rule concat_coverage:
     input:
         files=expand(
-            os.path.join(RESULTS_DIR, "Bins/cat_mags_cov_{sample}.txt"), sample=SAMPLES
+            os.path.join(RESULTS_DIR, "Bins/intermediate/cat_mags_cov_{sample}.txt"), sample=SAMPLES
         ),
         script=os.path.join(WORK_DIR, "scripts/mergeTables.pl"),
     output:

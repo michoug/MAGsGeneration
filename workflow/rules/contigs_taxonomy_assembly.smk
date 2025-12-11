@@ -2,7 +2,7 @@ rule contigs_taxonomy:
     input:
         expand(
             os.path.join(
-                RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_good.tsv"
+                RESULTS_DIR, "Assembly/intermediate/{sample}_taxonomy/{sample}_tax_good.tsv"
             ),
             sample=ASSEMBLY,
         ),
@@ -16,10 +16,10 @@ rule taxonomy:
         file=rules.download_tax_db.output.file,
     output:
         tax_report=os.path.join(
-            RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_report.tsv"
+            RESULTS_DIR, "Assembly/intermediate/{sample}_taxonomy/{sample}_report.tsv"
         ),
         tax_class=os.path.join(
-            RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_classifications.tsv"
+            RESULTS_DIR, "Assembly/intermediate/{sample}_taxonomy/{sample}_classifications.tsv"
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.out.log"),
@@ -42,7 +42,7 @@ rule taxconverter:
         report=rules.taxonomy.output.tax_report,
         classif=rules.taxonomy.output.tax_class,
     output:
-        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_temp.tsv"),
+        os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_taxonomy/{sample}_tax_temp.tsv"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.err.log"),
@@ -57,7 +57,7 @@ rule tax_add_missing:
         fasta=os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
         tax=rules.taxconverter.output,
     output:
-        os.path.join(RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_good.tsv"),
+        os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_taxonomy/{sample}_tax_good.tsv"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.err.log"),

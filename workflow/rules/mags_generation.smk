@@ -6,44 +6,39 @@ rule mags_generation:
             sample=SAMPLES,
         ),
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-            sample=SAMPLES,
-            number=[100, 125, 150, 250, 400],
-        ),
-        expand(
-            os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
+            os.path.join(RESULTS_DIR, "intermediate/BamFiles/{sample}/{sample}_{sample_2}.bam"),
             sample=SAMPLES,
             sample_2=SAMPLES,
         ),
-        expand(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat"), sample=SAMPLES),
+        expand(os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Metabat"), sample=SAMPLES),
         expand(
             os.path.join(
                 RESULTS_DIR,
-                "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png",
+                "Bins/intermediate/{sample}/Rosella/UMAP_projection_with_clusters_final.png",
             ),
             sample=SAMPLES,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
-                "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
+                "Bins/intermediate/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
             ),
             sample=SAMPLES,
         ),
         expand(
             os.path.join(
-                RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"
+                RESULTS_DIR, "Bins/intermediate/{sample}/Concoct/concoct_clustering_merged.csv"
             ),
             sample=SAMPLES,
         ),
         expand(
             os.path.join(
-                RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"
+                RESULTS_DIR, "Bins/intermediate/{sample}/Comebin/comebin_res/comebin_res.tsv"
             ),
             sample=SAMPLES,
         ),
         expand(
-            os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
+            os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Semibin/contig_bins.tsv"),
             sample=SAMPLES,
         ),
     output:
@@ -54,7 +49,7 @@ rule indexAssembly:
     input:
         fa=rules.filter_length.output.out,
     output:
-        os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
+        temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti")),
     threads: 10
     resources:
         runtime=60,
@@ -79,11 +74,11 @@ rule indexAssembly:
 rule check_reads_assembly_for_mapping:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "TrimDedup/{sample}_1.fq.gz"),
+            os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"),
             sample=SAMPLES,
         ),
         expand(
-            os.path.join(RESULTS_DIR, "TrimDedup/{sample}_2.fq.gz"),
+            os.path.join(RESULTS_DIR, "TrimFinal/{sample}_2.fq.gz"),
             sample=SAMPLES,
         ),
         expand(
@@ -104,9 +99,14 @@ rule mapping:
         read1=rules.getdedupreads.output.read1,
         read2=rules.getdedupreads.output.read2,
         fasta=rules.filter_length.output.out,
+        index = expand(
+            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
+            sample=SAMPLES,
+            number=[100, 125, 150, 250, 400],
+        ),
     output:
-        bam=os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
-        bai=os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam.bai"),
+        bam=os.path.join(RESULTS_DIR, "intermediate/BamFiles/{sample}/{sample}_{sample_2}.bam"),
+        bai=os.path.join(RESULTS_DIR, "intermediate/BamFiles/{sample}/{sample}_{sample_2}.bam.bai"),
     threads: 8
     resources:
         runtime=60 * 1,
@@ -131,12 +131,12 @@ rule mapping:
 rule check_bam_files_for_binning:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
+            os.path.join(RESULTS_DIR, "intermediate/BamFiles/{sample}/{sample}_{sample_2}.bam"),
             sample=SAMPLES,
             sample_2=SAMPLES,
         ),
     output:
-        os.path.join(RESULTS_DIR, "BamFiles/check_bam_files_for_binning.done"),
+        os.path.join(RESULTS_DIR, "intermediate/BamFiles/check_bam_files_for_binning.done"),
     localrule: True
     shell:
         "touch {output}"
@@ -145,12 +145,12 @@ rule check_bam_files_for_binning:
 rule metabat2_mapping:
     input:
         bam=expand(
-            os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
+            os.path.join(RESULTS_DIR, "intermediate/BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
         check=rules.check_bam_files_for_binning.output,
     output:
-        os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),
+        os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_metabat_cov.txt"),
     threads: 10
     resources:
         runtime=60 * 2,
@@ -171,7 +171,7 @@ rule metabat2:
         contig=rules.filter_length.output.out,
         cov=rules.metabat2_mapping.output,
     output:
-        directory(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat/")),
+        directory(os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Metabat/")),
     threads: 10
     resources:
         runtime=60 * 2,
@@ -189,15 +189,15 @@ rule metabat2:
 rule metabinner_coverage:
     input:
         bam=expand(
-            os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
+            os.path.join(RESULTS_DIR, "intermediate/BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
         check=rules.check_bam_files_for_binning.output,
     output:
         temp=temp(
-            os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_temp.txt")
+            os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_metabinner_temp.txt")
         ),
-        final=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_cov.txt"),
+        final=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_metabinner_cov.txt"),
     threads: 14
     resources:
         runtime=60,
@@ -221,14 +221,14 @@ rule rosella:
     input:
         cont=rules.filter_length.output.out,
         cov=expand(
-            os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
+            os.path.join(RESULTS_DIR, "intermediate/BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
         check=rules.check_bam_files_for_binning.output,
     output:
         os.path.join(
             RESULTS_DIR,
-            "Bins/{sample}/Rosella/UMAP_projection_with_clusters_final.png",
+            "Bins/intermediate/{sample}/Rosella/UMAP_projection_with_clusters_final.png",
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/rosella/{sample}.out.log"),
@@ -250,7 +250,7 @@ rule vamb_coverage:
         rules.metabinner_coverage.output.final,
         rules.check_bam_files_for_binning.output,
     output:
-        os.path.join(RESULTS_DIR, "Bins/{sample}/Vamb/{sample}_aemb_cov.txt"),
+        os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Vamb/{sample}_aemb_cov.txt"),
     params:
         name="{sample}",
     localrule: True
@@ -266,7 +266,7 @@ rule vamb_length:
     input:
         rules.filter_length.output.out,
     output:
-        temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter_vamb.fasta")),
+        temp(os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_filter_vamb.fasta")),
     threads: 4
     localrule: True
     message:
@@ -280,7 +280,7 @@ rule vamb_filter:
         rules.tax_add_missing.output,
         rules.vamb_length.output,
     output:
-        temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_tax.tsv")),
+        temp(os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_tax.tsv")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/vamb_filter/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/vamb_filter/{sample}.err.log"),
@@ -305,7 +305,7 @@ rule taxvamb:
         cov=rules.vamb_coverage.output,
     output:
         os.path.join(
-            RESULTS_DIR, "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv"
         ),
     threads: 14
     resources:
@@ -325,14 +325,14 @@ rule concoct_prepare:
     input:
         contig=rules.filter_length.output.out,
         bam=expand(
-            os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
+            os.path.join(RESULTS_DIR, "intermediate/BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
         check=rules.check_bam_files_for_binning.output,
     output:
-        bed=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_10k.bed"),
-        cont=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_10k.fa"),
-        cov=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_concoct_cov.txt"),
+        bed=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_10k.bed"),
+        cont=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_10k.fa"),
+        cov=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_concoct_cov.txt"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.err.log"),
@@ -355,7 +355,7 @@ rule concoct:
         contig=rules.concoct_prepare.output.cont,
         cov=rules.concoct_prepare.output.cov,
     output:
-        os.path.join(RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"),
+        os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Concoct/concoct_clustering_merged.csv"),
     threads: 20
     resources:
         runtime=60 * 8,
@@ -376,13 +376,13 @@ rule comebin:
         cont=rules.filter_length.output.out,
         check=rules.check_bam_files_for_binning.output,
     output:
-        os.path.join(RESULTS_DIR, "Bins/{sample}/Comebin/comebin_res/comebin_res.tsv"),
+        os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Comebin/comebin_res/comebin_res.tsv"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/comebin/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/comebin/{sample}.err.log"),
     params:
-        bam=os.path.join(RESULTS_DIR, "BamFiles/{sample}"),
-        folder=os.path.join(RESULTS_DIR, "Bins/{sample}/Comebin/"),
+        bam=os.path.join(RESULTS_DIR, "intermediate/BamFiles/{sample}"),
+        folder=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Comebin/"),
     threads: 20
     resources:
         runtime=60 * 24,
@@ -400,12 +400,12 @@ rule semibin:
     input:
         cont=rules.filter_length.output.out,
         bam=expand(
-            os.path.join(RESULTS_DIR, "BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
+            os.path.join(RESULTS_DIR, "intermediate/BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
             sample_2=SAMPLES,
         ),
         check=rules.check_bam_files_for_binning.output,
     output:
-        os.path.join(RESULTS_DIR, "Bins/{sample}/Semibin/contig_bins.tsv"),
+        os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Semibin/contig_bins.tsv"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/semibin/{sample}.err.log"),

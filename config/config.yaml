@@ -21,7 +21,7 @@ assembly_dir: "/scratch/gmichoud/GlacierIce/Assembly"
 results_dir: "/scratch/gmichoud/GlacierIce/mags_all"  
 
 # Directory for raw reads
-reads_dir: "/scratch/gmichoud/GlacierIce/reads_2"
+reads_dir: "/scratch/gmichoud/GlacierIce/reads"
 
 
 ### Memory per cpus for your cluster

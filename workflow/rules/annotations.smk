@@ -24,7 +24,7 @@ def count_mags_prots(wildcards):
 
 rule annotation:
     input:
-        fasta=os.path.join(RESULTS_DIR, "Bins/tempBins/{mags}.fa"),
+        fasta=os.path.join(RESULTS_DIR, "Bins/intermediate/tempBins/{mags}.fa"),
     output:
         protein=os.path.join(RESULTS_DIR, "Bins/Annotation/{mags}.faa"),
         gff=os.path.join(RESULTS_DIR, "Bins/Annotation/{mags}.gff"),
@@ -41,9 +41,10 @@ rule annotation:
     message:
         "Prodigal annotation for {wildcards.mags}"
     shell:
-        "(date && "
-        "pixi r -e annotations pyrodigal -a {output.protein} -j {threads} -d {output.nucl} -f gff -i {input.fasta} -o {output.gff} && "
-        "date) 2> {log.err} > {log.out}"
+        """(date
+        pixi r -e annotations pyrodigal -a {output.protein} -j {threads} -d {output.nucl} -f gff -i {input.fasta} -o {output.gff}
+        date) 2> {log.err} > {log.out}
+        """
 
 
 rule prepare4egg:

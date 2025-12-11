@@ -1,6 +1,6 @@
 rule syntracker:
     input:
-        expand(os.path.join(RESULTS_DIR, "SynTracker/blastDB")),
+        expand(os.path.join(RESULTS_DIR, "SynTracker/intermediate/blastDB")),
         expand(os.path.join(RESULTS_DIR, "SynTracker/syntracker_finalized.done")),
     output:
         touch("status/syntracker.done"),
@@ -10,7 +10,7 @@ rule cp_assemblies:
     input:
         expand(rules.filter_length.output.out, sample=SAMPLES),
     output:
-        dir=temp(directory(os.path.join(RESULTS_DIR, "SynTracker/assemblies"))),
+        dir=temp(directory(os.path.join(RESULTS_DIR, "SynTracker/intermediate/assemblies"))),
     localrule: True
     log:
         out=os.path.join(RESULTS_DIR, "logs/cp_assemblies.out.log"),
@@ -30,8 +30,8 @@ rule syntracker_blast:
         syntracker=rules.syntracker_install.output.dbs,
         assembly=rules.cp_assemblies.output.dir,
     output:
-        dir=directory(os.path.join(RESULTS_DIR, "SynTracker/blastDB")),
-        done=touch(os.path.join(RESULTS_DIR, "SynTracker/blastDB.done")),
+        dir=directory(os.path.join(RESULTS_DIR, "SynTracker/intermediate/blastDB")),
+        done=touch(os.path.join(RESULTS_DIR, "SynTracker/intermediate/blastDB.done")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/syntracker_blast.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/syntracker_blast.err.log"),
@@ -54,7 +54,7 @@ def get_syn_mags(wildcards):
     return expand(
         os.path.join(
             RESULTS_DIR,
-            "SynTracker/temp/syntracker_output_{mags}/summary_output/synteny_scores_per_region.csv",
+            "SynTracker/intermediate/syntracker_output_{mags}/summary_output/synteny_scores_per_region.csv",
         ),
         mags=glob_wildcards(os.path.join(checkpoint_output, "{mags}.fa")).mags,
     )
@@ -69,11 +69,11 @@ rule syntracker_run:
     output:
         done=os.path.join(
             RESULTS_DIR,
-            "SynTracker/temp/syntracker_output_{mags}/summary_output/synteny_scores_per_region.csv",
+            "SynTracker/intermediate/syntracker_output_{mags}/summary_output/synteny_scores_per_region.csv",
         ),
         folder=
             directory(
-                os.path.join(RESULTS_DIR, "SynTracker/temp/syntracker_output_{mags}")
+                os.path.join(RESULTS_DIR, "SynTracker/intermediate/syntracker_output_{mags}")
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/syntracker/syntracker_run_{mags}.out.log"),

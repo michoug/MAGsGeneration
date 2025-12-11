@@ -4,7 +4,7 @@
 rule checkm_all:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Bins/{sample}/checkm2/quality_report.tsv"),
+            os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/checkm2/quality_report.tsv"),
             sample=SAMPLES,
         ),
     output:
@@ -16,7 +16,7 @@ rule checkm2:
     input:
         rules.dasTool_run.output,
     output:
-        tsv=os.path.join(RESULTS_DIR, "Bins/{sample}/checkm2/quality_report.tsv"),
+        tsv=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/checkm2/quality_report.tsv"),
     resources:
         runtime=60 * 4,
         mem_mb=get_mem_mb,

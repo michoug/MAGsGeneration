@@ -9,8 +9,8 @@ rule galah_prepare:
     input:
         check=rules.checkm2_refine.output.tsv,
     output:
-        final=os.path.join(RESULTS_DIR, "Bins/checkm2BeforeGalah.tsv"),
-        temp=temp(os.path.join(RESULTS_DIR, "Bins/checkm2_temp.tsv")),
+        final=os.path.join(RESULTS_DIR, "Bins/intermediate/checkm2BeforeGalah.tsv"),
+        temp=temp(os.path.join(RESULTS_DIR, "Bins/intermediate/checkm2_temp.tsv")),
     message:
         "Adjusting CheckM output for input to Galah"
     localrule: True
@@ -31,7 +31,7 @@ checkpoint galah:
         check=rules.galah_prepare.output.final,
     output:
         final=directory(os.path.join(RESULTS_DIR, "Bins/finalBins")),
-        cluster=os.path.join(RESULTS_DIR, "Bins/cluster_galah.txt"),
+        cluster=os.path.join(RESULTS_DIR, "Bins/intermediate/cluster_galah.txt"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/galah/galah.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/galah/galah.err.log"),

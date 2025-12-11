@@ -13,7 +13,7 @@ rule multi_to_single:
     input:
         rules.prepare4egg.output,
     output:
-        fixed_fa=os.path.join(RESULTS_DIR, "EggNOG/cat_proteins.faa"),
+        fixed_fa=os.path.join(RESULTS_DIR, "EggNOG/intermediate/cat_proteins.faa"),
     message:
         "Converting multi-line FASTA to single line FASTA files"
     shell:
@@ -25,7 +25,7 @@ checkpoint prep_eggnog:
     input:
         fa=rules.multi_to_single.output.fixed_fa,
     output:
-        dir=directory(os.path.join(RESULTS_DIR, "EggNOG/split")),
+        dir=directory(os.path.join(RESULTS_DIR, "EggNOG/intermediate/split")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/split/split.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/split/split.err.log"),
@@ -42,7 +42,7 @@ def aggregate_emapper(wildcards):
     return expand(
         os.path.join(
             RESULTS_DIR,
-            "EggNOG/split/temp/cat_proteins.part_{i}.emapper.seed_orthologs",
+            "EggNOG/intermediate/split/temp/cat_proteins.part_{i}.emapper.seed_orthologs",
         ),
         i=glob_wildcards(os.path.join(checkpoint_output, "cat_proteins.part_{i}")).i,
     )
@@ -51,14 +51,14 @@ def aggregate_emapper(wildcards):
 # EGGNOG mapping to annotations
 rule emapper:
     input:
-        os.path.join(RESULTS_DIR, "EggNOG/split/cat_proteins.part_{i}"),
+        os.path.join(RESULTS_DIR, "EggNOG/intermediate/split/cat_proteins.part_{i}"),
     output:
         hits=os.path.join(
-            RESULTS_DIR, "EggNOG/split/temp/cat_proteins.part_{i}.emapper.hits"
+            RESULTS_DIR, "EggNOG/intermediate/split/temp/cat_proteins.part_{i}.emapper.hits"
         ),
         seed=os.path.join(
             RESULTS_DIR,
-            "EggNOG/split/temp/cat_proteins.part_{i}.emapper.seed_orthologs",
+            "EggNOG/intermediate/split/temp/cat_proteins.part_{i}.emapper.seed_orthologs",
         ),
     threads: 10
     resources:
