@@ -29,7 +29,7 @@ rule MGthermometer_run:
     localrule: True
     shell:
         "(date && "
-        "pixi r -e MGthermometer perl {input.script} {input.fasta} {output.proportion} && "
+        "pixi r -e mgthermometer perl {input.script} {input.fasta} {output.proportion} && "
         "date) 2> {log.err} > {log.out}"
 
 

@@ -9,7 +9,7 @@ checkpoint countGenome:
     input:
         os.path.join(RESULTS_DIR, "Bins/finalBins"),
     output:
-        temp(directory(os.path.join(RESULTS_DIR, "Bins/tempBins"))),
+        temp(directory(os.path.join(RESULTS_DIR, "Bins/intermediate/tempBins"))),
     shell:
         "mkdir {output} && cp {input}/*fa {output}/"
 
