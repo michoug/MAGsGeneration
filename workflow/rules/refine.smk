@@ -30,9 +30,9 @@ rule rosella_ref:
     log:
         out=os.path.join(RESULTS_DIR, "logs/refine/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/refine/{sample}.err.log"),
-    threads: 20
+    threads: 30
     resources:
-        runtime=60 * 24,
+        runtime=60 * 48,
         mem_mb=get_mem_mb,
     message:
         "Refine bins with Rosella"
