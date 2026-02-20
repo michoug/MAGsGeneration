@@ -59,7 +59,7 @@ rule rename_refine:
                 RESULTS_DIR, "Bins/intermediate/{sample}/Refine_rename/genomes_list_temp.txt"
             )
         ),
-        bash_temp=temp(os.path.join(RESULTS_DIR, "Bins/{sample}/Refine_rename/t.sh")),
+        bash_temp=temp(os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine_rename/t.sh")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.err.log"),

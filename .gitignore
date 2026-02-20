@@ -169,3 +169,8 @@ fastp.json
 
 # Ruff files
 .ruff_cache/
+
+#pixi cache
+
+pkgs/
+uv-cache/
