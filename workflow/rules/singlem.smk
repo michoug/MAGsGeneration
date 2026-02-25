@@ -145,6 +145,7 @@ rule singlem_microbial:
 rule singlem_genomes:
     input:
         genomes=os.path.join(RESULTS_DIR, "Bins/intermediate/cluster_galah.txt"),
+        folder = os.path.join(RESULTS_DIR, "Bins/finalBins"),
         db=rules.singlem_data.output.folder,
     output:
         table=os.path.join(RESULTS_DIR, "SingleM/genomes_otu.tsv"),
@@ -159,7 +160,7 @@ rule singlem_genomes:
         """
         (date
         export SINGLEM_METAPACKAGE_PATH={input.db}
-        pixi r -e singlem singlem pipe --threads {threads} --otu-table {output.table} --genome-fasta-files $(dirname {input.genomes})/finalBins/*fa --metapackage {input.db} &&
+        pixi r -e singlem singlem pipe --threads {threads} --otu-table {output.table} --genome-fasta-files {input.folder}/*fa --metapackage {input.db} &&
         date ) 2> {log.err} > {log.out}
         """
 

@@ -16,7 +16,7 @@ rerun-incomplete: True
 printshellcmds: True
 scheduler: greedy
 use-conda: False
-restart-times: 3
+restart-times: 1
 #conda-prefix: snakemake_envs/
 slurm-keep-successful-logs: False
 # group-components:
