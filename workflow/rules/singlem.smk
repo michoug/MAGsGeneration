@@ -1,7 +1,8 @@
 rule singlem_all:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "SingleM/intermediate/{sample}_otu.tsv"), sample=SAMPLES
+            os.path.join(RESULTS_DIR, "SingleM/intermediate/{sample}_otu.tsv"),
+            sample=SAMPLES,
         ),
         expand(os.path.join(RESULTS_DIR, "SingleM/genomes_otu.tsv")),
         expand(os.path.join(RESULTS_DIR, "SingleM/SingleM_MF.tsv")),
@@ -9,7 +10,8 @@ rule singlem_all:
         expand(os.path.join(RESULTS_DIR, "SingleM/clustered_all.otu_table.tsv")),
         expand(
             os.path.join(
-                RESULTS_DIR, "SingleM/intermediate/Unifrac/otu_table.S3.35.RNA_SBDS.unifrac"
+                RESULTS_DIR,
+                "SingleM/intermediate/Unifrac/otu_table.S3.35.RNA_SBDS.unifrac",
             )
         ),
         expand(
@@ -46,7 +48,8 @@ rule singlem_reads:
 rule singlem_cluster:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "SingleM/intermediate/{sample}_otu.tsv"), sample=SAMPLES
+            os.path.join(RESULTS_DIR, "SingleM/intermediate/{sample}_otu.tsv"),
+            sample=SAMPLES,
         ),
     output:
         os.path.join(RESULTS_DIR, "SingleM/clustered_all.otu_table.tsv"),
@@ -69,7 +72,10 @@ rule singlem_unifrac:
     input:
         rules.singlem_cluster.output,
     output:
-        os.path.join(RESULTS_DIR, "SingleM/intermediate/Unifrac/otu_table.S3.35.RNA_SBDS.unifrac"),
+        os.path.join(
+            RESULTS_DIR,
+            "SingleM/intermediate/Unifrac/otu_table.S3.35.RNA_SBDS.unifrac",
+        ),
     threads: 2
     resources:
         runtime=60 * 1,
@@ -167,7 +173,8 @@ rule singlem_genomes:
 rule singlem_appraise:
     input:
         metagenomes=expand(
-            os.path.join(RESULTS_DIR, "SingleM/intermediate/{sample}_otu.tsv"), sample=SAMPLES
+            os.path.join(RESULTS_DIR, "SingleM/intermediate/{sample}_otu.tsv"),
+            sample=SAMPLES,
         ),
         genomes=os.path.join(RESULTS_DIR, "SingleM/genomes_otu.tsv"),
         db=rules.singlem_data.output.folder,

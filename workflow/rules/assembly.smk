@@ -1,7 +1,8 @@
 rule assembly_all:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_megahit.fa"), sample=ASSEMBLY
+            os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_megahit.fa"),
+            sample=ASSEMBLY,
         ),
     output:
         touch("status/assembly.done"),
@@ -12,10 +13,14 @@ rule assembly_megahit:
         read1=rules.getdedupreads.output.read1,
         read2=rules.getdedupreads.output.read2,
     output:
-        fasta=os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_megahit/final.contigs.fa"),
+        fasta=os.path.join(
+            RESULTS_DIR, "Assembly/intermediate/{sample}_megahit/final.contigs.fa"
+        ),
         final=os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_megahit.fa"),
     params:
-        folder=directory(os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_megahit")),
+        folder=directory(
+            os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_megahit")
+        ),
         name="{sample}",
     threads: 20
     resources:

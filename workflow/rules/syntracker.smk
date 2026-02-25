@@ -10,7 +10,9 @@ rule cp_assemblies:
     input:
         expand(rules.filter_length.output.out, sample=SAMPLES),
     output:
-        dir=temp(directory(os.path.join(RESULTS_DIR, "SynTracker/intermediate/assemblies"))),
+        dir=temp(
+            directory(os.path.join(RESULTS_DIR, "SynTracker/intermediate/assemblies"))
+        ),
     localrule: True
     log:
         out=os.path.join(RESULTS_DIR, "logs/cp_assemblies.out.log"),
@@ -71,9 +73,10 @@ rule syntracker_run:
             RESULTS_DIR,
             "SynTracker/intermediate/syntracker_output_{mags}/summary_output/synteny_scores_per_region.csv",
         ),
-        folder=
-            directory(
-                os.path.join(RESULTS_DIR, "SynTracker/intermediate/syntracker_output_{mags}")
+        folder=directory(
+            os.path.join(
+                RESULTS_DIR, "SynTracker/intermediate/syntracker_output_{mags}"
+            )
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/syntracker/syntracker_run_{mags}.out.log"),

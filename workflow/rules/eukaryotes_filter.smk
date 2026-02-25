@@ -8,7 +8,9 @@ rule eukaryotes_filter:
             sample=SAMPLES,
         ),
         os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotes_filter_mags"),
-        os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_deepmicroclass.txt"),
+        os.path.join(
+            RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_deepmicroclass.txt"
+        ),
         os.path.join(RESULTS_DIR, "Eukaryotic_mags/done.txt"),
         os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/done.txt"),
         os.path.join(RESULTS_DIR, "qc/busco/multiqc_report.html"),
@@ -26,12 +28,19 @@ rule get_all_mags:
         vamb=rules.taxvamb.output,
     output:
         dir=temp(
-            directory(os.path.join(RESULTS_DIR, "Bins/intermediate/euk_potential_mags/{sample}"))
+            directory(
+                os.path.join(
+                    RESULTS_DIR, "Bins/intermediate/euk_potential_mags/{sample}"
+                )
+            )
         ),
-        done=os.path.join(RESULTS_DIR, "Bins/intermediate/euk_potential_mags/{sample}/done.txt"),
+        done=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/euk_potential_mags/{sample}/done.txt"
+        ),
         concoct=temp(
             os.path.join(
-                RESULTS_DIR, "Bins/intermediate/euk_potential_mags/{sample}/concoct_list.txt"
+                RESULTS_DIR,
+                "Bins/intermediate/euk_potential_mags/{sample}/concoct_list.txt",
             )
         ),
     log:
@@ -70,7 +79,8 @@ rule rename_mags:
         temp(
             directory(
                 os.path.join(
-                    RESULTS_DIR, "Bins/intermediate/euk_potential_mags_renamed/{sample}_renamed"
+                    RESULTS_DIR,
+                    "Bins/intermediate/euk_potential_mags_renamed/{sample}_renamed",
                 )
             )
         ),
@@ -135,12 +145,15 @@ checkpoint get_filtered_mags:
         ),
         dirs=expand(
             os.path.join(
-                RESULTS_DIR, "Bins/intermediate/euk_potential_mags_renamed/{sample}_renamed"
+                RESULTS_DIR,
+                "Bins/intermediate/euk_potential_mags_renamed/{sample}_renamed",
             ),
             sample=SAMPLES,
         ),
     output:
-        files=directory(os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotes_filter_mags")),
+        files=directory(
+            os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotes_filter_mags")
+        ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/get_filter_euk.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/get_filter_euk.err.log"),
@@ -161,7 +174,8 @@ def get_file_names_mm_deepmicroclass(wildcards):
     ck_output = checkpoints.get_filtered_mags.get(**wildcards).output[0]
     return expand(
         os.path.join(
-            RESULTS_DIR, "Bins/intermediate/deepmicroclass/collated_output/{mags}_percentage.txt"
+            RESULTS_DIR,
+            "Bins/intermediate/deepmicroclass/collated_output/{mags}_percentage.txt",
         ),
         mags=glob_wildcards(os.path.join(ck_output, "{mags}.fa")).mags,
     )
@@ -172,7 +186,8 @@ rule deepmicroclass:
         os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotes_filter_mags/{mags}.fa"),
     output:
         os.path.join(
-            RESULTS_DIR, "Bins/intermediate/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv"
+            RESULTS_DIR,
+            "Bins/intermediate/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv",
         ),
     threads: 3
     resources:
@@ -196,11 +211,13 @@ rule deepmicroclass:
 rule deepmicroclass_percentage:
     input:
         pred=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv"
+            RESULTS_DIR,
+            "Bins/intermediate/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv",
         ),
     output:
         percent=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/deepmicroclass/collated_output/{mags}_percentage.txt"
+            RESULTS_DIR,
+            "Bins/intermediate/deepmicroclass/collated_output/{mags}_percentage.txt",
         ),
     log:
         os.path.join(RESULTS_DIR, "logs/collate/deepmicroclass_{mags}.log"),
@@ -240,9 +257,12 @@ rule concatenate_deepmicroclass:
         all_files=get_file_names_mm_deepmicroclass,
     output:
         collated=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/deepmicroclass/collated_output/collated_percentages.txt"
+            RESULTS_DIR,
+            "Bins/intermediate/deepmicroclass/collated_output/collated_percentages.txt",
         ),
-        final_list=os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_deepmicroclass.txt"),
+        final_list=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_deepmicroclass.txt"
+        ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/all_files_collation_deepmicroclass.log"),
     message:
@@ -278,7 +298,9 @@ rule concatenate_deepmicroclass:
 checkpoint get_eukaryotes_mags:
     input:
         folder=rules.get_filtered_mags.output.files,
-        deep=os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_deepmicroclass.txt"),
+        deep=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_deepmicroclass.txt"
+        ),
     output:
         dir=directory(os.path.join(RESULTS_DIR, "Eukaryotic_mags")),
         done=os.path.join(RESULTS_DIR, "Eukaryotic_mags/done.txt"),
@@ -305,7 +327,9 @@ checkpoint get_eukaryotes_mags:
 def get_file_eukaryotes(wildcards):
     ck_output = checkpoints.get_eukaryotes_mags.get(**wildcards).output[0]
     return expand(
-        os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/{mags}/{mags}.done"),
+        os.path.join(
+            RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/{mags}/{mags}.done"
+        ),
         mags=glob_wildcards(os.path.join(ck_output, "{mags}.fa")).mags,
     )
 
@@ -315,8 +339,12 @@ rule busco:
         folder=os.path.join(RESULTS_DIR, "Eukaryotic_mags/{mags}.fa"),
         db=rules.busco_db_euk.output.dir,
     output:
-        folder=directory(os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/{mags}")),
-        done=os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/{mags}/{mags}.done"),
+        folder=directory(
+            os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/{mags}")
+        ),
+        done=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/{mags}/{mags}.done"
+        ),
     threads: 10
     resources:
         runtime=2 * 60,

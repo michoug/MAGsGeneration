@@ -12,7 +12,11 @@ rule filter_length:
         rules.assembly_megahit.output.final,
     output:
         out=os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
-        other=temp(os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_filter_name.fasta")),
+        other=temp(
+            os.path.join(
+                RESULTS_DIR, "Assembly/intermediate/{sample}_filter_name.fasta"
+            )
+        ),
     threads: 4
     resources:
         mem_mb=get_mem_mb,

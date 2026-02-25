@@ -1,7 +1,10 @@
 rule binning_refinement:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/das_DASTool_summary.tsv"),
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/DasTool/das_DASTool_summary.tsv",
+            ),
             sample=ASSEMBLY,
         ),
     output:
@@ -17,12 +20,24 @@ rule prepare_dasTool:
         comebin=rules.comebin.output,
         semibin=rules.semibin.output,
     output:
-        metabatout=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/metabat_das.tsv"),
-        rosellaout=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/rosella_das.tsv"),
-        taxvambout=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/taxvamb_das.tsv"),
-        concoctout=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/concoct_das.tsv"),
-        comebinout=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/comebin_das.tsv"),
-        semibinout=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/semibin_das.tsv"),
+        metabatout=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/metabat_das.tsv"
+        ),
+        rosellaout=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/rosella_das.tsv"
+        ),
+        taxvambout=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/taxvamb_das.tsv"
+        ),
+        concoctout=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/concoct_das.tsv"
+        ),
+        comebinout=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/comebin_das.tsv"
+        ),
+        semibinout=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/semibin_das.tsv"
+        ),
     params:
         value="{sample}",
     # conda:
@@ -59,7 +74,9 @@ rule dasTool_run:
         semibin=rules.prepare_dasTool.output.semibinout,
         cont=rules.filter_length.output.out,
     output:
-        os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/das_DASTool_summary.tsv"),
+        os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/das_DASTool_summary.tsv"
+        ),
     # conda:
     #     os.path.join(WORK_DIR, "envs/dastool.yaml")
     log:

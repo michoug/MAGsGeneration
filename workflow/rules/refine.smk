@@ -4,14 +4,23 @@
 rule refine_all:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine/rosella.done"),
+            os.path.join(
+                RESULTS_DIR, "Bins/intermediate/{sample}/Refine/rosella.done"
+            ),
             sample=ASSEMBLY,
         ),
         expand(
-            os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine_rename/genomes_list.txt"),
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/Refine_rename/genomes_list.txt",
+            ),
             sample=ASSEMBLY,
         ),
-        expand(os.path.join(RESULTS_DIR, "Bins/intermediate/checkm2_refine/quality_report.tsv")),
+        expand(
+            os.path.join(
+                RESULTS_DIR, "Bins/intermediate/checkm2_refine/quality_report.tsv"
+            )
+        ),
     output:
         touch("status/refine.done"),
 
@@ -20,7 +29,10 @@ rule rosella_ref:
     input:
         cont=rules.filter_length.output.out,
         cov=expand(
-            os.path.join(RESULTS_DIR, "intermediate/BamFiles/{{sample}}/{{sample}}_{sample_2}.bam"),
+            os.path.join(
+                RESULTS_DIR,
+                "intermediate/BamFiles/{{sample}}/{{sample}}_{sample_2}.bam",
+            ),
             sample_2=SAMPLES,
         ),
         check=rules.checkm2.output,
@@ -53,13 +65,18 @@ rule rename_refine:
     params:
         sample="{sample}",
     output:
-        list=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine_rename/genomes_list.txt"),
+        list=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/Refine_rename/genomes_list.txt"
+        ),
         list_temp=temp(
             os.path.join(
-                RESULTS_DIR, "Bins/intermediate/{sample}/Refine_rename/genomes_list_temp.txt"
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/Refine_rename/genomes_list_temp.txt",
             )
         ),
-        bash_temp=temp(os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine_rename/t.sh")),
+        bash_temp=temp(
+            os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine_rename/t.sh")
+        ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.err.log"),
@@ -82,7 +99,10 @@ rule rename_refine:
 rule cp_mags:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine_rename/genomes_list.txt"),
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/Refine_rename/genomes_list.txt",
+            ),
             sample=ASSEMBLY,
         ),
     output:
@@ -99,7 +119,9 @@ rule checkm2_refine:
     input:
         os.path.join(RESULTS_DIR, "Bins/intermediate/renamed_mags"),
     output:
-        tsv=os.path.join(RESULTS_DIR, "Bins/intermediate/checkm2_refine/quality_report.tsv"),
+        tsv=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/checkm2_refine/quality_report.tsv"
+        ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm_refine.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm_refine.err.log"),

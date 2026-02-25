@@ -54,7 +54,8 @@ rule emapper:
         os.path.join(RESULTS_DIR, "EggNOG/intermediate/split/cat_proteins.part_{i}"),
     output:
         hits=os.path.join(
-            RESULTS_DIR, "EggNOG/intermediate/split/temp/cat_proteins.part_{i}.emapper.hits"
+            RESULTS_DIR,
+            "EggNOG/intermediate/split/temp/cat_proteins.part_{i}.emapper.hits",
         ),
         seed=os.path.join(
             RESULTS_DIR,
