@@ -165,6 +165,13 @@ if "singlem_all" in STEPS:
     TARGETS += ["status/singlem.done"]
 
 
+if "report" in STEPS:
+
+    include: "rules/report.smk"
+
+    TARGETS += [os.path.join(RESULTS_DIR, "report/MAGs_summary.html")]
+
+
 # No targets
 if len(TARGETS) == 0:
     raise Exception("You are not serious. Nothing to be done? Really?")

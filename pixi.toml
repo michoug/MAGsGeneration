@@ -244,6 +244,17 @@ channels = ["conda-forge", "bioconda"]
 trim-galore = "0.6.10.*"
 perl = "5.32.*"
 
+[feature.report]
+channels = ["conda-forge", "bioconda"]
+
+[feature.report.dependencies]
+quarto = "1.*"
+r-base = "4.4.*"
+r-tidyverse = "*"
+r-ggrepel = "*"
+r-knitr = "*"
+r-rmarkdown = "*"
+
 [environments]
 annotations = { features = ["annotations"], no-default-feature = true }
 dastool = { features = ["dastool"], no-default-feature = true }
@@ -274,3 +285,4 @@ syntracker = { features = ["syntracker"], no-default-feature = true }
 taxconverter = { features = ["taxconverter"], no-default-feature = true }
 vamb = { features = ["vamb"], no-default-feature = true }
 trimgalore = { features = ["trimgalore"], no-default-feature = true }
+report     = { features = ["report"],     no-default-feature = true }

@@ -1,0 +1,423 @@
+---
+title: "MAGs Generation Summary Report"
+date: today
+format:
+  html:
+    toc: true
+    toc-float: true
+    code-fold: true
+    embed-resources: true
+params:
+  results_dir: "results"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(ggrepel)
+
+results_dir <- params$results_dir
+
+file_exists_msg <- function(path) {
+  if (!file.exists(path)) {
+    cat(paste0("> **File not found:** `", path, "` — this step may not have been run.\n\n"))
+    return(FALSE)
+  }
+  TRUE
+}
+```
+
+# Overview
+
+This report summarises the results produced by the **MAGs Generation** pipeline for the data stored in:
+
+```{r print-results-dir, echo=FALSE}
+cat(results_dir)
+```
+
+The sections below cover MAG quality, taxonomy, coverage, eukaryotic MAGs, synteny (SynTracker), metagenome completeness (SingleM), optimal growth temperature (MGThermometer), and functional annotation (EggNOG).
+
+---
+
+# 1. Final MAG Statistics
+
+```{r final-mags}
+final_bins_dir <- file.path(results_dir, "Bins", "finalBins")
+
+if (dir.exists(final_bins_dir)) {
+  fa_files <- list.files(final_bins_dir, pattern = "\\.fa$", full.names = TRUE)
+  n_mags <- length(fa_files)
+  cat(paste0("**Number of final dereplicated MAGs:** ", n_mags, "\n"))
+} else {
+  cat(paste0("> **Directory not found:** `", final_bins_dir,
+             "` — dereplication step may not have been run.\n"))
+}
+```
+
+---
+
+# 2. MAG Quality (CheckM2)
+
+```{r checkm2}
+checkm2_path <- file.path(results_dir, "Bins", "checkm2", "quality_report.tsv")
+
+if (file_exists_msg(checkm2_path)) {
+  checkm2 <- read_tsv(checkm2_path, show_col_types = FALSE)
+
+  # Quality categories
+  checkm2 <- checkm2 |>
+    mutate(Quality = case_when(
+      Completeness >= 90 & Contamination < 5  ~ "High Quality",
+      Completeness >= 50 & Contamination < 10 ~ "Medium Quality",
+      TRUE                                     ~ "Low Quality"
+    ))
+
+  quality_counts <- checkm2 |>
+    count(Quality) |>
+    arrange(desc(n))
+
+  cat("## Quality summary\n\n")
+  knitr::kable(quality_counts, col.names = c("Quality category", "Number of MAGs"))
+}
+```
+
+```{r checkm2-plot, fig.width=8, fig.height=5}
+if (exists("checkm2")) {
+  ggplot(checkm2, aes(x = Completeness, y = Contamination, colour = Quality)) +
+    geom_point(alpha = 0.7, size = 2) +
+    scale_colour_manual(values = c(
+      "High Quality"   = "#2166ac",
+      "Medium Quality" = "#f4a582",
+      "Low Quality"    = "#d6604d"
+    )) +
+    geom_vline(xintercept = c(50, 90), linetype = "dashed", colour = "grey50") +
+    geom_hline(yintercept = c(5, 10), linetype = "dashed", colour = "grey50") +
+    labs(
+      title  = "MAG quality (CheckM2)",
+      x      = "Completeness (%)",
+      y      = "Contamination (%)",
+      colour = "Quality"
+    ) +
+    theme_bw()
+}
+```
+
+```{r checkm2-table}
+if (exists("checkm2")) {
+  checkm2 |>
+    arrange(desc(Completeness)) |>
+    select(Name, Completeness, Contamination, Quality) |>
+    knitr::kable(digits = 2, caption = "CheckM2 results for all final MAGs")
+}
+```
+
+---
+
+# 3. MAG Taxonomy (GTDBTk)
+
+```{r gtdbtk}
+gtdbtk_dir <- file.path(results_dir, "Bins", "GDTBTk")
+
+read_gtdb_summary <- function(dir, pattern) {
+  candidates <- list.files(dir, pattern = pattern, full.names = TRUE, recursive = TRUE)
+  if (length(candidates) == 0) return(NULL)
+  read_tsv(candidates[1], show_col_types = FALSE)
+}
+
+gtdb_bac <- NULL
+gtdb_arc <- NULL
+
+if (dir.exists(gtdbtk_dir)) {
+  gtdb_bac <- read_gtdb_summary(gtdbtk_dir, "gtdbtk\\.bac120\\.summary\\.tsv")
+  gtdb_arc <- read_gtdb_summary(gtdbtk_dir, "gtdbtk\\.ar53\\.summary\\.tsv")
+} else {
+  cat(paste0("> **Directory not found:** `", gtdbtk_dir,
+             "` — GTDBTk step may not have been run.\n\n"))
+}
+
+# Combine bacteria and archaea
+if (!is.null(gtdb_bac) || !is.null(gtdb_arc)) {
+  gtdb_all <- bind_rows(
+    if (!is.null(gtdb_bac)) gtdb_bac |> mutate(Domain = "Bacteria") else NULL,
+    if (!is.null(gtdb_arc)) gtdb_arc |> mutate(Domain = "Archaea")  else NULL
+  )
+
+  # Parse phylum from classification string (d__;p__;c__;...)
+  gtdb_all <- gtdb_all |>
+    mutate(
+      Phylum = str_extract(classification, "(?<=p__)[^;]+"),
+      Phylum = if_else(is.na(Phylum) | Phylum == "", "Unclassified", Phylum)
+    )
+
+  phylum_counts <- gtdb_all |>
+    count(Domain, Phylum, sort = TRUE)
+
+  cat(paste0("**Total classified MAGs:** ", nrow(gtdb_all), "\n\n"))
+  if (!is.null(gtdb_bac)) cat(paste0("- Bacteria: ", nrow(gtdb_bac), "\n"))
+  if (!is.null(gtdb_arc)) cat(paste0("- Archaea: ",  nrow(gtdb_arc), "\n"))
+}
+```
+
+```{r gtdbtk-plot, fig.width=9, fig.height=6}
+if (exists("phylum_counts")) {
+  top_phyla <- phylum_counts |>
+    group_by(Phylum) |>
+    summarise(total = sum(n)) |>
+    slice_max(total, n = 20) |>
+    pull(Phylum)
+
+  phylum_counts |>
+    filter(Phylum %in% top_phyla) |>
+    mutate(Phylum = fct_reorder(Phylum, n, sum)) |>
+    ggplot(aes(x = n, y = Phylum, fill = Domain)) +
+    geom_col() +
+    scale_fill_manual(values = c("Bacteria" = "#4393c3", "Archaea" = "#d6604d")) +
+    labs(
+      title = "Taxonomic distribution of final MAGs (top 20 phyla)",
+      x     = "Number of MAGs",
+      y     = "Phylum",
+      fill  = "Domain"
+    ) +
+    theme_bw()
+}
+```
+
+```{r gtdbtk-table}
+if (exists("gtdb_all")) {
+  gtdb_all |>
+    select(user_genome, classification, Domain) |>
+    arrange(Domain, classification) |>
+    knitr::kable(caption = "GTDBTk classification of all final MAGs")
+}
+```
+
+---
+
+# 4. MAG Coverage
+
+```{r coverage}
+cov_path <- file.path(results_dir, "cat_mags_cov.txt")
+
+if (file_exists_msg(cov_path)) {
+  cov <- read_tsv(cov_path, show_col_types = FALSE)
+
+  # First column is contig/MAG name; remaining columns are per-sample coverage
+  cov_long <- cov |>
+    rename(MAG = 1) |>
+    pivot_longer(-MAG, names_to = "Sample", values_to = "Coverage")
+
+  cat(paste0("**MAGs:** ", n_distinct(cov_long$MAG),
+             "  |  **Samples:** ", n_distinct(cov_long$Sample), "\n\n"))
+}
+```
+
+```{r coverage-plot, fig.width=10, fig.height=6}
+if (exists("cov_long")) {
+  cov_summary <- cov_long |>
+    group_by(Sample) |>
+    summarise(
+      Mean   = mean(Coverage, na.rm = TRUE),
+      Median = median(Coverage, na.rm = TRUE)
+    ) |>
+    pivot_longer(c(Mean, Median), names_to = "Statistic", values_to = "Coverage")
+
+  ggplot(cov_summary, aes(x = Sample, y = Coverage, fill = Statistic)) +
+    geom_col(position = "dodge") +
+    scale_fill_manual(values = c("Mean" = "#4393c3", "Median" = "#d6604d")) +
+    labs(
+      title = "Per-sample coverage of final MAGs (trimmed mean)",
+      x     = "Sample",
+      y     = "Coverage",
+      fill  = NULL
+    ) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+```
+
+---
+
+# 5. Eukaryotic MAGs (BUSCO)
+
+```{r eukaryotes}
+euk_dir  <- file.path(results_dir, "Eukaryotic_mags")
+busco_qc <- file.path(results_dir, "qc", "busco", "multiqc_report.html")
+
+if (dir.exists(euk_dir)) {
+  euk_files <- list.files(euk_dir, pattern = "\\.fa$", full.names = FALSE)
+  n_euk <- length(euk_files)
+  cat(paste0("**Number of putative eukaryotic MAGs:** ", n_euk, "\n\n"))
+  if (n_euk > 0) {
+    cat("MAG names:\n\n")
+    cat(paste0("- ", euk_files, collapse = "\n"), "\n")
+  }
+} else {
+  cat(paste0("> **Directory not found:** `", euk_dir,
+             "` — eukaryotic filtering step may not have been run.\n\n"))
+}
+
+if (file.exists(busco_qc)) {
+  cat(paste0("\nBUSCO MultiQC report available at: `", busco_qc, "`\n"))
+} else {
+  cat(paste0("> **BUSCO MultiQC report not found** (`", busco_qc,
+             "`) — BUSCO step may not have been run.\n"))
+}
+```
+
+---
+
+# 6. SynTracker (Synteny-based strain tracking)
+
+```{r syntracker}
+syn_path <- file.path(results_dir, "SynTracker", "avg_synteny_scores_all_regions.csv")
+
+if (file_exists_msg(syn_path)) {
+  syn <- read_csv(syn_path, show_col_types = FALSE)
+  cat(paste0("**MAGs with synteny data:** ", n_distinct(syn[[1]]), "\n\n"))
+  cat(paste0("**Total pairwise comparisons:** ", nrow(syn), "\n\n"))
+  print(head(syn))
+}
+```
+
+```{r syntracker-plot, fig.width=8, fig.height=5}
+if (exists("syn") && ncol(syn) >= 3) {
+  # Assume columns: ref_mag, query_genome, avg_synteny_score (or similar)
+  score_col <- names(syn)[str_detect(names(syn), regex("score|synteny", ignore_case = TRUE))][1]
+  if (!is.na(score_col)) {
+    ggplot(syn, aes(x = .data[[score_col]])) +
+      geom_histogram(bins = 40, fill = "#4393c3", colour = "white") +
+      labs(
+        title = "Distribution of average synteny scores (all regions)",
+        x     = score_col,
+        y     = "Count"
+      ) +
+      theme_bw()
+  }
+}
+```
+
+---
+
+# 7. SingleM (Metagenome completeness)
+
+## 7.1 Microbial fraction
+
+```{r singlem-mf}
+mf_path <- file.path(results_dir, "SingleM", "SingleM_MF.tsv")
+
+if (file_exists_msg(mf_path)) {
+  mf <- read_tsv(mf_path, show_col_types = FALSE)
+  knitr::kable(mf, caption = "SingleM microbial fraction per sample")
+}
+```
+
+```{r singlem-mf-plot, fig.width=8, fig.height=5}
+if (exists("mf")) {
+  frac_col <- names(mf)[str_detect(names(mf),
+    regex("fraction|microbial|bacterial", ignore_case = TRUE))][1]
+  sample_col <- names(mf)[1]
+
+  if (!is.na(frac_col)) {
+    ggplot(mf, aes(x = .data[[sample_col]], y = .data[[frac_col]])) +
+      geom_col(fill = "#4393c3") +
+      labs(
+        title = "Microbial fraction per sample (SingleM)",
+        x     = "Sample",
+        y     = frac_col
+      ) +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  }
+}
+```
+
+## 7.2 Appraise — fraction of diversity captured in MAGs
+
+```{r singlem-appraise}
+appraise_path <- file.path(results_dir, "SingleM", "SingleM_appraise.tsv")
+
+if (file_exists_msg(appraise_path)) {
+  appraise <- read_tsv(appraise_path, show_col_types = FALSE)
+  knitr::kable(head(appraise, 20), caption = "SingleM appraise (first 20 rows)")
+}
+```
+
+---
+
+# 8. MGThermometer (Optimal Growth Temperature)
+
+```{r mgthermometer}
+ogt_path <- file.path(results_dir, "MGthermometer", "table_OGT.txt")
+
+if (file_exists_msg(ogt_path)) {
+  ogt <- read_tsv(ogt_path, show_col_types = FALSE,
+                  col_names = c("MAG", "IVYWREL_proportion", "OGT"))
+
+  cat(paste0("**MAGs with OGT estimates:** ", nrow(ogt), "\n\n"))
+
+  ggplot(ogt, aes(x = OGT)) +
+    geom_histogram(bins = 30, fill = "#d6604d", colour = "white") +
+    labs(
+      title = "Distribution of estimated Optimal Growth Temperature (MGThermometer)",
+      x     = "OGT (°C)",
+      y     = "Number of MAGs"
+    ) +
+    theme_bw()
+}
+```
+
+```{r mgthermometer-table}
+if (exists("ogt")) {
+  ogt |>
+    arrange(desc(OGT)) |>
+    knitr::kable(digits = 2, caption = "MGThermometer OGT estimates for all MAGs")
+}
+```
+
+---
+
+# 9. Functional Annotation (EggNOG-mapper)
+
+```{r eggnog}
+egg_path <- file.path(results_dir, "EggNOG", "allMAGs_egg.txt.emapper.annotations")
+
+if (file_exists_msg(egg_path)) {
+  egg <- read_tsv(egg_path, comment = "#", show_col_types = FALSE,
+                  col_names = c(
+                    "query", "seed_ortholog", "evalue", "score",
+                    "eggNOG_OGs", "max_annot_lvl", "COG_category",
+                    "Description", "Preferred_name", "GOs",
+                    "EC", "KEGG_ko", "KEGG_Pathway", "KEGG_Module",
+                    "KEGG_Reaction", "KEGG_rclass", "BRITE",
+                    "KEGG_TC", "CAZy", "BiGG_Reaction", "PFAMs"
+                  ))
+
+  cat(paste0("**Total annotated proteins:** ", nrow(egg), "\n\n"))
+
+  # COG category distribution
+  cog <- egg |>
+    filter(!is.na(COG_category) & COG_category != "-") |>
+    separate_rows(COG_category, sep = "") |>
+    filter(COG_category != "") |>
+    count(COG_category, sort = TRUE)
+
+  ggplot(cog, aes(x = fct_reorder(COG_category, n), y = n)) +
+    geom_col(fill = "#4393c3") +
+    coord_flip() +
+    labs(
+      title = "COG category distribution (EggNOG-mapper)",
+      x     = "COG category",
+      y     = "Number of proteins"
+    ) +
+    theme_bw()
+}
+```
+
+---
+
+# Session info
+
+```{r session-info}
+sessionInfo()
+```
