@@ -470,7 +470,7 @@ ogt_path <- file.path(results_dir, "MGthermometer", "table_OGT.txt")
 
 if (file_exists_msg(ogt_path)) {
   ogt <- read_tsv(ogt_path, show_col_types = FALSE,
-                  col_names = c("MAG", "IVYWREL_proportion", "OGT"))
+                  col_names = c("MAG", "OGT"))
 
   cat(paste0("**MAGs with OGT estimates:** ", nrow(ogt), "\n\n"))
 
