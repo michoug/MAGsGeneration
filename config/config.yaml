@@ -6,22 +6,24 @@
 #
 
 steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy","check_assembly","mags_generation",  "binning_refinement", "eukaryotes_filter",
- "checkm","refine_all","dereplicate","syntracker","coverage","annotations",
+ "checkm","refine_all","dereplicate",
+ #"syntracker",
+ "coverage","annotations",
  "quality","mgthermometer","eggnog","singlem_all"]
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
 # Directory where the workflow exists
-work_dir: "/scratch/gmichoud/GlacierIce/MAGsGeneration/"
+work_dir: "/scratch/gmichoud/Metalp/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/gmichoud/GlacierIce/Assembly"
+assembly_dir: "/scratch/gmichoud/Metalp/Assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/GlacierIce/mags_all"  
+results_dir: "/scratch/gmichoud/Metalp/mags_all"  
 
 # Directory for raw reads
-reads_dir: "/scratch/gmichoud/GlacierIce/reads"
+reads_dir: "/scratch/gmichoud/Metalp/reads"
 
 
 ### Memory per cpus for your cluster
