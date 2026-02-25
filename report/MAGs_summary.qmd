@@ -9,6 +9,8 @@ format:
     embed-resources: true
 params:
   results_dir: "results"
+  sample_list: "config/sample_list.txt"
+  steps: "trim_reads,assembly_all,contigs_taxonomy,check_assembly,mags_generation,binning_refinement,eukaryotes_filter,checkm,refine_all,dereplicate,syntracker,coverage,annotations,quality,mgthermometer,eggnog,singlem_all"
 ---
 
 ```{r setup, include=FALSE}
@@ -17,7 +19,9 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(ggrepel)
 
-results_dir <- params$results_dir
+results_dir  <- params$results_dir
+sample_list  <- params$sample_list
+steps_run    <- str_trim(str_split(params$steps, ",")[[1]])
 
 file_exists_msg <- function(path) {
   if (!file.exists(path)) {
@@ -30,34 +34,148 @@ file_exists_msg <- function(path) {
 
 # Overview
 
-This report summarises the results produced by the **MAGs Generation** pipeline for the data stored in:
+The **MAGs Generation** pipeline is a Snakemake-based metagenome-assembled genome (MAG) workflow.
+Starting from raw paired-end reads, it performs quality trimming, metagenome assembly, multi-tool
+binning, bin refinement, dereplication, taxonomy assignment and a range of downstream analyses.
 
-```{r print-results-dir, echo=FALSE}
-cat(results_dir)
-```
+Results directory: **`r results_dir`**
 
-The sections below cover MAG quality, taxonomy, coverage, eukaryotic MAGs, synteny (SynTracker), metagenome completeness (SingleM), optimal growth temperature (MGThermometer), and functional annotation (EggNOG).
+The sections below cover a run summary (samples, assemblies, MAGs), pipeline steps executed,
+MAG quality, taxonomy, coverage, eukaryotic MAGs, synteny (SynTracker), metagenome completeness
+(SingleM), optimal growth temperature (MGThermometer), functional annotation (EggNOG), and a
+table of all tools and references.
 
 ---
 
-# 1. Final MAG Statistics
+# 1. Run Summary
 
-```{r final-mags}
+```{r run-summary}
+# ── samples ───────────────────────────────────────────────────────────────────
+n_samples <- NA_integer_
+if (file.exists(sample_list)) {
+  samples <- readLines(sample_list)
+  samples <- samples[nzchar(trimws(samples))]
+  n_samples <- length(samples)
+}
+
+# ── assemblies ────────────────────────────────────────────────────────────────
+assembly_dir <- file.path(results_dir, "Assembly")
+n_assemblies <- NA_integer_
+if (dir.exists(assembly_dir)) {
+  asm_files    <- list.files(assembly_dir, pattern = "_filter\\.fasta$", full.names = FALSE)
+  n_assemblies <- length(asm_files)
+}
+
+# ── trimmed read pairs ────────────────────────────────────────────────────────
+trim_dir <- file.path(results_dir, "TrimFinal")
+n_read_pairs <- NA_integer_
+if (dir.exists(trim_dir)) {
+  trim_files   <- list.files(trim_dir, pattern = "_1\\.fq\\.gz$", full.names = FALSE)
+  n_read_pairs <- length(trim_files)
+}
+
+# ── final dereplicated MAGs ───────────────────────────────────────────────────
 final_bins_dir <- file.path(results_dir, "Bins", "finalBins")
-
+n_mags <- NA_integer_
 if (dir.exists(final_bins_dir)) {
-  fa_files <- list.files(final_bins_dir, pattern = "\\.fa$", full.names = TRUE)
-  n_mags <- length(fa_files)
-  cat(paste0("**Number of final dereplicated MAGs:** ", n_mags, "\n"))
+  fa_files <- list.files(final_bins_dir, pattern = "\\.fa$", full.names = FALSE)
+  n_mags   <- length(fa_files)
+}
+
+# ── eukaryotic MAGs ───────────────────────────────────────────────────────────
+euk_dir <- file.path(results_dir, "Eukaryotic_mags")
+n_euk   <- NA_integer_
+if (dir.exists(euk_dir)) {
+  n_euk <- length(list.files(euk_dir, pattern = "\\.fa$"))
+}
+
+# ── quality breakdown (CheckM2) ───────────────────────────────────────────────
+n_hq <- NA_integer_; n_mq <- NA_integer_; n_lq <- NA_integer_
+checkm2_path <- file.path(results_dir, "Bins", "checkm2", "quality_report.tsv")
+if (file.exists(checkm2_path)) {
+  chk <- read_tsv(checkm2_path, show_col_types = FALSE)
+  n_hq <- sum(chk$Completeness >= 90 & chk$Contamination < 5,  na.rm = TRUE)
+  n_mq <- sum(chk$Completeness >= 50 & chk$Contamination < 10 &
+              !(chk$Completeness >= 90 & chk$Contamination < 5), na.rm = TRUE)
+  n_lq <- nrow(chk) - n_hq - n_mq
+}
+
+summary_tbl <- tibble(
+  Metric = c(
+    "Samples",
+    "Trimmed read pairs",
+    "Filtered assemblies",
+    "Final dereplicated MAGs",
+    "  — High Quality (≥90% comp., <5% cont.)",
+    "  — Medium Quality (≥50% comp., <10% cont.)",
+    "  — Low Quality",
+    "Eukaryotic MAGs"
+  ),
+  Count = c(
+    n_samples, n_read_pairs, n_assemblies,
+    n_mags, n_hq, n_mq, n_lq,
+    n_euk
+  )
+)
+
+knitr::kable(summary_tbl, caption = "Run summary")
+```
+
+---
+
+# 2. Pipeline Steps
+
+```{r pipeline-steps, results='asis'}
+step_info <- tribble(
+  ~Step,                 ~Description,
+  "install_software",    "Download and set up all required software databases (CheckM2, GTDBTk, SingleM, BUSCO, SynTracker).",
+  "trim_reads",          "Adapter and quality trimming with **Trim Galore**, human-read removal with **strobealign**, and PCR-duplicate removal with **fastp**.",
+  "assembly_all",        "De novo metagenome assembly per sample with **MEGAHIT** (min contig length 1 000 bp), followed by length filtering (≥1 500 bp) with **seqkit**.",
+  "contigs_taxonomy",    "Contig-level taxonomic classification used to guide the TaxVAMB binner.",
+  "check_assembly",      "Quality-check filtered assemblies and index them with **strobealign** for downstream read mapping.",
+  "mags_generation",     "Cross-sample read mapping with **strobealign**; parallel binning with **Metabat2**, **Rosella**, **TaxVAMB**, **CONCOCT**, **COMEBin** and **SemiBin2**.",
+  "binning_refinement",  "Per-sample bin consolidation with **DAS_Tool**, quality estimation with **CheckM2**.",
+  "eukaryotes_filter",   "Size-filter large bins (>2.5 Mb), classify contigs as prokaryote/eukaryote with **DeepMicroClass** (>80% eukaryotic contigs retained), assess completeness with **BUSCO**.",
+  "checkm",              "Quality assessment of per-sample DAS_Tool bins with **CheckM2**.",
+  "refine_all",          "Bin refinement using **Rosella refine**, rename bins, then re-run **CheckM2** on the refined set.",
+  "dereplicate",         "Filter bins (≥70% completeness, ≤10% contamination) and dereplicate across all samples with **Galah**.",
+  "syntracker",          "Synteny-based strain tracking across samples with **SynTracker**.",
+  "coverage",            "Map all reads to the final dereplicated MAGs with **CoverM** (trimmed mean).",
+  "annotations",         "Gene prediction on all final MAGs with **pyrodigal**.",
+  "quality",             "Final taxonomy assignment with **GTDBTk** and quality assessment with **CheckM2**.",
+  "mgthermometer",       "Predict optimal growth temperature (OGT) from the relative abundance of IVYWREL amino acids (**MGThermometer**).",
+  "eggnog",              "Functional annotation of predicted proteins with **EggNOG-mapper** (COG categories, KEGG pathways, GO terms).",
+  "singlem_all",         "Read-based community profiling with **SingleM**; estimate the fraction of microbial diversity captured in the MAGs."
+)
+
+active <- step_info |> filter(Step %in% steps_run)
+
+if (nrow(active) == 0) {
+  cat("> No step information available — `steps` parameter may not have been set.\n\n")
 } else {
-  cat(paste0("> **Directory not found:** `", final_bins_dir,
-             "` — dereplication step may not have been run.\n"))
+  cat("The following pipeline steps were executed:\n\n")
+  for (i in seq_len(nrow(active))) {
+    cat(paste0("**`", active$Step[i], "`** — ", active$Description[i], "\n\n"))
+  }
 }
 ```
 
 ---
 
-# 2. MAG Quality (CheckM2)
+# 3. Final MAG Statistics
+
+```{r final-mags}
+if (!dir.exists(final_bins_dir)) {
+  cat(paste0("> **Directory not found:** `", final_bins_dir,
+             "` — dereplication step may not have been run.\n"))
+} else {
+  cat(paste0("**Number of final dereplicated MAGs:** ", n_mags, "\n"))
+}
+```
+
+---
+
+# 4. MAG Quality (CheckM2)
 
 ```{r checkm2}
 checkm2_path <- file.path(results_dir, "Bins", "checkm2", "quality_report.tsv")
@@ -114,7 +232,7 @@ if (exists("checkm2")) {
 
 ---
 
-# 3. MAG Taxonomy (GTDBTk)
+# 5. MAG Taxonomy (GTDBTk)
 
 ```{r gtdbtk}
 gtdbtk_dir <- file.path(results_dir, "Bins", "GDTBTk")
@@ -194,7 +312,7 @@ if (exists("gtdb_all")) {
 
 ---
 
-# 4. MAG Coverage
+# 6. MAG Coverage
 
 ```{r coverage}
 cov_path <- file.path(results_dir, "cat_mags_cov.txt")
@@ -238,7 +356,7 @@ if (exists("cov_long")) {
 
 ---
 
-# 5. Eukaryotic MAGs (BUSCO)
+# 7. Eukaryotic MAGs (BUSCO)
 
 ```{r eukaryotes}
 euk_dir  <- file.path(results_dir, "Eukaryotic_mags")
@@ -267,7 +385,7 @@ if (file.exists(busco_qc)) {
 
 ---
 
-# 6. SynTracker (Synteny-based strain tracking)
+# 8. SynTracker (Synteny-based strain tracking)
 
 ```{r syntracker}
 syn_path <- file.path(results_dir, "SynTracker", "avg_synteny_scores_all_regions.csv")
@@ -299,9 +417,9 @@ if (exists("syn") && ncol(syn) >= 3) {
 
 ---
 
-# 7. SingleM (Metagenome completeness)
+# 9. SingleM (Metagenome completeness)
 
-## 7.1 Microbial fraction
+## 9.1 Microbial fraction
 
 ```{r singlem-mf}
 mf_path <- file.path(results_dir, "SingleM", "SingleM_MF.tsv")
@@ -332,7 +450,7 @@ if (exists("mf")) {
 }
 ```
 
-## 7.2 Appraise — fraction of diversity captured in MAGs
+## 9.2 Appraise — fraction of diversity captured in MAGs
 
 ```{r singlem-appraise}
 appraise_path <- file.path(results_dir, "SingleM", "SingleM_appraise.tsv")
@@ -345,7 +463,7 @@ if (file_exists_msg(appraise_path)) {
 
 ---
 
-# 8. MGThermometer (Optimal Growth Temperature)
+# 10. MGThermometer (Optimal Growth Temperature)
 
 ```{r mgthermometer}
 ogt_path <- file.path(results_dir, "MGthermometer", "table_OGT.txt")
@@ -377,7 +495,7 @@ if (exists("ogt")) {
 
 ---
 
-# 9. Functional Annotation (EggNOG-mapper)
+# 11. Functional Annotation (EggNOG-mapper)
 
 ```{r eggnog}
 egg_path <- file.path(results_dir, "EggNOG", "allMAGs_egg.txt.emapper.annotations")
@@ -412,6 +530,47 @@ if (file_exists_msg(egg_path)) {
     ) +
     theme_bw()
 }
+```
+
+---
+
+# 12. Tools & References
+
+The table below lists all tools used in this pipeline, their roles, and links to the relevant publications or repositories.
+
+```{r tools-table, echo=FALSE}
+tools_tbl <- tribble(
+  ~Tool,              ~Version,    ~Role,                                              ~Reference,
+  "Snakemake",        "≥8.30",     "Workflow manager",                                 "https://doi.org/10.12688/f1000research.29032.1",
+  "Trim Galore",      "0.6.10",    "Adapter and quality trimming of raw reads",         "https://github.com/FelixKrueger/TrimGalore",
+  "strobealign",      "0.14",      "Fast short-read aligner (mapping & index)",        "https://doi.org/10.1186/s13059-022-02831-7",
+  "fastp",            "1.0",       "Read deduplication and QC",                        "https://doi.org/10.1093/bioinformatics/bty560",
+  "samtools",         "1.9",       "SAM/BAM processing",                               "https://doi.org/10.1093/bioinformatics/btp352",
+  "MEGAHIT",          "1.2.9",     "De novo metagenome assembly",                      "https://doi.org/10.1093/bioinformatics/btv033",
+  "seqkit",           "2.8",       "FASTA/Q sequence manipulation and filtering",      "https://doi.org/10.1371/journal.pone.0163962",
+  "Metabat2",         "2.15",      "Coverage- and tetranucleotide-based binning",      "https://doi.org/10.7717/peerj.7359",
+  "Rosella",          "0.5.5",     "UMAP-based binning and bin refinement",            "https://github.com/rhysnewell/rosella",
+  "TaxVAMB",          "≥5.0",      "Variational autoencoder binning with taxonomy",    "https://doi.org/10.1038/s41587-024-02412-y",
+  "CONCOCT",          "1.1.0",     "Coverage and composition binning",                 "https://doi.org/10.1038/nmeth.3103",
+  "COMEBin",          "1.0.3",     "Contrastive multi-view binning",                   "https://doi.org/10.1038/s41467-024-46029-y",
+  "SemiBin2",         "2.1",       "Semi-supervised deep learning binning",            "https://doi.org/10.1093/bioinformatics/btad209",
+  "DAS_Tool",         "1.1.7",     "Non-redundant bin set selection",                  "https://doi.org/10.1038/s41564-018-0171-1",
+  "CheckM2",          "1.1",       "ML-based completeness and contamination assessment","https://doi.org/10.1038/s41592-023-01940-w",
+  "Galah",            "0.4",       "MAG dereplication",                                "https://github.com/wwood/galah",
+  "GTDBTk",           "2.4",       "Taxonomic classification (GTDB)",                  "https://doi.org/10.1093/bioinformatics/btac672",
+  "CoverM",           "0.7.0",     "Read-to-genome coverage calculation",              "https://github.com/wwood/CoverM",
+  "pyrodigal",        "3.5",       "Gene prediction (Prodigal wrapper)",               "https://doi.org/10.21105/joss.04296",
+  "EggNOG-mapper",    "2.1.9",     "Functional annotation (COG, KEGG, GO)",            "https://doi.org/10.1093/molbev/msab293",
+  "DeepMicroClass",   "1.0.6",     "Contig-level prokaryote/eukaryote classification", "https://doi.org/10.1093/bioinformatics/btad519",
+  "BUSCO",            "6",         "Eukaryotic MAG completeness (marker genes)",       "https://doi.org/10.1093/molbev/msab199",
+  "SynTracker",       "—",         "Synteny-based strain tracking across samples",     "https://doi.org/10.1101/2022.10.06.511217",
+  "SingleM",          "0.19",      "Read-based community profiling (SMGs)",            "https://doi.org/10.1101/2024.01.30.578060",
+  "MGThermometer",    "—",         "OGT prediction from IVYWREL amino acid content",   "https://doi.org/10.1101/2022.07.14.499854"
+)
+
+knitr::kable(tools_tbl,
+             col.names = c("Tool", "Version used", "Role in pipeline", "Reference / Repository"),
+             caption   = "Tools used in the MAGs Generation pipeline")
 ```
 
 ---
