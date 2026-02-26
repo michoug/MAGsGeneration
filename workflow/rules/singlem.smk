@@ -151,7 +151,7 @@ rule singlem_microbial:
 rule singlem_genomes:
     input:
         genomes=os.path.join(RESULTS_DIR, "Bins/intermediate/cluster_galah.txt"),
-        folder = os.path.join(RESULTS_DIR, "Bins/finalBins"),
+        folder=os.path.join(RESULTS_DIR, "Bins/finalBins"),
         db=rules.singlem_data.output.folder,
     output:
         table=os.path.join(RESULTS_DIR, "SingleM/genomes_otu.tsv"),
