@@ -113,7 +113,7 @@ rule checkm2_refine:
     message:
         "Running CheckM2 for directory renamed bins"
     shell:
-        "(date && touch {input} && "
+        "(date && "
         "export CHECKM2DB={params.db} && "
         "pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input {input} --output-directory $(dirname {output.tsv}) --force && "
         "date) 2> {log.err} > {log.out}"
