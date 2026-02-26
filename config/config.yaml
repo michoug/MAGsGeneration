@@ -9,7 +9,8 @@ steps: ["install_software","trim_reads","assembly_all","contigs_taxonomy","check
  "checkm","refine_all","dereplicate",
  #"syntracker",
  "coverage","annotations",
- "quality","mgthermometer","eggnog","singlem_all"]
+ "quality","mgthermometer","eggnog","singlem_all",
+ "report"]  ###USER INPUT REQUIRED###
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
