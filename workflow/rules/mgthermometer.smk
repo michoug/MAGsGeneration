@@ -18,7 +18,9 @@ rule MGthermometer_run:
         fasta=os.path.join(RESULTS_DIR, "Bins/Annotation/{mags}.faa"),
         script=os.path.join(WORK_DIR, "scripts/getFrequency.pl"),
     output:
-        proportion=os.path.join(RESULTS_DIR, "MGthermometer/intermediate/proportion_{mags}.txt"),
+        proportion=os.path.join(
+            RESULTS_DIR, "MGthermometer/intermediate/proportion_{mags}.txt"
+        ),
     params:
         prefix="{mags}",
     log:

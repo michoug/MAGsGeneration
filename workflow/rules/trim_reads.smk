@@ -10,8 +10,12 @@ rule trimming:
         read1=os.path.join(READS_DIR, "{sample}_R1_001.fastq.gz"),
         read2=os.path.join(READS_DIR, "{sample}_R2_001.fastq.gz"),
     output:
-        trim1=temp(os.path.join(RESULTS_DIR, "intermediate/Trim/{sample}_R1_001_val_1.fq.gz")),
-        trim2=temp(os.path.join(RESULTS_DIR, "intermediate/Trim/{sample}_R2_001_val_2.fq.gz")),
+        trim1=temp(
+            os.path.join(RESULTS_DIR, "intermediate/Trim/{sample}_R1_001_val_1.fq.gz")
+        ),
+        trim2=temp(
+            os.path.join(RESULTS_DIR, "intermediate/Trim/{sample}_R2_001_val_2.fq.gz")
+        ),
     threads: 4
     resources:
         runtime=60 * 3,

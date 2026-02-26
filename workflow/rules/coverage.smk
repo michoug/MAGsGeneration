@@ -28,7 +28,11 @@ rule mapping_all:
         read2=rules.getdedupreads.output.read2,
         cont=rules.concatenate_mags.output,
     output:
-        temp(os.path.join(RESULTS_DIR, "intermediate/Bam/cat_mags.fa.{sample}_1.fq.gz.bam")),
+        temp(
+            os.path.join(
+                RESULTS_DIR, "intermediate/Bam/cat_mags.fa.{sample}_1.fq.gz.bam"
+            )
+        ),
     threads: 10
     resources:
         runtime=60 * 12,
@@ -69,7 +73,8 @@ rule coverage:
 rule concat_coverage:
     input:
         files=expand(
-            os.path.join(RESULTS_DIR, "Bins/intermediate/cat_mags_cov_{sample}.txt"), sample=SAMPLES
+            os.path.join(RESULTS_DIR, "Bins/intermediate/cat_mags_cov_{sample}.txt"),
+            sample=SAMPLES,
         ),
         script=os.path.join(WORK_DIR, "scripts/mergeTables.pl"),
     output:
