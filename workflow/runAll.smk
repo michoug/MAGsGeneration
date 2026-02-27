@@ -165,6 +165,13 @@ if "singlem_all" in STEPS:
     TARGETS += ["status/singlem.done"]
 
 
+if "virus" in STEPS:
+
+    include: "rules/virus.smk"
+
+    TARGETS += ["status/virus.done"]
+
+
 if "report" in STEPS:
 
     include: "rules/report.smk"

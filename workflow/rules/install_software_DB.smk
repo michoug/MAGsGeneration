@@ -9,6 +9,8 @@ rule install_software:
         ),
         os.path.join(RESULTS_DIR, "DB/Busco_euk/busco_euk.done"),
         os.path.join(RESULTS_DIR, "DB/SynTracker/syntracker.done"),
+        os.path.join(RESULTS_DIR, "DB/Genomad/genomad.done"),
+        os.path.join(RESULTS_DIR, "DB/AMG/README.txt"),
     output:
         touch("status/install_software.done"),
 
@@ -83,27 +85,6 @@ rule metabinner_install:
         """
 
 
-# rule vamb_install:
-#     input:
-#         rules.metabinner_install.output.file,
-#     output:
-#         os.path.join(RESULTS_DIR, "DB/vamb.done"),
-#
-#     log:
-#         out=os.path.join(RESULTS_DIR, "logs/vamb_install.out.log"),
-#         err=os.path.join(RESULTS_DIR, "logs/vamb_install.err.log"),
-#     priority: 20
-#     localrule: True
-#     shell:
-#         """
-#         (date
-#         rm -rf $CONDA_PREFIX/compiler_compat/
-#         pip install vamb
-#         touch {output}
-#         date) 2> {log.err} > {log.out}
-#         """
-
-
 rule singlem_data:
     output:
         file=os.path.join(
@@ -166,4 +147,52 @@ rule syntracker_install:
         git clone https://github.com/leylabmpi/SynTracker.git &> /dev/null
         mv SynTracker $(dirname {output.dbs})
         touch {output.file} ) 2> {log.err} > {log.out}
+        """
+
+
+rule genomad_db:
+    output:
+        dir=directory(os.path.join(RESULTS_DIR, "DB/Genomad")),
+        # file=os.path.join(RESULTS_DIR, "DB/Genomad/file_versions.tsv"),
+        done=os.path.join(RESULTS_DIR, "DB/Genomad/genomad.done"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/genomad_db.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/genomad_db.err.log"),
+    resources:
+        mem_mb=get_mem_mb,
+        runtime=2 * 60,
+    threads: 2
+    shell:
+        """
+        (date
+        rm -rf {output.dir}
+        mkdir -p {output.dir}
+        wget https://zenodo.org/records/14886553/files/genomad_db_v1.9.tar.gz -O {output.dir}/genomad_db_v1.9.tar.gz
+        tar -xzf {output.dir}/genomad_db_v1.9.tar.gz -C {output.dir} --strip-components=1
+        rm {output.dir}/genomad_db_v1.9.tar.gz
+        touch {output.done}
+        date) 2> {log.err} > {log.out}
+        """
+
+
+rule checkamg_db:
+    output:
+        file=os.path.join(RESULTS_DIR, "DB/AMG/README.txt"),
+        folder=directory(os.path.join(RESULTS_DIR, "DB/AMG")),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/check_amg_db.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/check_amg_db.err.log"),
+    resources:
+        mem_mb=get_mem_mb,
+        runtime=2 * 60,
+    threads: 2
+    shell:
+        """
+        (date
+        rm -rf {output.folder}
+        mkdir -p {output.folder}
+        wget https://zenodo.org/records/18407279/files/CheckAMG_db_v1_20260128.tar.gz?download=1 -O {output.folder}/CheckAMG_db_v1_20260128.tar.gz
+        tar -xzf {output.folder}/CheckAMG_db_v1_20260128.tar.gz -C {output.folder} --strip-components=1
+        rm {output.folder}/CheckAMG_db_v1_20260128.tar.gz
+        date) 2> {log.err} > {log.out}
         """

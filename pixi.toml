@@ -255,6 +255,21 @@ r-ggrepel = "*"
 r-knitr = "*"
 r-rmarkdown = "*"
 
+[feature.virus]
+channels = ["conda-forge", "bioconda"]
+
+[feature.virus.dependencies]
+genomad = "1.11.*"
+python = "3.11.*"
+scikit-learn = "1.7.2.*"
+numpy = "2.2.*"
+pyrodigal= "3.5.*"
+wrapt = "1.*"
+
+[feature.virus.pypi-dependencies]
+checkamg = "==0.10.0"
+
+
 [environments]
 annotations = { features = ["annotations"], no-default-feature = true }
 dastool = { features = ["dastool"], no-default-feature = true }
@@ -286,3 +301,4 @@ taxconverter = { features = ["taxconverter"], no-default-feature = true }
 vamb = { features = ["vamb"], no-default-feature = true }
 trimgalore = { features = ["trimgalore"], no-default-feature = true }
 report     = { features = ["report"],     no-default-feature = true }
+virus = { features = ["virus"], no-default-feature = true }
