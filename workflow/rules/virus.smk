@@ -1,7 +1,7 @@
 rule virus_all:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Virus/{sample}_genomad/summary.log"),
+            os.path.join(RESULTS_DIR, "Virus/{sample}_genomad/{sample}_summary/{sample}_virus.fna"),
             sample=SAMPLES,
         ),
         expand(
@@ -40,7 +40,7 @@ rule genomad:
 
 rule check_amg:
     input:
-        db=rules.checkamg_db.output.done,
+        db=rules.checkamg_db.output.file,
         fna=rules.genomad.output.fna,
     output:
         folder=directory(os.path.join(RESULTS_DIR, "Virus/{sample}_checkamg")),
