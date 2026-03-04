@@ -55,7 +55,7 @@ pixi install
 All per-step tool environments are installed automatically when the pipeline first runs them, or you can pre-install everything at once:
 
 ```bash
-pixi install -a
+pixi install -a --run-post-link-scripts
 ```
 
 ### Run Setup
