@@ -156,13 +156,42 @@ Mandatory steps are always executed. The launcher prints a summary before runnin
 
 
 ### Via Snakemake
-To run the pipeline, you can use the following command:
 
-#### Without Slurm
+You can also invoke Snakemake directly without the Python wrapper. In this case you are responsible for preparing the config file and managing the working directory yourself.
 
-`snakemake -s workflow/runAll.smk --configfile config/config.yaml`
+#### Local execution (without Slurm)
+
+```bash
+snakemake -s workflow/runAll.smk --configfile config/config.yaml --cores 4
+```
+
+#### Dry run (preview steps without executing)
+
+```bash
+snakemake -s workflow/runAll.smk --configfile config/config.yaml --dry-run
+```
 
 #### With Slurm
 
-`snakemake -s workflow/runAll.smk --configfile config/config.yaml --profile profile/`
+```bash
+snakemake -s workflow/runAll.smk --configfile config/config.yaml --profile profile/
+```
+
+#### On already-assembled data
+
+```bash
+snakemake -s workflow/alreadyAssemble.smk --configfile config/config.yaml --cores 4
+```
+
+#### Unlock the working directory (if a previous run was interrupted)
+
+```bash
+snakemake -s workflow/runAll.smk --configfile config/config.yaml --unlock
+```
+
+#### Resume an incomplete run
+
+```bash
+snakemake -s workflow/runAll.smk --configfile config/config.yaml --cores 4 --rerun-incomplete
+```
 
