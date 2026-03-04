@@ -55,8 +55,8 @@ channels = ["conda-forge", "bioconda"]
 
 [feature.coverm.dependencies]
 coverm = "0.7.0.*"
-samtools = "1.9.*"
-strobealign = "0.14.*"
+samtools = "1.*"
+strobealign = "0.17.*"
 
 [feature.datasets]
 channels = ["conda-forge", "bioconda"]
@@ -278,11 +278,11 @@ microtrait = { features = ["microtrait"], no-default-feature = true }
 multiqc = { features = ["multiqc"], no-default-feature = true }
 rosella = { features = ["rosella"], no-default-feature = true }
 r = { features = ["r"], no-default-feature = true }
+report     = { features = ["report"],     no-default-feature = true }
 semibin = { features = ["semibin"], no-default-feature = true }
 seqkit = { features = ["seqkit"], no-default-feature = true }
 singlem = { features = ["singlem"], no-default-feature = true }
 syntracker = { features = ["syntracker"], no-default-feature = true }
 taxconverter = { features = ["taxconverter"], no-default-feature = true }
-vamb = { features = ["vamb"], no-default-feature = true }
 trimgalore = { features = ["trimgalore"], no-default-feature = true }
-report     = { features = ["report"],     no-default-feature = true }
+vamb = { features = ["vamb"], no-default-feature = true }
