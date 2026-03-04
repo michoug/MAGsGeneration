@@ -10,7 +10,7 @@ There are two main options of this pipeline, either you have assemblies and want
 - The trimmed reads are then assembled with [megahit](https://github.com/voutcn/megahit) (`runAll` pipeline) or not (`alreadyAssemble` pipeline).
 - The coverage is calculated with [strobealign](https://github.com/ksahlin/strobealign) for bay mapping all the reads across all assemblies.
 - Bins are generated with [Comebin](https://github.com/ziyewang/COMEBin), [Concoct](https://github.com/BinPro/CONCOCT), [Metabat2](https://bitbucket.org/berkeleylab/metabat), [Rosella](https://github.com/rhysnewell/rosella), [Sembin2](https://github.com/BigDataBiology/SemiBin) and [Taxvamb](https://github.com/RasmussenLab/vamb) per sample.
-- [Binetter](https://github.com/genotoul-bioinfo/Binette) is then used to generate a non redudant set of bins per samples.
+- [DAS Tool](https://github.com/cmks/DAS_Tool) is then used to generate a non-redundant set of bins per sample.
 - These redundant sets are refined using [Rosella](https://github.com/rhysnewell/rosella).
 - All bins from all samples are then combined in a single folder and [Checkm2](https://github.com/chklovski/CheckM2) is used to estimate quality (completeness and contamination)
 - All the bins that passes a quality threshold of 70% completeness and <10% contamination are dereplicated with [Galah](https://github.com/wwood/galah).
@@ -31,27 +31,31 @@ OGT = 937 * F_{IVYWREL} − 335
 
 ## Setup
 
-### Conda
+### Pixi
 
-[Conda user guide](https://docs.conda.io/projects/conda/en/latest/user-guide/index.html)
+This pipeline uses **[Pixi](https://prefix.dev/pixi)** to manage all tool environments. Pixi automatically installs isolated per-tool environments from `pixi.toml` — no manual conda setup required.
 
 ```bash
-# install miniconda3
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-chmod u+x Miniconda3-latest-Linux-x86_64.sh
-./Miniconda3-latest-Linux-x86_64.sh # follow the instructions
+# install pixi
+curl -fsSL https://pixi.sh/install.sh | sh
 ```
 
 Getting the repository
 ```bash
 git clone https://github.com/michoug/MAGsGeneration.git
+cd MAGsGeneration
 ```
 
-Create the main `snakemake` environment
+Install the default Snakemake environment
 
 ```bash
-# create venv
-conda env create -f requirements.yaml -n "snakemake"
+pixi install
+```
+
+All per-step tool environments are installed automatically when the pipeline first runs them, or you can pre-install everything at once:
+
+```bash
+pixi install -a
 ```
 
 ### Run Setup
@@ -73,13 +77,13 @@ The pipeline works with **[Pixi](https://prefix.dev/pixi)** to manage environmen
 ##### Local Execution
 
 ```bash
-./MAGsGeneration.py -p <pipeline> -c <config.yaml> --output <results_path> [options]
+pixi r python MAGsGeneration.py -p <pipeline> -c <config.yaml> --output <results_path> [options]
 ```
 
 ##### Slurm Execution
 
 ```bash
-./MAGsGeneration.py -p <pipeline> -c <config.yaml> --output <results_path> --slurm [options]
+pixi r python MAGsGeneration.py -p <pipeline> -c <config.yaml> --output <results_path> --slurm [options]
 ```
 
 ##### Dry-Run
@@ -87,7 +91,7 @@ The pipeline works with **[Pixi](https://prefix.dev/pixi)** to manage environmen
 Preview the steps without executing:
 
 ```bash
-./MAGsGeneration.py -c <results_path>/config_run.yaml --continue --dryrun --cores 4
+pixi r python MAGsGeneration.py -c <results_path>/config_run.yaml --continue --dryrun --cores 4
 ```
 
 ##### Continue Failed Run
@@ -95,7 +99,7 @@ Preview the steps without executing:
 Resume unfinished or failed steps:
 
 ```bash
-./MAGsGeneration.py -c <results_path>/config_run.yaml --continue --cores 4
+pixi r python MAGsGeneration.py -c <results_path>/config_run.yaml --continue --cores 4
 ```
 
 ---
@@ -156,13 +160,42 @@ Mandatory steps are always executed. The launcher prints a summary before runnin
 
 
 ### Via Snakemake
-To run the pipeline, you can use the following command:
 
-#### Without Slurm
+You can also invoke Snakemake directly without the Python wrapper. In this case you are responsible for preparing the config file and managing the working directory yourself.
 
-`snakemake -s workflow/runAll.smk --configfile config/config.yaml`
+#### Local execution (without Slurm)
+
+```bash
+pixi r snakemake -s workflow/runAll.smk --configfile config/config.yaml --cores 4
+```
+
+#### Dry run (preview steps without executing)
+
+```bash
+pixi r snakemake -s workflow/runAll.smk --configfile config/config.yaml --dry-run
+```
 
 #### With Slurm
 
-`snakemake -s workflow/runAll.smk --configfile config/config.yaml --profile profile/`
+```bash
+pixi r snakemake -s workflow/runAll.smk --configfile config/config.yaml --profile profile/
+```
+
+#### On already-assembled data
+
+```bash
+pixi r snakemake -s workflow/alreadyAssemble.smk --configfile config/config.yaml --cores 4
+```
+
+#### Unlock the working directory (if a previous run was interrupted)
+
+```bash
+pixi r snakemake -s workflow/runAll.smk --configfile config/config.yaml --unlock
+```
+
+#### Resume an incomplete run
+
+```bash
+pixi r snakemake -s workflow/runAll.smk --configfile config/config.yaml --cores 4 --rerun-incomplete
+```
 
