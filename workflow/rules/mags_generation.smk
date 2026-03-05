@@ -470,7 +470,7 @@ rule semibin:
         """
         (date
         rm -rf $(dirname {output})
-        pixi r -e semibin SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster
+        pixi r -e semibin SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster --minfasta 200000
         touch {output}
         date) 2> {log.err} > {log.out}
         """

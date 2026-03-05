@@ -16,6 +16,8 @@ rule install_software:
 rule downloadHuman:
     output:
         file=os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
+    params:
+        url="https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.fna.gz",
     resources:
         runtime=60,
         mem_mb=get_mem_mb,
@@ -26,19 +28,12 @@ rule downloadHuman:
     shell:
         """
         (date
-        rm -f ncbi_dataset.zip
-        rm -rf $(dirname {output.file})/ncbi_dataset
-        rm -f $(dirname {output.file})/md5sum.txt
-        rm -f $(dirname {output.file})/README.md
-        pixi r -e datasets datasets download genome accession GCF_000001405.40 --include genome --assembly-source refseq --dehydrated
-        unzip ncbi_dataset.zip -d $(dirname {output.file})
-        pixi r -e datasets datasets rehydrate --directory $(dirname {output.file})
-        pigz -p 10  $(dirname {output.file})/ncbi_dataset/data/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fna
-        mv $(dirname {output.file})/ncbi_dataset/data/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fna.gz {output.file}
-        rm -rf $(dirname {output.file})/ncbi_dataset
-        rm -f $(dirname {output.file})/md5sum.txt
-        rm -f $(dirname {output.file})/README.md
-        rm -f ncbi_dataset.zip
+        wget \
+            --tries=3 \
+            --waitretry=30 \
+            --timeout=120 \
+            -O {output.file} \
+            {params.url}
         date) 2> {log.err} > {log.out}
         """
 
