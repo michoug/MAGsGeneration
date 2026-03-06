@@ -556,7 +556,8 @@ rule metacat_cluster:
             )
         ),
         done=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat/Bins/{sample}_metacat.mapping"
+            RESULTS_DIR,
+            "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat/Bins/{sample}_metacat.mapping",
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/metacat_cluster/{sample}.out.log"),

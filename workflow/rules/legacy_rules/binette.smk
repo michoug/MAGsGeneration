@@ -51,7 +51,6 @@ rule prepare_binning_refinement:
         perl -pe 's/\t/\t{params.value}_semibin_/g' {input.semibin} | tail -n +2 > {output.semibinout}
         date) 2> {log.err} > {log.out}
         """
-        # perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout}
 
 
 rule binref:

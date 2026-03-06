@@ -258,6 +258,22 @@ hmmer = ">=3.4,<4"
 pip = ">=26.0.1,<27"
 fraggenescan = ">=1.32,<2"
 
+[feature.magscot]
+channels = ["conda-forge", "bioconda"]
+
+[feature.magscot.dependencies]
+r = ">=4.5,<4.6"
+r-base = ">=4.5.2,<4.6"
+r-optparse = ">=1.7.5,<2"
+r-dplyr = ">=1.2.0,<2"
+r-readr = ">=2.2.0,<3"
+r-funr = ">=0.3.2,<0.4"
+r-digest = ">=0.6.39,<0.7"
+hmmer = ">=3.4,<4"
+parallel = ">=20260122,<20260123"
+pyrodigal = ">=3.5,<4"
+
+
 [environments]
 annotations = { features = ["annotations"], no-default-feature = true }
 dastool = { features = ["dastool"], no-default-feature = true }
@@ -271,6 +287,7 @@ eggnog = { features = ["eggnog"], no-default-feature = true }
 fastp = { features = ["fastp"], no-default-feature = true }
 galah = { features = ["galah"], no-default-feature = true }
 gtdbtk = { features = ["gtdbtk"], no-default-feature = true }
+magscot = { features = ["magscot"], no-default-feature = true }
 megahit = { features = ["megahit"], no-default-feature = true }
 metabat = { features = ["metabat"], no-default-feature = true }
 metabinner = { features = ["metabinner"], no-default-feature = true }

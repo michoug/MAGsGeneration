@@ -159,3 +159,22 @@ rule syntracker_install:
         mv SynTracker $(dirname {output.dbs})
         touch {output.file} ) 2> {log.err} > {log.out}
         """
+
+
+rule magscot_install:
+    output:
+        folder=directory(os.path.join(RESULTS_DIR, "DB/MAGScoT")),
+        file=os.path.join(RESULTS_DIR, "DB/MAGScoT/MAGScoT.R"),
+    localrule: True
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/magscot_install.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/magscot_install.err.log"),
+    priority: 20
+    shell:
+        """
+        (date
+        git clone https://github.com/ikmb/MAGScoT &> /dev/null
+        mv MAGScoT $(dirname {output.folder})
+        date
+        ) 2> {log.err} > {log.out}
+        """
