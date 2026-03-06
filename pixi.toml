@@ -293,4 +293,5 @@ singlem = { features = ["singlem"], no-default-feature = true }
 syntracker = { features = ["syntracker"], no-default-feature = true }
 taxconverter = { features = ["taxconverter"], no-default-feature = true }
 trimgalore = { features = ["trimgalore"], no-default-feature = true }
+vamb = { features = ["vamb"], no-default-feature = true }
 virus = { features = ["virus"], no-default-feature = true }

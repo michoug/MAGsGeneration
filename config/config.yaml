@@ -22,9 +22,10 @@ steps: ["install_software",
   "mgthermometer",
   "eggnog",
   "singlem_all",
-  #"syntracker",
+  "syntracker",
   "virus",
-  "report"]  ###USER INPUT REQUIRED###
+  # "report"
+  ]  ###USER INPUT REQUIRED###
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###

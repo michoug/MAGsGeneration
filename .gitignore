@@ -175,3 +175,4 @@ fastp.json
 pkgs/
 uv-cache/
 repodata/
+conda-pypi-mapping
