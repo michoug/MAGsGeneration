@@ -9,6 +9,7 @@ rule install_software:
         ),
         os.path.join(RESULTS_DIR, "DB/Busco_euk/busco_euk.done"),
         os.path.join(RESULTS_DIR, "DB/SynTracker/syntracker.done"),
+        # os.path.join(RESULTS_DIR, "DB/MetaCAT.done"),
     output:
         touch("status/install_software.done"),
 
@@ -78,25 +79,21 @@ rule metabinner_install:
         """
 
 
-# rule vamb_install:
-#     input:
-#         rules.metabinner_install.output.file,
-#     output:
-#         os.path.join(RESULTS_DIR, "DB/vamb.done"),
-#
-#     log:
-#         out=os.path.join(RESULTS_DIR, "logs/vamb_install.out.log"),
-#         err=os.path.join(RESULTS_DIR, "logs/vamb_install.err.log"),
-#     priority: 20
-#     localrule: True
-#     shell:
-#         """
-#         (date
-#         rm -rf $CONDA_PREFIX/compiler_compat/
-#         pip install vamb
-#         touch {output}
-#         date) 2> {log.err} > {log.out}
-#         """
+rule metacat_install:
+    output:
+        file=os.path.join(RESULTS_DIR, "DB/MetaCAT.done"),
+    localrule: True
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/metacat_install.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/metacat_install.err.log"),
+    priority: 20
+    shell:
+        """
+        (date
+        pixi r -e metacat pip install https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.3/metacat-1.0.3-py3-none-any.whl
+        touch {output.file}
+        date) 2> {log.err} > {log.out}
+        """
 
 
 rule singlem_data:

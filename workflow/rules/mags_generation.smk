@@ -50,6 +50,13 @@ rule mags_generation:
             ),
             sample=SAMPLES,
         ),
+        expand(
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat.done",
+            ),
+            sample=SAMPLES,
+        ),
     output:
         touch("status/mags_generation.done"),
 
@@ -472,5 +479,102 @@ rule semibin:
         rm -rf $(dirname {output})
         pixi r -e semibin SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster --minfasta 200000
         touch {output}
+        date) 2> {log.err} > {log.out}
+        """
+
+
+rule metacat_cov:
+    input:
+        db=rules.metacat_install.output.file,
+        bam=expand(
+            os.path.join(
+                RESULTS_DIR,
+                "intermediate/BamFiles/{{sample}}/{{sample}}_{sample_2}.bam",
+            ),
+            sample_2=SAMPLES,
+        ),
+        check=rules.check_bam_files_for_binning.output,
+    output:
+        os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat.cov"
+        ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/metacat_cov/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/metacat_cov/{sample}.err.log"),
+    threads: 20
+    resources:
+        runtime=60 * 4,
+        mem_mb=get_mem_mb,
+    message:
+        "Running MetaCAT coverage"
+    shell:
+        """
+        (date
+        rm -rf {output}
+        pixi r -e metacat MetaCAT coverage -b {input.bam} -ti 20 -tc 20 -o {output}
+        date) 2> {log.err} > {log.out}
+        """
+
+
+rule metacat_seed:
+    input:
+        db=rules.metacat_install.output.file,
+        cont=rules.filter_length.output.out,
+    output:
+        os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat.seed"
+        ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/metacat_seed/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/metacat_seed/{sample}.err.log"),
+    threads: 20
+    resources:
+        runtime=60 * 2,
+        mem_mb=get_mem_mb,
+    message:
+        "Running MetaCAT seed"
+    shell:
+        """
+        (date
+        rm -rf {output}
+        pixi r -e metacat MetaCAT seed -f {input.cont} -o {output} -t 20
+        date) 2> {log.err} > {log.out}
+        """
+
+
+rule metacat_cluster:
+    input:
+        db=rules.metacat_install.output.file,
+        cont=rules.filter_length.output.out,
+        seed=rules.metacat_seed.output,
+        cov=rules.metacat_cov.output,
+    output:
+        folder=directory(
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat/Bins/",
+            )
+        ),
+        done=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat/Bins/{sample}_metacat.mapping"
+        ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/metacat_cluster/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/metacat_cluster/{sample}.err.log"),
+    params:
+        name="{sample}",
+    threads: 20
+    resources:
+        runtime=60 * 4,
+        mem_mb=get_mem_mb,
+    message:
+        "Running MetaCAT"
+    shell:
+        """
+        (date
+        rm -rf {output.folder}
+        mkdir -p {output.folder}
+        pixi r -e metacat MetaCAT cluster -t {threads} -f {input.cont} -s {input.seed} -c {input.cov} -o {output.folder}/{params.name}_metacat
+        touch {output.done}
         date) 2> {log.err} > {log.out}
         """

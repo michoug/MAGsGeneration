@@ -249,6 +249,15 @@ r-ggrepel = "*"
 r-knitr = "*"
 r-rmarkdown = "*"
 
+[feature.metacat]
+channels = ["conda-forge", "bioconda"]
+
+[feature.metacat.dependencies]
+python = ">=3.12.13,<3.13"
+hmmer = ">=3.4,<4"
+pip = ">=26.0.1,<27"
+fraggenescan = ">=1.32,<2"
+
 [environments]
 annotations = { features = ["annotations"], no-default-feature = true }
 dastool = { features = ["dastool"], no-default-feature = true }
@@ -266,6 +275,7 @@ megahit = { features = ["megahit"], no-default-feature = true }
 metabat = { features = ["metabat"], no-default-feature = true }
 metabinner = { features = ["metabinner"], no-default-feature = true }
 metabuli = { features = ["metabuli"], no-default-feature = true }
+metacat = { features = ["metacat"], no-default-feature = true }
 mgthermometer = { features = ["mgthermometer"], no-default-feature = true }
 microtrait = { features = ["microtrait"], no-default-feature = true }
 multiqc = { features = ["multiqc"], no-default-feature = true }

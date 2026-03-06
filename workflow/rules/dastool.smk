@@ -19,6 +19,7 @@ rule prepare_dasTool:
         concoct=rules.concoct.output,
         comebin=rules.comebin.output,
         semibin=rules.semibin.output,
+        metacat=rules.metacat_cluster.output.done,
     output:
         metabatout=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/metabat_das.tsv"
@@ -37,6 +38,9 @@ rule prepare_dasTool:
         ),
         semibinout=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/semibin_das.tsv"
+        ),
+        metacatout=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/metacat_das.tsv"
         ),
     params:
         value="{sample}",
@@ -60,6 +64,7 @@ rule prepare_dasTool:
         perl -pe 's/,/\t{params.value}_concoct_/g' {input.concoct} | tail -n +2 > {output.concoctout}
         perl -pe 's/\tgroup/\t{params.value}_comebin_/g' {input.comebin} > {output.comebinout}
         perl -pe 's/\t/\t{params.value}_semibin_/g' {input.semibin} | tail -n +2 > {output.semibinout}
+        perl -pe 's/metacat\./metacat_/g' {input.metacat} | tail -n +2 > {output.metacatout}
         date) 2> {log.err} > {log.out}
         """
 
@@ -72,6 +77,7 @@ rule dasTool_run:
         concoct=rules.prepare_dasTool.output.concoctout,
         comebin=rules.prepare_dasTool.output.comebinout,
         semibin=rules.prepare_dasTool.output.semibinout,
+        metacat=rules.prepare_dasTool.output.metacatout,
         cont=rules.filter_length.output.out,
     output:
         os.path.join(
@@ -91,6 +97,6 @@ rule dasTool_run:
     shell:
         """
         (date && 
-        pixi r -e dastool DAS_Tool -i {input.metabat},{input.taxvamb},{input.rosella},{input.concoct},{input.comebin},{input.semibin} --score_threshold -42 -l metabat,taxvamb,rosella,concoct,comebin,semibin -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
+        pixi r -e dastool DAS_Tool -i {input.metabat},{input.taxvamb},{input.rosella},{input.concoct},{input.comebin},{input.semibin},{input.metacat} --score_threshold -42 -l metabat,taxvamb,rosella,concoct,comebin,semibin,metacat -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads} && 
         date) 2> {log.err} > {log.out}        
         """
