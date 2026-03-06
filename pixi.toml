@@ -55,14 +55,8 @@ channels = ["conda-forge", "bioconda"]
 
 [feature.coverm.dependencies]
 coverm = "0.7.0.*"
-samtools = "1.9.*"
-strobealign = "0.14.*"
-
-[feature.datasets]
-channels = ["conda-forge", "bioconda"]
-
-[feature.datasets.dependencies]
-ncbi-datasets-cli = "16.40.*"
+samtools = "1.*"
+strobealign = "0.17.*"
 
 [feature.deepmicroclass]
 channels = ["conda-forge", "bioconda"]
@@ -278,7 +272,6 @@ checkm2 = { features = ["checkm2"], no-default-feature = true }
 comebin = { features = ["comebin"], no-default-feature = true }
 concoct = { features = ["concoct"], no-default-feature = true }
 coverm = { features = ["coverm"], no-default-feature = true }
-datasets = { features = ["datasets"], no-default-feature = true }
 deepmicroclass = { features = ["deepmicroclass"], no-default-feature = true }
 eggnog = { features = ["eggnog"], no-default-feature = true }
 fastp = { features = ["fastp"], no-default-feature = true }
@@ -293,12 +286,11 @@ microtrait = { features = ["microtrait"], no-default-feature = true }
 multiqc = { features = ["multiqc"], no-default-feature = true }
 rosella = { features = ["rosella"], no-default-feature = true }
 r = { features = ["r"], no-default-feature = true }
+report     = { features = ["report"],     no-default-feature = true }
 semibin = { features = ["semibin"], no-default-feature = true }
 seqkit = { features = ["seqkit"], no-default-feature = true }
 singlem = { features = ["singlem"], no-default-feature = true }
 syntracker = { features = ["syntracker"], no-default-feature = true }
 taxconverter = { features = ["taxconverter"], no-default-feature = true }
-vamb = { features = ["vamb"], no-default-feature = true }
 trimgalore = { features = ["trimgalore"], no-default-feature = true }
-report     = { features = ["report"],     no-default-feature = true }
 virus = { features = ["virus"], no-default-feature = true }

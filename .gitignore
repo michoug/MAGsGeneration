@@ -174,3 +174,4 @@ fastp.json
 
 pkgs/
 uv-cache/
+repodata/

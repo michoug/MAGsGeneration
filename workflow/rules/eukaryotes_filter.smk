@@ -64,7 +64,10 @@ rule get_all_mags:
         done
         perl -pe 's/,(\\d+)/,concoct_$1/g' {input.concoct} > {output.concoct}
         pixi r -e concoct extract_fasta_bins.py {input.contigs} {output.concoct} --output_path {output.dir}
-        cp $(dirname {input.semibin})/output_bins/*.fa.gz {output.dir}
+        for file in "$(dirname {input.semibin})"/output_bins/*.fa.gz; do
+            [ -e "$file" ] || continue
+            cp "$file" {output.dir}
+        done
         for file in {output.dir}/*gz; do [[ -f "$file" && "$file" == *.gz ]] && gunzip "$file"; done
         for file in {output.dir}/*.fna; do [[ -f "$file" ]] && mv "$file" "${{file%.fna}}.fa"; done
         touch {output.done}

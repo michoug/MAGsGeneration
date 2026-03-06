@@ -11,11 +11,14 @@ rule singlem_all:
         expand(
             os.path.join(
                 RESULTS_DIR,
-                "SingleM/intermediate/Unifrac/otu_table.S3.35.RNA_SBDS.unifrac",
+                "SingleM/intermediate/Unifrac/otu_table.S3.1.ribosomal_protein_L2_rplB.unifrac",
             )
         ),
         expand(
-            os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.ebd")
+            os.path.join(
+                RESULTS_DIR,
+                "SingleM/Betadiv/otu_table.S3.1.ribosomal_protein_L2_rplB.ebd",
+            )
         ),
     output:
         touch("status/singlem.done"),
@@ -74,7 +77,7 @@ rule singlem_unifrac:
     output:
         os.path.join(
             RESULTS_DIR,
-            "SingleM/intermediate/Unifrac/otu_table.S3.35.RNA_SBDS.unifrac",
+            "SingleM/intermediate/Unifrac/otu_table.S3.1.ribosomal_protein_L2_rplB.unifrac",
         ),
     threads: 2
     resources:
@@ -97,8 +100,12 @@ rule singlem_betadiv:
     input:
         rules.singlem_unifrac.output,
     output:
-        ebd=os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.ebd"),
-        tree=os.path.join(RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.35.RNA_SBDS.tre"),
+        ebd=os.path.join(
+            RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.1.ribosomal_protein_L2_rplB.ebd"
+        ),
+        tree=os.path.join(
+            RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.1.ribosomal_protein_L2_rplB.tre"
+        ),
     threads: 2
     resources:
         runtime=60 * 1,

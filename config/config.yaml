@@ -29,16 +29,16 @@ steps: ["install_software",
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
 # Directory where the workflow exists
-work_dir: "/scratch/gmichoud/Metalp/MAGsGeneration/"
+work_dir: "/scratch/gmichoud/CAMI/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/gmichoud/Metalp/Assembly"
+assembly_dir: "/scratch/gmichoud/CAMI/p25/contigs"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/Metalp/mags_all"  
+results_dir: "/scratch/gmichoud/CAMI/p25_results"  
 
 # Directory for raw reads
-reads_dir: "/scratch/gmichoud/Metalp/reads"
+reads_dir: "/scratch/gmichoud/CAMI/p25"
 
 ### Memory per cpus for your cluster
 
