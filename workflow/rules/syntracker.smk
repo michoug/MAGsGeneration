@@ -13,10 +13,10 @@ rule cp_assemblies:
         dir=temp(
             directory(os.path.join(RESULTS_DIR, "SynTracker/intermediate/assemblies"))
         ),
-    localrule: True
     log:
         out=os.path.join(RESULTS_DIR, "logs/cp_assemblies.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/cp_assemblies.err.log"),
+    localrule: True
     shell:
         """
         (date
@@ -37,10 +37,10 @@ rule syntracker_blast:
     log:
         out=os.path.join(RESULTS_DIR, "logs/syntracker_blast.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/syntracker_blast.err.log"),
+    threads: 4
     resources:
         mem_mb=get_mem_mb,
         runtime=4 * 60,
-    threads: 4
     shell:
         """
         (date
@@ -81,12 +81,12 @@ rule syntracker_run:
     log:
         out=os.path.join(RESULTS_DIR, "logs/syntracker/syntracker_run_{mags}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/syntracker/syntracker_run_{mags}.err.log"),
-    resources:
-        mem_mb=get_mem_mb,
-        runtime=60,
     # group:
     #     "syntracker"
     threads: 5
+    resources:
+        mem_mb=get_mem_mb,
+        runtime=60,
     shell:
         """
         (date
@@ -125,9 +125,9 @@ rule syntracker_finalize:
     log:
         out=os.path.join(RESULTS_DIR, "logs/syntracker/syntracker_finalize.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/syntracker/syntracker_finalize.err.log"),
+    localrule: True
     message:
         "Finalizing SynTracker output"
-    localrule: True
     shell:
         """
         (

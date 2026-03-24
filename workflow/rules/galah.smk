@@ -11,9 +11,9 @@ rule galah_prepare:
     output:
         final=os.path.join(RESULTS_DIR, "Bins/intermediate/checkm2BeforeGalah.tsv"),
         temp=temp(os.path.join(RESULTS_DIR, "Bins/intermediate/checkm2_temp.tsv")),
+    localrule: True
     message:
         "Adjusting CheckM output for input to Galah"
-    localrule: True
     shell:
         """
         cat {input.check} | sed '/^Name/d' | awk '{{print $1","$2","$3}}' > {output.temp} &&
@@ -35,13 +35,13 @@ checkpoint galah:
     log:
         out=os.path.join(RESULTS_DIR, "logs/galah/galah.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/galah/galah.err.log"),
-    params:
-        comp=70,
-        cont=10,
     threads: 10
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
+    params:
+        comp=70,
+        cont=10,
     message:
         "Running Galah on all NOMIS MAGs"
     shell:

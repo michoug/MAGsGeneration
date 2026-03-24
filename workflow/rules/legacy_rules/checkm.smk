@@ -35,13 +35,13 @@ rule checkm:
         os.path.join(RESULTS_DIR, "renamed_mags/dir_00{number}"),
     output:
         tsv=os.path.join(RESULTS_DIR, "renamed_mags/checkm_{number}/checkm.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/checkm.yaml")
-    wildcard_constraints:
-        number="|".join(["1", "2", "3", "4", "5"]),
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm/dir_00{number}_checkm.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm/dir_00{number}_checkm.err.log"),
+    wildcard_constraints:
+        number="|".join(["1", "2", "3", "4", "5"]),
+    conda:
+        os.path.join(WORK_DIR, "envs/checkm.yaml")
     threads: config["checkM"]["threads"]
     message:
         "Running CheckM for directory: {wildcards.number}"

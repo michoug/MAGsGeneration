@@ -58,10 +58,10 @@ rule metabolic:
         err=os.path.join(RESULTS_DIR, "logs/metabolic/metabolic.err.log"),
     conda:
         os.path.join(WORK_DIR, "envs/metabolic.yaml")
+    threads: config["metabolic"]["threads"]
     params:
         gtdbtk=config["metabolic"]["db"],
         metabolic=config["metabolic"]["directory"],
-    threads: config["metabolic"]["threads"]
     message:
         "Running METABOLIC-G for all MAGs"
     shell:

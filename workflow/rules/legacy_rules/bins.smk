@@ -6,12 +6,12 @@ rule metabat2_mapping:
         ),
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),
-    conda:
-        os.path.join(WORK_DIR, "envs/metabat.yaml")
-    threads: config["metabat2"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.err.log"),
+    conda:
+        os.path.join(WORK_DIR, "envs/metabat.yaml")
+    threads: config["metabat2"]["threads"]
     message:
         "Running the first part of metabat2 to estimate the coverage"
     shell:
@@ -25,12 +25,12 @@ rule metabat2:
         cov=rules.metabat2_mapping.output,
     output:
         directory(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat/")),
-    conda:
-        os.path.join(WORK_DIR, "envs/metabat.yaml")
-    threads: config["metabat2"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.err.log"),
+    conda:
+        os.path.join(WORK_DIR, "envs/metabat.yaml")
+    threads: config["metabat2"]["threads"]
     message:
         "Running metabat2 to obtain bins"
     shell:
@@ -49,11 +49,11 @@ rule concoct_prepare:
         bed=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_10k.bed"),
         cont=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_10k.fa"),
         cov=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_concoct_cov.txt"),
-    conda:
-        os.path.join(WORK_DIR, "envs/concoct.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.err.log"),
+    conda:
+        os.path.join(WORK_DIR, "envs/concoct.yaml")
     message:
         "Preparing files for Concoct"
     shell:
@@ -68,12 +68,12 @@ rule concoct:
         cov=rules.concoct_prepare.output.cov,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Concoct/concoct_clustering_merged.csv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/concoct.yaml")
-    threads: config["concoct"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.err.log"),
+    conda:
+        os.path.join(WORK_DIR, "envs/concoct.yaml")
+    threads: config["concoct"]["threads"]
     message:
         "Running concoct to obtain bins"
     shell:
@@ -103,12 +103,12 @@ rule metabinner_coverage:
             os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_temp.txt")
         ),
         final=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_cov.txt"),
-    conda:
-        os.path.join(WORK_DIR, "envs/metabat.yaml")
-    threads: config["metabinner"]["threads"]
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log"),
+    conda:
+        os.path.join(WORK_DIR, "envs/metabat.yaml")
+    threads: config["metabinner"]["threads"]
     message:
         "Running the first part of metabinner to estimate the coverage"
     shell:
@@ -146,11 +146,11 @@ rule metabinner_prepare:
         + "/Bins/{sample}/{sample}_kmer_4_f"
         + str(config["metabinner"]["length"])
         + ".csv",
-    conda:
-        os.path.join(WORK_DIR, "envs/metabinner.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_prepare/{sample}.err.log"),
+    conda:
+        os.path.join(WORK_DIR, "envs/metabinner.yaml")
     message:
         "Prepare fasta and kmer file for Metabinner"
     shell:
@@ -168,11 +168,11 @@ rule metabinner:
         path=rules.metabinner_install.output.dbs,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Metabinner/metabinner_result.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/metabinner.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner/{sample}.err.log"),
+    conda:
+        os.path.join(WORK_DIR, "envs/metabinner.yaml")
     threads: config["metabinner"]["threads"]
     message:
         "Running Metabinner"

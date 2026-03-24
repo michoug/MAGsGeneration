@@ -66,12 +66,6 @@ rule indexAssembly:
         fa=rules.filter_length.output.out,
     output:
         temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti")),
-    threads: 10
-    resources:
-        runtime=60,
-        mem_mb=get_mem_mb,
-    params:
-        numb="{number}",
     log:
         out=os.path.join(
             RESULTS_DIR, "logs/indexAssembly/indexAssembly_{sample}_{number}.out.log"
@@ -79,6 +73,12 @@ rule indexAssembly:
         err=os.path.join(
             RESULTS_DIR, "logs/indexAssembly/indexAssembly_{sample}_{number}.err.log"
         ),
+    threads: 10
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
+    params:
+        numb="{number}",
     shell:
         """
         (date 
@@ -127,15 +127,15 @@ rule mapping:
         bai=os.path.join(
             RESULTS_DIR, "intermediate/BamFiles/{sample}/{sample}_{sample_2}.bam.bai"
         ),
-    threads: 8
-    resources:
-        runtime=60 * 1,
-        mem_mb=get_mem_mb,
     # group:
     #     "mapping_group"
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
+    threads: 8
+    resources:
+        runtime=60 * 1,
+        mem_mb=get_mem_mb,
     shell:
         """
         (date
@@ -178,13 +178,13 @@ rule metabat2_mapping:
         check=rules.check_bam_files_for_binning.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_metabat_cov.txt"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.err.log"),
     threads: 10
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.err.log"),
     message:
         "Running the first part of metabat2 to estimate the coverage"
     shell:
@@ -193,19 +193,19 @@ rule metabat2_mapping:
 
 
 rule metabat2:
-    priority: 20
     input:
         contig=rules.filter_length.output.out,
         cov=rules.metabat2_mapping.output,
     output:
         directory(os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Metabat/")),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.err.log"),
+    priority: 20
     threads: 10
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.err.log"),
     message:
         "Running metabat2 to obtain bins"
     shell:
@@ -232,15 +232,15 @@ rule metabinner_coverage:
         final=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_metabinner_cov.txt"
         ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log"),
     threads: 14
     resources:
         runtime=60,
         mem_mb=get_mem_mb,
     params:
         length=1500,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log"),
     message:
         "Running the first part of metabinner to estimate the coverage"
     shell:
@@ -290,9 +290,9 @@ rule vamb_coverage:
         os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/Vamb/{sample}_aemb_cov.txt"
         ),
+    localrule: True
     params:
         name="{sample}",
-    localrule: True
     run:
         import pandas as pd
 
@@ -310,8 +310,8 @@ rule vamb_length:
                 RESULTS_DIR, "Assembly/intermediate/{sample}_filter_vamb.fasta"
             )
         ),
-    threads: 4
     localrule: True
+    threads: 4
     message:
         "Remove contigs less than 1501 bp for Vamb"
     shell:
@@ -351,13 +351,13 @@ rule taxvamb:
             RESULTS_DIR,
             "Bins/intermediate/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
         ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log"),
     threads: 14
     resources:
         runtime=60 * 24,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log"),
     shell:
         "(date && "
         "rm -r $(dirname {output}) && "
@@ -385,14 +385,14 @@ rule concoct_prepare:
     log:
         out=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/concoct_prepare/{sample}.err.log"),
-    message:
-        "Preparing files for Concoct"
-    params:
-        script=os.path.join(WORK_DIR, "scripts/concoct_coverage_table_threads.py"),
+    threads: 10
     resources:
         runtime=60 * 10,
         mem_mb=get_mem_mb,
-    threads: 10
+    params:
+        script=os.path.join(WORK_DIR, "scripts/concoct_coverage_table_threads.py"),
+    message:
+        "Preparing files for Concoct"
     shell:
         "(date && rm -f {output.bed} {output.cont} {output.cov} && pixi r -e concoct cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
         "pixi r -e concoct {params.script} {output.bed} {input.bam} --threads {threads} > {output.cov} && [[ -s {output.cov} ]] && "
@@ -408,13 +408,13 @@ rule concoct:
             RESULTS_DIR,
             "Bins/intermediate/{sample}/Concoct/concoct_clustering_merged.csv",
         ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.err.log"),
     threads: 20
     resources:
         runtime=60 * 8,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.err.log"),
     message:
         "Running concoct to obtain bins"
     shell:
@@ -435,13 +435,13 @@ rule comebin:
     log:
         out=os.path.join(RESULTS_DIR, "logs/comebin/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/comebin/{sample}.err.log"),
-    params:
-        bam=os.path.join(RESULTS_DIR, "intermediate/BamFiles/{sample}"),
-        folder=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Comebin/"),
     threads: 20
     resources:
         runtime=60 * 24,
         mem_mb=get_mem_mb,
+    params:
+        bam=os.path.join(RESULTS_DIR, "intermediate/BamFiles/{sample}"),
+        folder=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Comebin/"),
     message:
         "Running Comebin"
     shell:
@@ -556,17 +556,18 @@ rule metacat_cluster:
             )
         ),
         done=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat/Bins/{sample}_metacat.mapping"
+            RESULTS_DIR,
+            "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat/Bins/{sample}_metacat.mapping",
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/metacat_cluster/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metacat_cluster/{sample}.err.log"),
-    params:
-        name="{sample}",
     threads: 20
     resources:
         runtime=60 * 4,
         mem_mb=get_mem_mb,
+    params:
+        name="{sample}",
     message:
         "Running MetaCAT"
     shell:

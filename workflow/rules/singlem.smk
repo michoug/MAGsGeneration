@@ -32,13 +32,13 @@ rule singlem_reads:
     output:
         table=os.path.join(RESULTS_DIR, "SingleM/intermediate/{sample}_otu.tsv"),
         profile=os.path.join(RESULTS_DIR, "SingleM/intermediate/{sample}_profile.tsv"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.err.log"),
     threads: 8
     resources:
         runtime=60 * 4,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.err.log"),
     shell:
         """
         (date
@@ -56,13 +56,13 @@ rule singlem_cluster:
         ),
     output:
         os.path.join(RESULTS_DIR, "SingleM/clustered_all.otu_table.tsv"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/singlem/singlem_cluster.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/singlem/singlem_cluster.err.log"),
     threads: 2
     resources:
         runtime=60 * 6,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/singlem/singlem_cluster.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/singlem/singlem_cluster.err.log"),
     shell:
         """
         (date
@@ -79,13 +79,13 @@ rule singlem_unifrac:
             RESULTS_DIR,
             "SingleM/intermediate/Unifrac/otu_table.S3.1.ribosomal_protein_L2_rplB.unifrac",
         ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/singlem/singlem_unifrac.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/singlem/singlem_unifrac.err.log"),
     threads: 2
     resources:
         runtime=60 * 1,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/singlem/singlem_unifrac.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/singlem/singlem_unifrac.err.log"),
     params:
         "otu_table",
     shell:
@@ -106,13 +106,13 @@ rule singlem_betadiv:
         tree=os.path.join(
             RESULTS_DIR, "SingleM/Betadiv/otu_table.S3.1.ribosomal_protein_L2_rplB.tre"
         ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/singlem/singlem_betadiv.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/singlem/singlem_betadiv.err.log"),
     threads: 2
     resources:
         runtime=60 * 1,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/singlem/singlem_betadiv.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/singlem/singlem_betadiv.err.log"),
     params:
         "otu_table",
     shell:
@@ -139,12 +139,12 @@ rule singlem_microbial:
     output:
         profile=os.path.join(RESULTS_DIR, "SingleM/allProfiles.tsv"),
         mf=os.path.join(RESULTS_DIR, "SingleM/SingleM_MF.tsv"),
-    resources:
-        runtime=60 * 5,
-        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_MF.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_MF.err.log"),
+    resources:
+        runtime=60 * 5,
+        mem_mb=get_mem_mb,
     shell:
         """
         (date
@@ -162,13 +162,13 @@ rule singlem_genomes:
         db=rules.singlem_data.output.folder,
     output:
         table=os.path.join(RESULTS_DIR, "SingleM/genomes_otu.tsv"),
-    resources:
-        runtime=60 * 2,
-        mem_mb=get_mem_mb,
-    threads: 8
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_genomes.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_genomes.err.log"),
+    threads: 8
+    resources:
+        runtime=60 * 2,
+        mem_mb=get_mem_mb,
     shell:
         """
         (date

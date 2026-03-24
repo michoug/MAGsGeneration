@@ -73,12 +73,12 @@ rule mapping:
         idx=rules.mapping_index.output,
     output:
         temp(os.path.join(RESULTS_DIR, "Bam/{sample}/{sample}_{sample_2}.bam")),
-    threads: config["mapping"]["threads"]
-    conda:
-        os.path.join(WORK_DIR, "envs/mapping.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
+    conda:
+        os.path.join(WORK_DIR, "envs/mapping.yaml")
+    threads: config["mapping"]["threads"]
     message:
         "Running bwa to produce sorted bams"
     shell:

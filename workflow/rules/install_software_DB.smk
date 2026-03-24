@@ -9,7 +9,6 @@ rule install_software:
         ),
         os.path.join(RESULTS_DIR, "DB/Busco_euk/busco_euk.done"),
         os.path.join(RESULTS_DIR, "DB/SynTracker/syntracker.done"),
-        # os.path.join(RESULTS_DIR, "DB/MetaCAT.done"),
     output:
         touch("status/install_software.done"),
 
@@ -17,15 +16,15 @@ rule install_software:
 rule downloadHuman:
     output:
         file=os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
-    params:
-        url="https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.fna.gz",
-    resources:
-        runtime=60,
-        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/human_download.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/human_download.err.log"),
     threads: 10
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
+    params:
+        url="https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.fna.gz",
     shell:
         """
         (date
@@ -48,10 +47,10 @@ rule download_tax_db:
     log:
         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
+    threads: 20
     resources:
         mem_mb=get_mem_mb,
         runtime=6 * 60,
-    threads: 20
     shell:
         """
         (date
@@ -65,11 +64,11 @@ rule metabinner_install:
     output:
         dbs=directory(os.path.join(RESULTS_DIR, "DB/MetaBinner")),
         file=os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
-    localrule: True
     log:
         out=os.path.join(RESULTS_DIR, "logs/metabinner_install.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metabinner_install.err.log"),
     priority: 20
+    localrule: True
     shell:
         """
         (date &&  rm -rf MetaBinner
@@ -82,11 +81,11 @@ rule metabinner_install:
 rule metacat_install:
     output:
         file=os.path.join(RESULTS_DIR, "DB/MetaCAT.done"),
-    localrule: True
     log:
         out=os.path.join(RESULTS_DIR, "logs/metacat_install.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metacat_install.err.log"),
     priority: 20
+    localrule: True
     shell:
         """
         (date
@@ -111,8 +110,8 @@ rule singlem_data:
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_data.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_data.err.log"),
-    localrule: True
     priority: 20
+    localrule: True
     shell:
         """
         (date
@@ -129,10 +128,10 @@ rule busco_db_euk:
     log:
         out=os.path.join(RESULTS_DIR, "logs/busco_db_euk.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/busco_db_euk.err.log"),
+    threads: 2
     resources:
         mem_mb=get_mem_mb,
         runtime=2 * 60,
-    threads: 2
     shell:
         """
         (date
@@ -147,11 +146,11 @@ rule syntracker_install:
     output:
         dbs=directory(os.path.join(RESULTS_DIR, "DB/SynTracker")),
         file=os.path.join(RESULTS_DIR, "DB/SynTracker/syntracker.done"),
-    localrule: True
     log:
         out=os.path.join(RESULTS_DIR, "logs/syntracker_install.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/syntracker_install.err.log"),
     priority: 20
+    localrule: True
     shell:
         """
         (date &&  rm -rf SynTracker

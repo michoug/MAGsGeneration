@@ -97,7 +97,9 @@ class TestPixiTomlStructure:
             "rosella",
         ]
         for env in expected_envs:
-            assert env in environments, f"Expected environment '{env}' not found in pixi.toml"
+            assert (
+                env in environments
+            ), f"Expected environment '{env}' not found in pixi.toml"
 
     def test_snakemake_in_dependencies(self):
         deps = self.config.get("dependencies", {})
@@ -110,9 +112,9 @@ class TestPixiTomlStructure:
     def test_each_feature_has_dependencies(self):
         features = self.config.get("feature", {})
         for feat_name, feat_def in features.items():
-            assert "dependencies" in feat_def, (
-                f"Feature '{feat_name}' has no 'dependencies' key"
-            )
-            assert len(feat_def["dependencies"]) > 0, (
-                f"Feature '{feat_name}' has an empty 'dependencies' dict"
-            )
+            assert (
+                "dependencies" in feat_def
+            ), f"Feature '{feat_name}' has no 'dependencies' key"
+            assert (
+                len(feat_def["dependencies"]) > 0
+            ), f"Feature '{feat_name}' has an empty 'dependencies' dict"

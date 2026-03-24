@@ -60,6 +60,7 @@ def unlock_snakemake(snakefile, configfile):
     except subprocess.CalledProcessError as e:
         logger.warning(f"Unlock failed (may be okay if not locked): {e.stderr}")
 
+
 # ----------------------------------------------------
 # Install Pixi (if missing) + install all Pixi envs
 # ----------------------------------------------------
@@ -67,7 +68,9 @@ def ensure_and_install_pixi_envs(pixi_project_path):
     pixi_toml = os.path.join(pixi_project_path, "pixi.toml")
 
     if not os.path.exists(pixi_toml):
-        print(f"ℹ️ No pixi.toml found in {pixi_project_path}, skipping Pixi environment setup.")
+        print(
+            f"ℹ️ No pixi.toml found in {pixi_project_path}, skipping Pixi environment setup."
+        )
         return
 
     # Ensure Pixi exists
@@ -75,25 +78,35 @@ def ensure_and_install_pixi_envs(pixi_project_path):
         print("⚠️ Pixi not found. Attempting automatic installation…")
         try:
             subprocess.run(
-                ["curl", "-fsSL", "https://pixi.sh/install.sh", "-o", "install_pixi.sh"],
-                check=True
+                [
+                    "curl",
+                    "-fsSL",
+                    "https://pixi.sh/install.sh",
+                    "-o",
+                    "install_pixi.sh",
+                ],
+                check=True,
             )
             subprocess.run(["sh", "install_pixi.sh"], check=True)
             print("✅ Pixi installed successfully.\n")
         except Exception:
-            print("❌ Failed to auto-install Pixi.\n"
-                  "Please install manually: https://prefix.dev/pixi")
+            print(
+                "❌ Failed to auto-install Pixi.\nPlease install manually: https://prefix.dev/pixi"
+            )
             sys.exit(1)
 
     # Install all Pixi environments
     print("📦 Installing Pixi environments defined in pixi.toml...")
     try:
-        subprocess.run(["pixi", "install", "--run-post-link-scripts", "-a"], cwd=pixi_project_path, check=True)
+        subprocess.run(
+            ["pixi", "install", "--run-post-link-scripts", "-a"],
+            cwd=pixi_project_path,
+            check=True,
+        )
         print("✅ Pixi environments installed.\n")
     except subprocess.CalledProcessError:
         print("❌ Pixi environment installation failed.")
         sys.exit(1)
-
 
 
 def run_snakemake(
@@ -170,7 +183,7 @@ def validate_optional_steps(steps):
 
 def resolve_optional_steps(args_steps, all_steps):
     """Resolve optional steps based on command line arguments.
-    
+
     Returns the final list of optional steps to include.
     - If args_steps is None (not provided): default to 'all'
     - If args_steps is ['all']: include all optional steps
@@ -178,21 +191,21 @@ def resolve_optional_steps(args_steps, all_steps):
     - Otherwise: include specified optional steps
     """
     optional_in_config = [s for s in all_steps if s in OPTIONAL_STEPS]
-    
+
     # Default to 'all' if --steps not provided
     if args_steps is None:
         logger.info("No --steps specified, defaulting to 'all' optional steps")
         return optional_in_config
-    
+
     # Handle special keywords
     if args_steps == ["all"]:
         logger.info("Using 'all' optional steps")
         return optional_in_config
-    
+
     if args_steps == ["none"]:
         logger.info("Using 'none' optional steps")
         return []
-    
+
     # Filter to valid optional steps
     return [s for s in args_steps if s in OPTIONAL_STEPS]
 
@@ -214,7 +227,7 @@ def main():
         "--steps",
         nargs="+",
         help=f"Optional steps to include. Use 'all' for all optional steps (default), "
-             f"'none' for no optional steps, or specify individual steps: {', '.join(OPTIONAL_STEPS)}",
+        f"'none' for no optional steps, or specify individual steps: {', '.join(OPTIONAL_STEPS)}",
     )
     parser.add_argument("-o", "--output", help="Results folder path")
     parser.add_argument(
@@ -247,7 +260,7 @@ def main():
         help="Path to Snakemake profile directory (overrides --slurm, sets cores to 'all')",
     )
     parser.add_argument(
-        "--continue",
+        "--continue-run",
         dest="continue_run",
         action="store_true",
         help="Continue an incomplete run",
@@ -304,10 +317,10 @@ def main():
 
     all_steps = config.get("steps", [])
     mandatory = [s for s in all_steps if s not in OPTIONAL_STEPS]
-    
+
     # Resolve which optional steps to include (defaults to 'all')
     optional_to_include = resolve_optional_steps(args.steps, all_steps)
-    
+
     final_steps = mandatory + optional_to_include
     config["steps"] = final_steps
 

@@ -26,11 +26,6 @@ rule report:
         done=[v for k, v in _STEP_DONE_FILES.items() if k in STEPS],
     output:
         html=os.path.join(RESULTS_DIR, "report/MAGs_summary.html"),
-    params:
-        results_dir=RESULTS_DIR,
-        outdir=os.path.join(RESULTS_DIR, "report"),
-        sample_list=os.path.join(WORK_DIR, "config/sample_list.txt"),
-        steps=",".join(STEPS),
     log:
         out=os.path.join(RESULTS_DIR, "logs/report/report.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/report/report.err.log"),
@@ -38,6 +33,11 @@ rule report:
     resources:
         runtime=60,
         mem_mb=get_mem_mb,
+    params:
+        results_dir=RESULTS_DIR,
+        outdir=os.path.join(RESULTS_DIR, "report"),
+        sample_list=os.path.join(WORK_DIR, "config/sample_list.txt"),
+        steps=",".join(STEPS),
     message:
         "Rendering Quarto summary report"
     shell:

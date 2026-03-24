@@ -21,13 +21,13 @@ rule checkm2:
         tsv=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/checkm2/quality_report.tsv"
         ),
-    resources:
-        runtime=60 * 4,
-        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm/{sample}.err.log"),
     threads: 10
+    resources:
+        runtime=60 * 4,
+        mem_mb=get_mem_mb,
     params:
         ext="fa",
         db=config["checkm2"]["db"],

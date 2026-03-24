@@ -46,10 +46,10 @@ rule get_all_mags:
     log:
         out=os.path.join(RESULTS_DIR, "logs/euk_potential/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/euk_potential/{sample}.err.log"),
-    message:
-        "Collecting all the MAGs from different binning tools"
     params:
         value="{sample}",
+    message:
+        "Collecting all the MAGs from different binning tools"
     shell:
         """
         set -euo pipefail
@@ -90,11 +90,11 @@ rule rename_mags:
     log:
         out=os.path.join(RESULTS_DIR, "logs/rename_mags/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/rename_mags/{sample}.err.log"),
-    message:
-        "Renaming the MAGs"
+    localrule: True
     params:
         value="{sample}",
-    localrule: True
+    message:
+        "Renaming the MAGs"
     shell:
         """
         set -euo pipefail
@@ -122,12 +122,12 @@ rule get_length:
             RESULTS_DIR,
             "Bins/intermediate/euk_potential_mags_length/{sample}_length_filtered_list.txt",
         ),
-    threads: 4
-    message:
-        "Get the length of all the MAGs"
     log:
         out=os.path.join(RESULTS_DIR, "logs/get_length/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/get_length/{sample}.err.log"),
+    threads: 4
+    message:
+        "Get the length of all the MAGs"
     shell:
         """
         date
@@ -192,12 +192,6 @@ rule deepmicroclass:
             RESULTS_DIR,
             "Bins/intermediate/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv",
         ),
-    threads: 3
-    resources:
-        runtime=30,
-        mem_mb=get_mem_mb,
-    group:
-        "deepmicroclass"
     log:
         out=os.path.join(
             RESULTS_DIR, "logs/deepmicroclass/deepmicroclass_{mags}.out.log"
@@ -205,6 +199,12 @@ rule deepmicroclass:
         err=os.path.join(
             RESULTS_DIR, "logs/deepmicroclass/deepmicroclass_{mags}.err.log"
         ),
+    group:
+        "deepmicroclass"
+    threads: 3
+    resources:
+        runtime=30,
+        mem_mb=get_mem_mb,
     message:
         "Running DeepMicroClass on {wildcards.mags}"
     shell:
@@ -224,9 +224,9 @@ rule deepmicroclass_percentage:
         ),
     log:
         os.path.join(RESULTS_DIR, "logs/collate/deepmicroclass_{mags}.log"),
+    localrule: True
     message:
         "Getting the percentage for contigs identified as 'eukarya' in {wildcards.mags}"
-    localrule: True
     run:
         import pandas as pd
 
@@ -275,7 +275,10 @@ rule concatenate_deepmicroclass:
         import contextlib
 
         with open(log.out, "w") as f_log:
-            with contextlib.redirect_stdout(f_log), contextlib.redirect_stderr(f_log):
+            with (
+                contextlib.redirect_stdout(f_log),
+                contextlib.redirect_stderr(f_log),
+            ):
                 dfs = []
 
                 for file in input.all_files:
@@ -310,9 +313,9 @@ checkpoint get_eukaryotes_mags:
     log:
         out=os.path.join(RESULTS_DIR, "logs/get_eukaryotic_mags.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/get_eukaryotic_mags.err.log"),
+    localrule: True
     message:
         "Getting the final eukaryotic MAGs"
-    localrule: True
     shell:
         """
         set -euo pipefail
@@ -348,13 +351,13 @@ rule busco:
         done=os.path.join(
             RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/{mags}/{mags}.done"
         ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/busco/busco_{mags}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/busco/busco_{mags}.err.log"),
     threads: 10
     resources:
         runtime=2 * 60,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/busco/busco_{mags}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/busco/busco_{mags}.err.log"),
     message:
         "Running BUSCO on the eukaryotic MAGs"
     shell:
@@ -371,9 +374,9 @@ rule busco_done:
         get_file_eukaryotes,
     output:
         os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/done.txt"),
+    localrule: True
     message:
         "All BUSCO runs on eukaryotic MAGs are done"
-    localrule: True
     shell:
         """
         touch {output}
@@ -386,14 +389,14 @@ rule busco_multiqc:
     output:
         html=os.path.join(RESULTS_DIR, "qc/busco/multiqc_report.html"),
         folder=directory(os.path.join(RESULTS_DIR, "qc/busco/")),
-    message:
-        "Running MultiQC on BUSCO results"
-    resources:
-        runtime=60,
-        mem_mb=get_mem_mb,
     log:
         err=os.path.join(RESULTS_DIR, "logs/multiqc_busco.err.log"),
         out=os.path.join(RESULTS_DIR, "logs/multiqc_busco.out.log"),
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
+    message:
+        "Running MultiQC on BUSCO results"
     shell:
         """
         (date

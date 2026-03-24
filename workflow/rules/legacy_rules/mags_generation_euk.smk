@@ -42,6 +42,13 @@ rule indexAssembly:
         fa=rules.filter_length.output.out,
     output:
         os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
+    log:
+        out=os.path.join(
+            RESULTS_DIR, "logs/indexAssembly/indexAssembly_{sample}_{number}.out.log"
+        ),
+        err=os.path.join(
+            RESULTS_DIR, "logs/indexAssembly/indexAssembly_{sample}_{number}.err.log"
+        ),
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 10
@@ -50,13 +57,6 @@ rule indexAssembly:
         mem_mb=get_mem_mb,
     params:
         numb="{number}",
-    log:
-        out=os.path.join(
-            RESULTS_DIR, "logs/indexAssembly/indexAssembly_{sample}_{number}.out.log"
-        ),
-        err=os.path.join(
-            RESULTS_DIR, "logs/indexAssembly/indexAssembly_{sample}_{number}.err.log"
-        ),
     shell:
         """
         (date 
@@ -87,15 +87,15 @@ rule mapping:
         index=rules.checkIndexAssembyDone.output,
     output:
         os.path.join(RESULTS_DIR, "BamFiles/{sample}/{sample}_{sample_2}.bam"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
     conda:
         os.path.join(WORK_DIR, "envs/coverm.yaml")
     threads: 8
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}_{sample_2}.err.log"),
     shell:
         """
         (date
@@ -115,15 +115,15 @@ rule metabat2_mapping:
         ),
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabat_cov.txt"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.err.log"),
     conda:
         os.path.join(WORK_DIR, "envs/metabat.yaml")
     threads: 10
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabat_mapping/{sample}.err.log"),
     message:
         "Running the first part of metabat2 to estimate the coverage"
     shell:
@@ -132,22 +132,22 @@ rule metabat2_mapping:
 
 
 rule metabat2:
-    priority: 20
     input:
         contig=rules.filter_length.output.out,
         cov=rules.metabat2_mapping.output,
     output:
         folder=directory(os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat/")),
         file=os.path.join(RESULTS_DIR, "Bins/{sample}/Metabat/metabat.done"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.err.log"),
+    priority: 20
     conda:
         os.path.join(WORK_DIR, "envs/metabat.yaml")
     threads: 10
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabat2/{sample}.err.log"),
     message:
         "Running metabat2 to obtain bins"
     shell:
@@ -170,6 +170,9 @@ rule metabinner_coverage:
             os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_temp.txt")
         ),
         final=os.path.join(RESULTS_DIR, "Bins/{sample}/{sample}_metabinner_cov.txt"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log"),
     conda:
         os.path.join(WORK_DIR, "envs/metabat.yaml")
     threads: 14
@@ -178,9 +181,6 @@ rule metabinner_coverage:
         mem_mb=get_mem_mb,
     params:
         length=1500,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log"),
     message:
         "Running the first part of metabinner to estimate the coverage"
     shell:
@@ -196,9 +196,9 @@ rule vamb_coverage:
         rules.metabinner_coverage.output.final,
     output:
         os.path.join(RESULTS_DIR, "Bins/{sample}/Vamb/{sample}_aemb_cov.txt"),
+    localrule: True
     params:
         name="{sample}",
-    localrule: True
     run:
         import pandas as pd
 
@@ -212,10 +212,10 @@ rule vamb_length:
         rules.filter_length.output.out,
     output:
         temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter_vamb.fasta")),
+    localrule: True
     conda:
         os.path.join(WORK_DIR, "envs/seqkit.yaml")
     threads: 4
-    localrule: True
     message:
         "Remove contigs less than 1501 bp for Vamb"
     shell:
@@ -266,15 +266,15 @@ rule taxvamb:
         os.path.join(
             RESULTS_DIR, "Bins/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv"
         ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log"),
     conda:
         os.path.join(WORK_DIR, "envs/vamb.yaml")
     threads: 14
     resources:
         runtime=60 * 24,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/vamb/{sample}.err.log"),
     shell:
         "(date && "
         "rm -r $(dirname {output}) && "
@@ -293,12 +293,12 @@ use rule taxvamb as taxvamb_euk with:
             RESULTS_DIR,
             "Bins/{sample}/Vamb/Vamb_Results_euk/vaevae_clusters_unsplit.tsv",
         ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/vamb_euk/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/vamb_euk/{sample}.err.log"),
     conda:
         os.path.join(WORK_DIR, "envs/vamb.yaml")
     threads: 14
     resources:
         runtime=60 * 24,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/vamb_euk/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/vamb_euk/{sample}.err.log"),

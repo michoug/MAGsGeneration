@@ -10,11 +10,11 @@ rule checkmBeforeDrep:
         os.path.join(RESULTS_DIR, "Bins/mags_before_drep/MDMCleaner.done"),
     output:
         tsv=os.path.join(RESULTS_DIR, "Bins/checkm2/quality_report.tsv"),
-    conda:
-        os.path.join(WORK_DIR, "envs/checkm2.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm_beforeDrep.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm_beforeDrep.err.log"),
+    conda:
+        os.path.join(WORK_DIR, "envs/checkm2.yaml")
     threads: config["checkm2"]["threads"]
     params:
         ext=config["checkm2"]["extension"],
@@ -53,15 +53,15 @@ rule dRep:
     output:
         temp=directory(os.path.join(RESULTS_DIR, "Bins/dRep/dereplicated_genomes")),
         final=directory(os.path.join(RESULTS_DIR, "Bins/finalBins")),
-    conda:
-        os.path.join(WORK_DIR, "envs/drep.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/drep/drep.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/drep/drep.err.log"),
+    conda:
+        os.path.join(WORK_DIR, "envs/drep.yaml")
+    threads: config["dRep"]["threads"]
     params:
         comp=config["dRep"]["comp"],
         cont=config["dRep"]["cont"],
-    threads: config["dRep"]["threads"]
     message:
         "Running dRep on all NOMIS MAGs"
     shell:

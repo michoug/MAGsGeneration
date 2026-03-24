@@ -38,6 +38,11 @@ rule mdmcleaner:
         done=os.path.join(RESULTS_DIR, "Bins/MDMcleaner/{magsT}.done"),
         renamed=os.path.join(RESULTS_DIR, "Bins/mags_before_drep/{magsT}.fasta.gz"),
         final=os.path.join(RESULTS_DIR, "Bins/mags_before_drep/{magsT}.fasta"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/mdmcleaner/{magsT}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/mdmcleaner/{magsT}.err.log"),
+    conda:
+        os.path.join(WORK_DIR, "envs/mdmcleaner.yaml")
     threads: config["mdmcleaner"]["threads"]
     params:
         final=os.path.join(
@@ -45,11 +50,6 @@ rule mdmcleaner:
             "Bins/MDMcleaner/{magsT}/{magsT}/{magsT}_filtered_kept_contigs.fasta.gz",
         ),
         prefix="{magsT}",
-    conda:
-        os.path.join(WORK_DIR, "envs/mdmcleaner.yaml")
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/mdmcleaner/{magsT}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/mdmcleaner/{magsT}.err.log"),
     message:
         "Running MDMCleaner"
     shell:

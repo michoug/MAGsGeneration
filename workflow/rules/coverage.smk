@@ -15,9 +15,9 @@ rule concatenate_mags:
         rules.galah.output.final,
     output:
         os.path.join(RESULTS_DIR, "intermediate/concat/cat_mags.fa"),
+    localrule: True
     message:
         "Concatenating all dereplicated MAGS"
-    localrule: True
     shell:
         "(date && cat {input}/*.fa > {output} && date)"
 
@@ -33,13 +33,13 @@ rule mapping_all:
                 RESULTS_DIR, "intermediate/Bam/cat_mags.fa.{sample}_1.fq.gz.bam"
             )
         ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}.err.log"),
     threads: 10
     resources:
         runtime=60 * 12,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/mapping/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/mapping/{sample}.err.log"),
     message:
         "Running coverm to produce sorted bams for: {wildcards.sample}"
     shell:
@@ -55,14 +55,14 @@ rule coverage:
         os.path.join(RESULTS_DIR, "intermediate/Bam/cat_mags.fa.{sample}_1.fq.gz.bam"),
     output:
         final=os.path.join(RESULTS_DIR, "Bins/intermediate/cat_mags_cov_{sample}.txt"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/coverage/coverage_{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/coverage/coverage_{sample}.err.log"),
+    priority: 50
     threads: 10
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
-    priority: 50
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/coverage/coverage_{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/coverage/coverage_{sample}.err.log"),
     message:
         "Estimating coverage for concatenated MAGs"
     shell:

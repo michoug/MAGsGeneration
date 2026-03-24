@@ -19,7 +19,6 @@ from MAGsGeneration import (
     PIPELINES,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -40,7 +39,13 @@ def minimal_config():
 @pytest.fixture
 def config_with_optional_steps(minimal_config):
     config = minimal_config.copy()
-    config["steps"] = ["trim_reads", "assembly_all", "syntracker", "singlem_all", "eggnog"]
+    config["steps"] = [
+        "trim_reads",
+        "assembly_all",
+        "syntracker",
+        "singlem_all",
+        "eggnog",
+    ]
     return config
 
 
@@ -239,7 +244,13 @@ class TestConstants:
         assert len(OPTIONAL_STEPS) > 0
 
     def test_expected_optional_steps_present(self):
-        expected = {"syntracker", "singlem_all", "eggnog", "mgthermometer", "eukaryotes_filter"}
+        expected = {
+            "syntracker",
+            "singlem_all",
+            "eggnog",
+            "mgthermometer",
+            "eukaryotes_filter",
+        }
         assert expected.issubset(OPTIONAL_STEPS)
 
     def test_pipelines_is_dict(self):
@@ -254,4 +265,6 @@ class TestConstants:
         repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         for name, snakefile in PIPELINES.items():
             full_path = os.path.join(repo_root, snakefile)
-            assert os.path.exists(full_path), f"Snakefile for pipeline '{name}' not found: {full_path}"
+            assert os.path.exists(
+                full_path
+            ), f"Snakefile for pipeline '{name}' not found: {full_path}"

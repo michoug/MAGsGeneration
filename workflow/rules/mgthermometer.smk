@@ -21,14 +21,14 @@ rule MGthermometer_run:
         proportion=os.path.join(
             RESULTS_DIR, "MGthermometer/intermediate/proportion_{mags}.txt"
         ),
-    params:
-        prefix="{mags}",
     log:
         out=os.path.join(RESULTS_DIR, "logs/MGthermometer/{mags}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/MGthermometer/{mags}.err.log"),
+    localrule: True
+    params:
+        prefix="{mags}",
     message:
         "Calculate proportion of IVYWREL for {wildcards.mags}"
-    localrule: True
     shell:
         "(date && "
         "pixi r -e mgthermometer perl {input.script} {input.fasta} {output.proportion} && "

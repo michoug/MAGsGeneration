@@ -17,18 +17,18 @@ rule assembly_megahit:
             RESULTS_DIR, "Assembly/intermediate/{sample}_megahit/final.contigs.fa"
         ),
         final=os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_megahit.fa"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.err.log"),
+    threads: 20
+    resources:
+        runtime=60 * 12,
+        mem_mb=get_mem_mb,
     params:
         folder=directory(
             os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_megahit")
         ),
         name="{sample}",
-    threads: 20
-    resources:
-        runtime=60 * 12,
-        mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/assembly/{sample}_megahit.err.log"),
     shell:
         """
         (date

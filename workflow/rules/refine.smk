@@ -46,10 +46,10 @@ rule rosella_ref:
     resources:
         runtime=60 * 48,
         mem_mb=get_mem_mb,
-    message:
-        "Refine bins with Rosella"
     params:
         ext="fa",
+    message:
+        "Refine bins with Rosella"
     shell:
         """
         (date && 
@@ -62,8 +62,6 @@ rule rosella_ref:
 rule rename_refine:
     input:
         ref=rules.rosella_ref.output,
-    params:
-        sample="{sample}",
     output:
         list=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/Refine_rename/genomes_list.txt"
@@ -81,6 +79,8 @@ rule rename_refine:
         out=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/refine_rename/{sample}.err.log"),
     localrule: True
+    params:
+        sample="{sample}",
     shell:
         """
         (date 
@@ -107,9 +107,9 @@ rule cp_mags:
         ),
     output:
         directory(os.path.join(RESULTS_DIR, "Bins/intermediate/renamed_mags")),
+    localrule: True
     message:
         "Copy MAGs to another folder"
-    localrule: True
     shell:
         "(date && mkdir {output} && for file in $(dirname {input}); do cp $file/*fa {output}; done && date)"
 
@@ -125,10 +125,10 @@ rule checkm2_refine:
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm_refine.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm_refine.err.log"),
+    threads: 20
     resources:
         runtime=60 * 24,
         mem_mb=get_mem_mb,
-    threads: 20
     params:
         ext="fa",
         db=config["checkm2"]["db"],

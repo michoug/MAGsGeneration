@@ -61,7 +61,9 @@ class TestWorkflowFilesExist:
         ]
         for rule_file in expected_rules:
             full_path = os.path.join(RULES_DIR, rule_file)
-            assert os.path.exists(full_path), f"Expected rule file not found: {rule_file}"
+            assert os.path.exists(
+                full_path
+            ), f"Expected rule file not found: {rule_file}"
 
     def test_at_least_one_smk_file_found(self):
         smk_files = get_smk_files()
@@ -75,9 +77,7 @@ class TestWorkflowFilesExist:
 
 def has_snakefmt():
     """Return True if snakefmt is available on PATH."""
-    result = subprocess.run(
-        ["snakefmt", "--version"], capture_output=True, text=True
-    )
+    result = subprocess.run(["snakefmt", "--version"], capture_output=True, text=True)
     return result.returncode == 0
 
 

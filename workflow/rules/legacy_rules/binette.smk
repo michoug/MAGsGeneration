@@ -13,7 +13,6 @@ rule binning_refinement:
 rule prepare_binning_refinement:
     input:
         metabat=rules.metabat2.output,
-        # metabinner=rules.metabinner.output,
         rosella=rules.rosella.output,
         taxvamb=rules.taxvamb.output,
         concoct=rules.concoct.output,
@@ -21,25 +20,22 @@ rule prepare_binning_refinement:
         semibin=rules.semibin.output,
     output:
         metabatout=os.path.join(RESULTS_DIR, "Bins/{sample}/BinRef/metabat_das.tsv"),
-        # metabinnerout=os.path.join(
-        #     RESULTS_DIR, "Bins/{sample}/BinRef/metabinner_das.tsv"
-        # ),
         rosellaout=os.path.join(RESULTS_DIR, "Bins/{sample}/BinRef/rosella_das.tsv"),
         taxvambout=os.path.join(RESULTS_DIR, "Bins/{sample}/BinRef/taxvamb_das.tsv"),
         concoctout=os.path.join(RESULTS_DIR, "Bins/{sample}/BinRef/concoct_das.tsv"),
         comebinout=os.path.join(RESULTS_DIR, "Bins/{sample}/BinRef/comebin_das.tsv"),
         semibinout=os.path.join(RESULTS_DIR, "Bins/{sample}/BinRef/semibin_das.tsv"),
-    params:
-        value="{sample}",
-        script=os.path.join(WORK_DIR, "scripts/Fasta_to_Scaffolds2Bin.sh"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/prepare_BinRef/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/prepare_BinRef/{sample}.err.log"),
+    localrule: True
+    params:
+        value="{sample}",
+        script=os.path.join(WORK_DIR, "scripts/Fasta_to_Scaffolds2Bin.sh"),
     message:
         "Preparing files for BinRef"
-    localrule: True
     shell:
-        """
+        r"""
         (date && bash {params.script} -e fa -i {input.metabat} > {output.metabatout}
         perl -pe 's/metabat./{params.value}_metabat_/g' {output.metabatout} > $(dirname {output.metabatout})/t.txt && mv $(dirname {output.metabatout})/t.txt {output.metabatout} 
         bash {params.script} -e fna -i $(dirname {input.rosella}) >  {output.rosellaout}
@@ -51,13 +47,11 @@ rule prepare_binning_refinement:
         perl -pe 's/\t/\t{params.value}_semibin_/g' {input.semibin} | tail -n +2 > {output.semibinout}
         date) 2> {log.err} > {log.out}
         """
-        # perl -pe 's/\t/\t{params.value}_metabinner_/g' {input.metabinner} > {output.metabinnerout}
 
 
 rule binref:
     input:
         metabat=rules.prepare_binning_refinement.output.metabatout,
-        # metabinner=rules.prepare_binning_refinement.output.metabinnerout,
         taxvamb=rules.prepare_binning_refinement.output.taxvambout,
         rosella=rules.prepare_binning_refinement.output.rosellaout,
         concoct=rules.prepare_binning_refinement.output.concoctout,
@@ -73,16 +67,13 @@ rule binref:
     resources:
         runtime=60 * 12,
         mem_mb=get_mem_mb,
-    message:
-        "Running BinRef"
     params:
         db=config["checkm2"]["db"],
+    message:
+        "Running BinRef"
     shell:
         """
-        (date && 
-        pixi r -e binette binette -b {input.metabat} {input.taxvamb} {input.rosella} {input.concoct} {input.comebin} {input.semibin} -c {input.cont} -o $(dirname {output}) -t {threads} --checkm2_db {params.db} --min_completeness 50 --max_length 20000000 --verbose && 
+        (date
+        pixi r -e binette binette -b {input.metabat} {input.taxvamb} {input.rosella} {input.concoct} {input.comebin} {input.semibin} -c {input.cont} -o $(dirname {output}) -t {threads} --checkm2_db {params.db} --min_completeness 50 --max_length 20000000 --verbose
         date) 2> {log.err} > {log.out}        
         """
-
-
-#

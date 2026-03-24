@@ -29,15 +29,15 @@ rule annotation:
         protein=os.path.join(RESULTS_DIR, "Bins/Annotation/{mags}.faa"),
         gff=os.path.join(RESULTS_DIR, "Bins/Annotation/{mags}.gff"),
         nucl=os.path.join(RESULTS_DIR, "Bins/Annotation/{mags}.ffn"),
-    params:
-        prefix="{mags}",
-    resources:
-        runtime=60,
-        mem_mb=get_mem_mb,
-    threads: 4
     log:
         out=os.path.join(RESULTS_DIR, "logs/annotations/{mags}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/annotations/{mags}.err.log"),
+    threads: 4
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
+    params:
+        prefix="{mags}",
     message:
         "Prodigal annotation for {wildcards.mags}"
     shell:

@@ -34,12 +34,12 @@ rule get_all_mags:
     log:
         out=os.path.join(RESULTS_DIR, "logs/euk_potential/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/euk_potential/{sample}.err.log"),
-    message:
-        "Collecting all the MAGs from different binning tools"
     conda:
         os.path.join(WORK_DIR, "envs/concoct.yaml")
     params:
         value="{sample}",
+    message:
+        "Collecting all the MAGs from different binning tools"
     shell:
         """
         set -euo pipefail
@@ -75,10 +75,10 @@ rule rename_mags:
     log:
         out=os.path.join(RESULTS_DIR, "logs/rename_mags/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/rename_mags/{sample}.err.log"),
-    message:
-        "Renaming the MAGs"
     params:
         value="{sample}",
+    message:
+        "Renaming the MAGs"
     shell:
         """
         set -euo pipefail
@@ -106,14 +106,14 @@ rule get_length:
             RESULTS_DIR,
             "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt",
         ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/get_length/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/get_length/{sample}.err.log"),
     conda:
         os.path.join(WORK_DIR, "envs/seqkit.yaml")
     threads: 4
     message:
         "Get the length of all the MAGs"
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/get_length/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/get_length/{sample}.err.log"),
     shell:
         """
         date
@@ -171,15 +171,15 @@ rule whokaryote:
         os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags/{mags}.fa"),
     output:
         os.path.join(RESULTS_DIR, "Bins/whokaryote/{mags}/whokaryote_predictions_T.tsv"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/whokaryote/whokaryote_{mags}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/whokaryote/whokaryote_{mags}.err.log"),
     conda:
         os.path.join(WORK_DIR, "envs/whokaryote.yaml")
     threads: 3
     resources:
         runtime=30,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/whokaryote/whokaryote_{mags}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/whokaryote/whokaryote_{mags}.err.log"),
     message:
         "Running WHOKARYOTE on {wildcards.mags}"
     shell:
@@ -201,9 +201,9 @@ rule percentage_whokaryote:
         ),
     log:
         os.path.join(RESULTS_DIR, "logs/collate/{mags}.log"),
+    localrule: True
     message:
         "Getting the percentage for contigs identified as 'eukaryote' in {wildcards.mags}"
-    localrule: True
     run:
         import pandas as pd
 
@@ -236,7 +236,10 @@ rule concatenate_whokaryote:
         import contextlib
 
         with open(log.out, "w") as f_log:
-            with contextlib.redirect_stdout(f_log), contextlib.redirect_stderr(f_log):
+            with (
+                contextlib.redirect_stdout(f_log),
+                contextlib.redirect_stderr(f_log),
+            ):
                 dfs = []
 
                 for file in input.all_files:

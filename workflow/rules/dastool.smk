@@ -42,18 +42,16 @@ rule prepare_dasTool:
         metacatout=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/metacat_das.tsv"
         ),
-    params:
-        value="{sample}",
-    # conda:
-    #     os.path.join(WORK_DIR, "envs/dastool.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/prepare_dasTool/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/prepare_dasTool/{sample}.err.log"),
+    localrule: True
+    params:
+        value="{sample}",
     message:
         "Preparing files for DasTool"
-    localrule: True
     shell:
-        """
+        r"""
         (date &&
         pixi r -e dastool Fasta_to_Contig2Bin.sh -e fa -i {input.metabat} > {output.metabatout}
         perl -pe 's/metabat./{params.value}_metabat_/g' {output.metabatout} > $(dirname {output.metabatout})/t.txt && mv $(dirname {output.metabatout})/t.txt {output.metabatout} 
@@ -83,8 +81,6 @@ rule dasTool_run:
         os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/das_DASTool_summary.tsv"
         ),
-    # conda:
-    #     os.path.join(WORK_DIR, "envs/dastool.yaml")
     log:
         out=os.path.join(RESULTS_DIR, "logs/dasTool/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/dasTool/{sample}.err.log"),

@@ -9,9 +9,10 @@ version = "0.1.0"
 
 [dependencies]
 
-snakemake= ">=8.30.0,<9"
+snakemake= ">=9.0,<10"
 snakemake-executor-plugin-slurm= ">=2.0,<3"
-snakefmt = "0.11.*"
+snakefmt = ">=1.0.0,<2"
+pathspec = ">=1.0.4,<2"
 
 [feature.annotations]
 channels = ["conda-forge", "bioconda"]

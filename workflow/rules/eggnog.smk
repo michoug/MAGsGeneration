@@ -61,13 +61,13 @@ rule emapper:
             RESULTS_DIR,
             "EggNOG/intermediate/split/temp/cat_proteins.part_{i}.emapper.seed_orthologs",
         ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.err.log"),
     threads: 10
     resources:
         mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
         runtime=60 * 12,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.err.log"),
     params:
         db=config["eggnog"]["db"],
     message:
@@ -85,9 +85,9 @@ rule cat_emapper_out:
         aggregate_emapper,
     output:
         os.path.join(RESULTS_DIR, "EggNOG/allMAGs.emapper_orthologs"),
+    localrule: True
     message:
         "Cat EggNog-mapper output"
-    localrule: True
     shell:
         "(date && cat {input} > {output} && date)"
 
@@ -97,13 +97,13 @@ rule emapper_final:
         os.path.join(RESULTS_DIR, "EggNOG/allMAGs.emapper_orthologs"),
     output:
         os.path.join(RESULTS_DIR, "EggNOG/allMAGs_egg.txt.emapper.annotations"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.err.log"),
     threads: 10
     resources:
         runtime=60 * 12,
         mem_mb=get_mem_mb,
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper.err.log"),
     params:
         db=config["eggnog"]["db"],
     message:

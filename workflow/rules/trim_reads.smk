@@ -16,14 +16,14 @@ rule trimming:
         trim2=temp(
             os.path.join(RESULTS_DIR, "intermediate/Trim/{sample}_R2_001_val_2.fq.gz")
         ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.err.log"),
+    priority: 20
     threads: 4
     resources:
         runtime=60 * 3,
         mem_mb=get_mem_mb,
-    priority: 20
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/trimming/{sample}.err.log"),
     shell:
         "(date && "
         "pixi r -e trimgalore trim_galore --paired -j {threads} --output_dir $(dirname {output.trim1}) {input.read1} {input.read2} && "
@@ -35,6 +35,9 @@ rule indexHuman:
         fa=rules.downloadHuman.output,
     output:
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz.r{number}.sti"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/indexHuman_{number}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/indexHuman_{number}.err.log"),
     threads: 10
     resources:
         runtime=60,
@@ -42,9 +45,6 @@ rule indexHuman:
     params:
         # numb = lambda wildcards, output: output[0][-7:-4]
         numb="{number}",
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/indexHuman_{number}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/indexHuman_{number}.err.log"),
     shell:
         """
         (date
@@ -72,14 +72,14 @@ rule mappingHuman:
         index=rules.checkIndexDone.output,
     output:
         temp(os.path.join(RESULTS_DIR, "intermediate/TrimHuman/{sample}.bam")),
-    threads: 10
-    priority: 20
-    resources:
-        runtime=60 * 5,
-        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.err.log"),
+    priority: 20
+    threads: 10
+    resources:
+        runtime=60 * 5,
+        mem_mb=get_mem_mb,
     shell:
         """
         (date
@@ -94,14 +94,14 @@ rule removeHuman:
         rules.mappingHuman.output,
     output:
         temp(os.path.join(RESULTS_DIR, "intermediate/TrimHuman/{sample}.noHuman.bam")),
-    threads: 10
-    priority: 20
-    resources:
-        runtime=60 * 3,
-        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/removeHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/removeHuman/{sample}.err.log"),
+    priority: 20
+    threads: 10
+    resources:
+        runtime=60 * 3,
+        mem_mb=get_mem_mb,
     shell:
         """
         (date
@@ -117,14 +117,14 @@ rule getcleanreads:
     output:
         read1=os.path.join(RESULTS_DIR, "intermediate/TrimClean/{sample}_1.fq.gz"),
         read2=os.path.join(RESULTS_DIR, "intermediate/TrimClean/{sample}_2.fq.gz"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/getcleanreads/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/getcleanreads/{sample}.err.log"),
+    priority: 20
     threads: 10
     resources:
         runtime=60,
         mem_mb=get_mem_mb,
-    priority: 20
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/getcleanreads/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/getcleanreads/{sample}.err.log"),
     shell:
         """
         (date
@@ -142,14 +142,14 @@ rule getdedupreads:
         read2=os.path.join(RESULTS_DIR, "TrimFinal/{sample}_2.fq.gz"),
         report_html=os.path.join(RESULTS_DIR, "TrimFinal/Fastp/{sample}_fastp.html"),
         report_json=os.path.join(RESULTS_DIR, "TrimFinal/Fastp/{sample}_fastp.json"),
-    threads: 4
-    priority: 20
-    resources:
-        runtime=60,
-        mem_mb=get_mem_mb,
     log:
         out=os.path.join(RESULTS_DIR, "logs/getdedupreads/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/getdedupreads/{sample}.err.log"),
+    priority: 20
+    threads: 4
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
     shell:
         """
         (date

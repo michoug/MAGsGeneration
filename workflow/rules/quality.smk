@@ -14,12 +14,12 @@ rule gtdbtk:
         directory(os.path.join(RESULTS_DIR, "Bins/GDTBTk")),
     log:
         os.path.join(RESULTS_DIR, "logs/gtdbtk.log"),
-    params:
-        db=config["gtdbtk"]["path"],
     threads: 30
     resources:
         runtime=60 * 12,
         mem_mb=get_mem_mb,
+    params:
+        db=config["gtdbtk"]["path"],
     message:
         "Running GTDB on MAGs"
     shell:
