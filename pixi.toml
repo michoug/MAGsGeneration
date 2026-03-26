@@ -259,6 +259,12 @@ hmmer = ">=3.4,<4"
 pip = ">=26.0.1,<27"
 fraggenescan = ">=1.32,<2"
 
+[feature.remag]
+channels = ["conda-forge", "bioconda"]
+
+[feature.remag.dependencies]
+remag = ">=0.4.0,<1.0.0"
+
 [environments]
 annotations = { features = ["annotations"], no-default-feature = true }
 dastool = { features = ["dastool"], no-default-feature = true }
@@ -283,6 +289,7 @@ multiqc = { features = ["multiqc"], no-default-feature = true }
 rosella = { features = ["rosella"], no-default-feature = true }
 r = { features = ["r"], no-default-feature = true }
 report     = { features = ["report"],     no-default-feature = true }
+remag = { features = ["remag"], no-default-feature = true }
 semibin = { features = ["semibin"], no-default-feature = true }
 seqkit = { features = ["seqkit"], no-default-feature = true }
 singlem = { features = ["singlem"], no-default-feature = true }

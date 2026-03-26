@@ -2,6 +2,12 @@ rule eukaryotes_filter:
     input:
         expand(
             os.path.join(
+                RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_remag/bins.csv"
+            ),
+            sample=SAMPLES,
+        ),
+        expand(
+            os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/euk_potential_mags_length/{sample}_length_filtered_list.txt",
             ),
@@ -16,6 +22,38 @@ rule eukaryotes_filter:
         os.path.join(RESULTS_DIR, "qc/busco/multiqc_report.html"),
     output:
         touch("status/eukaryotes_filter.done"),
+
+
+rule remag:
+    input:
+        contig=rules.filter_length.output.out,
+        bam=expand(
+            os.path.join(
+                RESULTS_DIR,
+                "intermediate/BamFiles/{{sample}}/{{sample}}_{sample_2}.bam",
+            ),
+            sample_2=SAMPLES,
+        ),
+    output:
+        folder=directory(os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_remag/")),
+        file=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_remag/bins.csv"
+        ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/remag/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/remag/{sample}.err.log"),
+    threads: 10
+    resources:
+        runtime=60 * 10,
+        mem_mb=get_mem_mb,
+    message:
+        "Running REMAG on {wildcards.sample}"
+    shell:
+        """
+        (date
+        pixi r -e remag remag --fasta {input.contig} --coverage \"{input.bam}\" -o {output.folder} -t {threads}
+        date) 2> {log.err} > {log.out}
+        """
 
 
 rule get_all_mags:

@@ -22,7 +22,7 @@ steps: [
   "annotations",
   "quality",
   "mgthermometer",
-  "eggnog",
+  # "eggnog",
   "singlem_all",
   "report"
  ]  ###USER INPUT REQUIRED###
