@@ -1,11 +1,6 @@
 rule eukaryotes_filter:
     input:
-        expand(
-            os.path.join(
-                RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_remag/bins.csv"
-            ),
-            sample=SAMPLES,
-        ),
+        os.path.join(RESULTS_DIR, "Bins/intermediate/remag_all_bins/done"),
         expand(
             os.path.join(
                 RESULTS_DIR,
@@ -17,43 +12,11 @@ rule eukaryotes_filter:
         os.path.join(
             RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_deepmicroclass.txt"
         ),
-        os.path.join(RESULTS_DIR, "Eukaryotic_mags/done.txt"),
+        # os.path.join(RESULTS_DIR, "Bins/Eukaryotic_mags_dereplicated/done.txt"),
         os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/done.txt"),
-        os.path.join(RESULTS_DIR, "qc/busco/multiqc_report.html"),
+        # os.path.join(RESULTS_DIR, "qc/busco/multiqc_report.html"),
     output:
         touch("status/eukaryotes_filter.done"),
-
-
-rule remag:
-    input:
-        contig=rules.filter_length.output.out,
-        bam=expand(
-            os.path.join(
-                RESULTS_DIR,
-                "intermediate/BamFiles/{{sample}}/{{sample}}_{sample_2}.bam",
-            ),
-            sample_2=SAMPLES,
-        ),
-    output:
-        folder=directory(os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_remag/")),
-        file=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_remag/bins.csv"
-        ),
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/remag/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/remag/{sample}.err.log"),
-    threads: 10
-    resources:
-        runtime=60 * 10,
-        mem_mb=get_mem_mb,
-    message:
-        "Running REMAG on {wildcards.sample}"
-    shell:
-        """
-        (date
-        pixi r -e remag remag --fasta {input.contig} --coverage \"{input.bam}\" -o {output.folder} -t {threads}
-        date) 2> {log.err} > {log.out}
-        """
 
 
 rule get_all_mags:
@@ -339,30 +302,131 @@ rule concatenate_deepmicroclass:
                 print(f"Eukaryotic bins written to: {output.final_list}")
 
 
+
+rule remag:
+    input:
+        contig=rules.filter_length.output.out,
+        tsv=rules.metabat2_mapping.output,
+    output:
+        folder=directory(
+            os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_remag/")
+        ),
+        file=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_remag/bins.csv"
+        ),
+        bins=directory(
+            os.path.join(
+                RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_remag/bins/"
+            )
+        ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/remag/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/remag/{sample}.err.log"),
+    threads: 10
+    resources:
+        runtime=60 * 10,
+        mem_mb=get_mem_mb,
+    message:
+        "Running REMAG on {wildcards.sample}"
+    shell:
+        """
+        (date
+        pixi r -e remag remag --fasta {input.contig} --coverage {input.tsv} -o {output.folder} -t {threads}
+        date) 2> {log.err} > {log.out}
+        """
+
+
+rule concat_remag:
+    input:
+        expand(
+            os.path.join(
+                RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_remag/bins.csv"
+            ),
+            sample=SAMPLES,
+        ),
+    output:
+        folder=directory(os.path.join(RESULTS_DIR, "Bins/intermediate/remag_all_bins")),
+        file=os.path.join(RESULTS_DIR, "Bins/intermediate/remag_all_bins/done"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/remag_concat.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/remag_concat.err.log"),
+    localrule: True
+    message:
+        "Concatenating all REMAG bins into one folder"
+    shell:
+        """
+        set -euo pipefail
+        (date
+        rm -rf {output.folder}
+        mkdir -p {output.folder}
+        for file in {input}; do
+            sample=$(basename $(dirname $file))
+            for bins in "$(dirname $file)/bins/"*fa; do
+                [ -e "$bins" ] || continue
+                cp "$bins" {output.folder}/$sample\_$(basename "$bins")
+            done
+        done
+        touch {output.file}
+        date) 2> {log.err} > {log.out}
+        """
+
+rule get_length_for_remag:
+    input:
+        rules.concat_remag.output.folder,
+    output:
+        txt=temp(
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/intermediate/remag_all_bins/remag_stats_fasta_all.txt",
+            )
+        ),
+        final=os.path.join(
+            RESULTS_DIR,
+            "Bins/intermediate/remag_all_bins/remag_length_filtered_list.txt",
+        ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/get_length_remag.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/get_length_remag.err.log"),
+    threads: 4
+    shell:
+        """
+        (date
+        pixi r -e seqkit seqkit stats -j {threads} {input}/*fa -T > {output.txt}
+        awk '$5>=2500000' {output.txt} | cut -f1 | tail -n +2 > {output.final}
+        date) 2> {log.err} > {log.out}
+        """
+
+
 checkpoint get_eukaryotes_mags:
     input:
         folder=rules.get_filtered_mags.output.files,
         deep=os.path.join(
             RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_deepmicroclass.txt"
         ),
+        remag=rules.get_length_for_remag.output.final,
     output:
-        dir=directory(os.path.join(RESULTS_DIR, "Eukaryotic_mags")),
-        done=os.path.join(RESULTS_DIR, "Eukaryotic_mags/done.txt"),
+        folder=directory(os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags")),
+        done=os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags/done.txt"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/get_eukaryotic_mags.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/get_eukaryotic_mags.err.log"),
     localrule: True
     message:
-        "Getting the final eukaryotic MAGs"
+        "Getting the eukaryotic MAGs"
     shell:
         """
         set -euo pipefail
         (date
-        mkdir -p {output.dir}
+        rm -rf {output.folder}
+        mkdir -p {output.folder}
         cat {input.deep} | while read -r line; do
             base=$(basename "$line")
-            cp {input.folder}/$base {output.dir}/$base
+            cp {input.folder}/$base {output.folder}/$base
         done
+        while read -r line; do
+            base=$(basename "$line")
+            cp $line {output.folder}/$base
+        done < {input.remag}
         touch {output.done}
         date) 2> {log.err} > {log.out}
         """
@@ -380,7 +444,7 @@ def get_file_eukaryotes(wildcards):
 
 rule busco:
     input:
-        folder=os.path.join(RESULTS_DIR, "Eukaryotic_mags/{mags}.fa"),
+        folder=os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags/{mags}.fa"),
         db=rules.busco_db_euk.output.dir,
     output:
         folder=directory(
@@ -401,7 +465,8 @@ rule busco:
     shell:
         """
         (date
-        pixi r -e busco busco -i {input.folder} --out_path {output.folder} -m genome --auto-lineage -c 10 -f --metaeuk --download_path {input.db} --offline || echo "BUSCO failed (possibly no genes found) — continuing anyway"
+        rm -rf {output.folder}
+        pixi r -e busco busco -i {input.folder} --out_path {output.folder} -m genome --auto-lineage-euk -c 10 -f --metaeuk --download_path {input.db} --offline || echo "BUSCO failed (possibly no genes found) — continuing anyway"
         touch {output.done}
         date) 2> {log.err} > {log.out}
         """
@@ -426,6 +491,10 @@ rule busco_multiqc:
         rules.busco_done.output,
     output:
         html=os.path.join(RESULTS_DIR, "qc/busco/multiqc_report.html"),
+        stats=os.path.join(
+            RESULTS_DIR, "qc/busco/multiqc_data/multiqc_general_stats.txt"
+        ),
+        source=os.path.join(RESULTS_DIR, "qc/busco/multiqc_data/multiqc_sources.txt"),
         folder=directory(os.path.join(RESULTS_DIR, "qc/busco/")),
     log:
         err=os.path.join(RESULTS_DIR, "logs/multiqc_busco.err.log"),
@@ -438,6 +507,113 @@ rule busco_multiqc:
     shell:
         """
         (date
+        rm -rf {output.folder}
         pixi r -e multiqc multiqc $(dirname {input}) --verbose --ignore auto_lineage/ -o {output.folder} || echo "Multiqc failed (possibly no eukaryotic bins found) — continuing anyway"
         date)   2> {log.err} > {log.out}
+        """
+
+
+rule quality_eukaryotes:
+    input:
+        stats=rules.busco_multiqc.output.stats,
+        source=rules.busco_multiqc.output.source,
+    output:
+        os.path.join(RESULTS_DIR, "qc/busco_euk.csv"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/quality_eukaryotes.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/quality_eukaryotes.err.log"),
+    localrule: True
+    message:
+        "Extracting quality metrics for eukaryotic MAGs from MultiQC report"
+    run:
+        import pandas as pd
+
+        df = pd.read_csv(input.stats, sep="\t")
+        src = pd.read_csv(input.source, sep="\t")
+
+        required_cols = {
+            "Sample",
+            "busco-complete",
+            "busco-complete_single_copy",
+            "busco-fragmented",
+            "busco-missing",
+        }
+        missing_cols = required_cols - set(df.columns)
+        if missing_cols:
+            raise ValueError(f"Missing required columns: {sorted(missing_cols)}")
+
+        required_src_cols = {"Sample Name", "Source"}
+        missing_src_cols = required_src_cols - set(src.columns)
+        if missing_src_cols:
+            raise ValueError(
+                f"Missing required columns in sources file: {sorted(missing_src_cols)}"
+            )
+
+        busco_total = (
+            df["busco-complete_single_copy"]
+            + df["busco-fragmented"]
+            + df["busco-missing"]
+        )
+
+        if "busco-complete_duplicated" in df.columns:
+            duplicated = df["busco-complete_duplicated"]
+        else:
+            duplicated = (df["busco-complete"] - df["busco-complete_single_copy"]).clip(lower=0)
+
+        src["sample_key"] = src["Sample Name"].str.strip()
+        src["genome"] = src["Source"].str.extract(
+            r"/eukaryotic_mags_busco/([^/]+)/", expand=False
+        ).fillna(
+            src["Source"].str.extract(r"/BUSCO_([^/]+)\.fa(?:/|$)", expand=False)
+        )
+        sample_to_genome = (
+            src.dropna(subset=["genome"])
+            .drop_duplicates(subset=["sample_key"])
+            .set_index("sample_key")["genome"]
+        )
+
+        df["sample_key"] = df["Sample"].str.strip()
+        df["genome"] = df["sample_key"].map(sample_to_genome)
+        fallback = (
+            df["sample_key"]
+            .str.replace(r"^short_summary\.specific\.eukaryota_odb12\.", "", regex=True)
+            .str.replace(r"^BUSCO_", "", regex=True)
+            .str.replace(r"\.fa(?:\.txt)?$", "", regex=True)
+        )
+        df["genome"] = df["genome"].fillna(fallback)
+
+        df["completeness"] = (df["busco-complete"] + df["busco-fragmented"]) * 100 / busco_total
+        df["contamination"] = duplicated * 100 / busco_total
+
+        df[["genome", "completeness", "contamination"]].drop_duplicates().to_csv(
+            output[0], index=False
+        )
+
+
+rule galah_euk:
+    input:
+        bins=rules.get_eukaryotes_mags.output.folder,
+        busco=rules.quality_eukaryotes.output,
+    output:
+        final=directory(os.path.join(RESULTS_DIR, "Bins/Eukaryotic_mags_dereplicated")),
+        done=os.path.join(RESULTS_DIR, "Bins/Eukaryotic_mags_dereplicated/done.txt"),
+        cluster=os.path.join(RESULTS_DIR, "Bins/intermediate/cluster_galah_euk.txt"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/galah/galah_euk.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/galah/galah_euk.err.log"),
+    threads: 10
+    resources:
+        runtime=60 * 2,
+        mem_mb=get_mem_mb,
+    params:
+        comp=70,
+        cont=10,
+    message:
+        "Running Galah on all Eukaryotic MAGs"
+    shell:
+        """
+        (date
+        pixi r -e galah galah cluster --genome-fasta-directory {input.bins} --genome-info {input.busco} -x fa --output-representative-fasta-directory-copy {output.final} -t {threads}  --output-cluster-definition {output.cluster}
+        touch {output.done}
+        date) 2> {log.err} > {log.out}
         """

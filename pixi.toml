@@ -13,6 +13,7 @@ snakemake= ">=9.0,<10"
 snakemake-executor-plugin-slurm= ">=2.0,<3"
 snakefmt = ">=1.0.0,<2"
 pathspec = ">=1.0.4,<2"
+polars = "*"
 
 [feature.annotations]
 channels = ["conda-forge", "bioconda"]
@@ -32,6 +33,7 @@ channels = ["conda-forge", "bioconda"]
 
 [feature.busco.dependencies]
 busco = "6.*"
+sepp = "4.5.5.*"
 
 [feature.checkm2]
 channels = ["conda-forge", "bioconda"]
@@ -165,7 +167,7 @@ r-vegan = "*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.multiqc.dependencies]
-multiqc = "1.32.*"
+multiqc = "1.*"
 
 [feature.rosella]
 channels = ["conda-forge", "numba", "bioconda"]
