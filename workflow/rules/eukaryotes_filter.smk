@@ -12,9 +12,8 @@ rule eukaryotes_filter:
         os.path.join(
             RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_deepmicroclass.txt"
         ),
-        # os.path.join(RESULTS_DIR, "Bins/Eukaryotic_mags_dereplicated/done.txt"),
         os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/done.txt"),
-        # os.path.join(RESULTS_DIR, "qc/busco/multiqc_report.html"),
+        os.path.join(RESULTS_DIR, "Bins/Eukaryotic_mags_dereplicated/done.txt"),
     output:
         touch("status/eukaryotes_filter.done"),
 
@@ -302,7 +301,6 @@ rule concatenate_deepmicroclass:
                 print(f"Eukaryotic bins written to: {output.final_list}")
 
 
-
 rule remag:
     input:
         contig=rules.filter_length.output.out,
@@ -354,7 +352,7 @@ rule concat_remag:
     message:
         "Concatenating all REMAG bins into one folder"
     shell:
-        """
+        r"""
         set -euo pipefail
         (date
         rm -rf {output.folder}
@@ -369,6 +367,7 @@ rule concat_remag:
         touch {output.file}
         date) 2> {log.err} > {log.out}
         """
+
 
 rule get_length_for_remag:
     input:
@@ -558,13 +557,19 @@ rule quality_eukaryotes:
         if "busco-complete_duplicated" in df.columns:
             duplicated = df["busco-complete_duplicated"]
         else:
-            duplicated = (df["busco-complete"] - df["busco-complete_single_copy"]).clip(lower=0)
+            duplicated = (
+                df["busco-complete"] - df["busco-complete_single_copy"]
+            ).clip(lower=0)
 
         src["sample_key"] = src["Sample Name"].str.strip()
-        src["genome"] = src["Source"].str.extract(
-            r"/eukaryotic_mags_busco/([^/]+)/", expand=False
-        ).fillna(
-            src["Source"].str.extract(r"/BUSCO_([^/]+)\.fa(?:/|$)", expand=False)
+        src["genome"] = (
+            src["Source"]
+            .str.extract(r"/eukaryotic_mags_busco/([^/]+)/", expand=False)
+            .fillna(
+                src["Source"].str.extract(
+                    r"/BUSCO_([^/]+)\.fa(?:/|$)", expand=False
+                )
+            )
         )
         sample_to_genome = (
             src.dropna(subset=["genome"])
@@ -576,13 +581,17 @@ rule quality_eukaryotes:
         df["genome"] = df["sample_key"].map(sample_to_genome)
         fallback = (
             df["sample_key"]
-            .str.replace(r"^short_summary\.specific\.eukaryota_odb12\.", "", regex=True)
+            .str.replace(
+                r"^short_summary\.specific\.eukaryota_odb12\.", "", regex=True
+            )
             .str.replace(r"^BUSCO_", "", regex=True)
             .str.replace(r"\.fa(?:\.txt)?$", "", regex=True)
         )
         df["genome"] = df["genome"].fillna(fallback)
 
-        df["completeness"] = (df["busco-complete"] + df["busco-fragmented"]) * 100 / busco_total
+        df["completeness"] = (
+            (df["busco-complete"] + df["busco-fragmented"]) * 100 / busco_total
+        )
         df["contamination"] = duplicated * 100 / busco_total
 
         df[["genome", "completeness", "contamination"]].drop_duplicates().to_csv(
