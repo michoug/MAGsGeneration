@@ -47,7 +47,7 @@ if "assembly_all" in STEPS:
 
 if "contigs_taxonomy" in STEPS:
 
-    include: "rules/contigs_taxonomy.smk"
+    include: "rules/contigs_taxonomy_mmseqs.smk"
 
     TARGETS += ["status/taxonomy.done"]
 

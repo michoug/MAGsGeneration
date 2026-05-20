@@ -97,7 +97,7 @@ dashing = "0.4.*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.gtdbtk.dependencies]
-gtdbtk = "2.4.*"
+gtdbtk = "2.7.*"
 mash = "2.2.2.*"
 
 [feature.megahit]
@@ -165,7 +165,7 @@ r-vegan = "*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.multiqc.dependencies]
-multiqc = "1.32.*"
+multiqc = "1.35.*"
 
 [feature.rosella]
 channels = ["conda-forge", "numba", "bioconda"]
@@ -200,7 +200,7 @@ seqkit = "2.8.*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.singlem.dependencies]
-singlem = "0.19.*"
+singlem = "0.21.*"
 expressbetadiversity = "1.0.10.*"
 
 [feature.syntracker]
@@ -236,8 +236,7 @@ vamb = ">=5.0.4"
 channels = ["conda-forge", "bioconda"]
 
 [feature.trimgalore.dependencies]
-trim-galore = "0.6.10.*"
-perl = "5.32.*"
+trim-galore = "2.2*"
 
 [feature.report]
 channels = ["conda-forge", "bioconda"]
@@ -259,6 +258,12 @@ hmmer = ">=3.4,<4"
 pip = ">=26.0.1,<27"
 fraggenescan = ">=1.32,<2"
 
+[feature.mmseqs]
+channels = ["conda-forge", "bioconda"]
+
+[feature.mmseqs.dependencies]
+mmseqs2 = "18.*"
+
 [environments]
 annotations = { features = ["annotations"], no-default-feature = true }
 dastool = { features = ["dastool"], no-default-feature = true }
@@ -279,6 +284,7 @@ metabuli = { features = ["metabuli"], no-default-feature = true }
 metacat = { features = ["metacat"], no-default-feature = true }
 mgthermometer = { features = ["mgthermometer"], no-default-feature = true }
 microtrait = { features = ["microtrait"], no-default-feature = true }
+mmseqs = { features = ["mmseqs"], no-default-feature = true }
 multiqc = { features = ["multiqc"], no-default-feature = true }
 rosella = { features = ["rosella"], no-default-feature = true }
 r = { features = ["r"], no-default-feature = true }

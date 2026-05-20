@@ -25,18 +25,16 @@ rule taxonomy:
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.err.log"),
-    conda:
-        os.path.join(WORK_DIR, "envs/mmseqs.yaml")
     threads: 60
     resources:
         runtime=60 * 5,
-        mem_mb="400000",
+        mem_mb=get_mem_mb,
     shell:
         '(date && name=$(echo $(basename {output.taxonomy}) | sed "s/_tax.tsv//g") && '
         "rm -rf $(dirname {output.dbfasta})/* && "
-        "mmseqs createdb  {input.fasta} {output.dbfasta} && "
-        "mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/GTDB_mmseqs $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 && "
-        "mmseqs createtsv {output.dbfasta} $(dirname {output.taxonomy})/$name {output.taxonomy} && date) 2> {log.err} > {log.out}"
+        "pixi r -e mmseqs mmseqs createdb  {input.fasta} {output.dbfasta} && "
+        "pixi r -e mmseqs mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/GTDB_mmseqs $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 && "
+        "pixi r -e mmseqs mmseqs createtsv {output.dbfasta} $(dirname {output.taxonomy})/$name {output.taxonomy} && date) 2> {log.err} > {log.out}"
 
 
 rule taxconverter:
@@ -52,12 +50,12 @@ rule taxconverter:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_convert/{sample}.err.log"),
     localrule: True
-    conda:
-        os.path.join(WORK_DIR, "envs/taxconverter.yaml")
     threads: 20
+    resources:
+        mem_mb=get_mem_mb,
     shell:
         "(date && "
-        "taxconverter mmseqs2 -i {input.tax} -o {output} && date) 2> {log.err} > {log.out}"
+        "pixi r -e taxconverter taxconverter mmseqs2 -i {input.tax} -o {output} && date) 2> {log.err} > {log.out}"
 
 
 rule tax_add_missing:
