@@ -66,6 +66,7 @@ channels = ["conda-forge", "bioconda"]
 pip = "25.*"
 python = "3.10.*"
 requests = "2.*"
+packaging = "26.*"
 
 [feature.deepmicroclass.pypi-dependencies]
 biopython = "==1.85"

@@ -71,8 +71,6 @@ rule download_tax_db:
         mem_mb=get_mem_mb,
         runtime=6 * 60,
     threads: 20
-    conda:
-        os.path.join(WORK_DIR, "envs/mmseqs.yaml")
     shell:
         '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
         "rm -f $(dirname {output.file})/$name* && "
@@ -152,7 +150,7 @@ rule busco_db_euk:
     threads: 2
     resources:
         mem_mb=get_mem_mb,
-        runtime=2 * 60,
+        runtime=10 * 60,
     shell:
         """
         (date
