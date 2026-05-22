@@ -191,7 +191,7 @@ rule deepmicroclass:
     output:
         os.path.join(
             RESULTS_DIR,
-            "Bins/intermediate/deepmicroclass/{mags}/classification.tsv",
+            "Bins/intermediate/deepmicroclass/{mags}/{mags}_classification.tsv",
         ),
     log:
         out=os.path.join(
@@ -215,6 +215,7 @@ rule deepmicroclass:
         """
         (date 
         pixi r -e deepmicroclass python {params.software_dir}/predict.py --contig {input.file} --out_dir {params.folder}
+        cp {params.folder}/classification.tsv {output}
         date) 2> {log.err} > {log.out}
         """
 
@@ -223,7 +224,7 @@ rule deepmicroclass_percentage:
     input:
         pred=os.path.join(
             RESULTS_DIR,
-            "Bins/intermediate/deepmicroclass/{mags}/classification.tsv",
+            "Bins/intermediate/deepmicroclass/{mags}/{mags}_classification.tsv",
         ),
     output:
         percent=os.path.join(
@@ -239,7 +240,6 @@ rule deepmicroclass_percentage:
         import pandas as pd
         import os
 
-        # Inside run: block
         df = pd.read_csv(input.pred, sep="\t", header=0)
 
         label_map = {
@@ -247,19 +247,21 @@ rule deepmicroclass_percentage:
             "bac": "Bacteria",
             "chlor": "Chloroplast",
             "euk": "Eukaryote",
-            "eukvir": "EukaryoteVirus",
+            "eukvir": "Eukaryote",
             "mit": "Mitochondria",
             "pls": "Plasmid",
             "prokvir": "ProkaryoteVirus",
         }
 
-        df["pred"] = df["label"].map(label_map)
+        df = df[df['confidence'] > 0.25]
 
+        df["pred"] = df["label"].map(label_map)
+        
         count = df.groupby("pred")["pred"].count().to_frame()
         count["percent"] = (count["pred"] / count["pred"].sum()) * 100
 
         count_trans = count.transpose()
-        count_trans["bin"] = os.path.basename(input.pred).replace("_pred.tsv", "")
+        count_trans["bin"] = os.path.basename(input.pred).replace("_classification.tsv", "")
 
         count_trans_edited = count_trans.drop(labels="pred", axis=0)
         count_trans_edited.to_csv(output.percent, sep="\t", header=True)
@@ -333,7 +335,7 @@ checkpoint get_eukaryotes_mags:
         mkdir -p {output.dir}
         cat {input.deep} | while read -r line; do
             base=$(basename "$line")
-            cp {input.folder}/$base {output.dir}/$base
+            cp {input.folder}/$base\.fa {output.dir}/$base\.fa
         done
         touch {output.done}
         date) 2> {log.err} > {log.out}
