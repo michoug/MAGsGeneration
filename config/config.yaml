@@ -51,7 +51,7 @@ checkm2:
   db: "/work/river/Databases/checkm2/v1.1/CheckM2_database/uniref100.KO.1.dmnd"  ###USER INPUT REQUIRED###
 
 gtdbtk:
-  path: "/work/river/Databases/GTDBTk/release226/"  ###USER INPUT REQUIRED###
+  path: "/work/river/Databases/GTDBTk/release232/"  ###USER INPUT REQUIRED###
 
 eggnog:
   db: "/work/river/Databases/eggnog-mapper-2.1.12/"  ###USER INPUT REQUIRED###
