@@ -186,11 +186,12 @@ def get_file_names_mm_deepmicroclass(wildcards):
 
 rule deepmicroclass:
     input:
-        os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotes_filter_mags/{mags}.fa"),
+        software = os.path.join(RESULTS_DIR, "DB/DeepMicroClass2/deepmicroclass.done"),
+        file = os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotes_filter_mags/{mags}.fa"),
     output:
         os.path.join(
             RESULTS_DIR,
-            "Bins/intermediate/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv",
+            "Bins/intermediate/deepmicroclass/{mags}/classification.tsv",
         ),
     log:
         out=os.path.join(
@@ -201,6 +202,9 @@ rule deepmicroclass:
         ),
     group:
         "deepmicroclass"
+    params:
+        software_dir=os.path.join(RESULTS_DIR, "DB/DeepMicroClass2/"),
+        folder = os.path.join(RESULTS_DIR, "Bins/intermediate/deepmicroclass/{mags}"),
     threads: 3
     resources:
         runtime=30,
@@ -208,14 +212,18 @@ rule deepmicroclass:
     message:
         "Running DeepMicroClass on {wildcards.mags}"
     shell:
-        "(date && pixi r -e deepmicroclass DeepMicroClass predict --input {input} --output_dir $(dirname {output}) --device cpu --cpu_thread {threads} && date) 2> {log.err} > {log.out}"
+        """
+        (date 
+        pixi r -e deepmicroclass python {params.software_dir}/predict.py --contig {input.file} --out_dir {params.folder}
+        date) 2> {log.err} > {log.out}
+        """
 
 
 rule deepmicroclass_percentage:
     input:
         pred=os.path.join(
             RESULTS_DIR,
-            "Bins/intermediate/deepmicroclass/{mags}.fa_pred_one-hot_hybrid.tsv",
+            "Bins/intermediate/deepmicroclass/{mags}/classification.tsv",
         ),
     output:
         percent=os.path.join(
@@ -229,29 +237,31 @@ rule deepmicroclass_percentage:
         "Getting the percentage for contigs identified as 'eukarya' in {wildcards.mags}"
     run:
         import pandas as pd
+        import os
 
+        # Inside run: block
         df = pd.read_csv(input.pred, sep="\t", header=0)
 
-        choice_labels = {
-            1: "Eukaryote",
-            2: "Eukaryote",
-            3: "Prokaryote",
-            4: "Prokaryote",
-            5: "Prokaryote",
+        label_map = {
+            "arc": "Archaea",
+            "bac": "Bacteria",
+            "chlor": "Chloroplast",
+            "euk": "Eukaryote",
+            "eukvir": "EukaryoteVirus",
+            "mit": "Mitochondria",
+            "pls": "Plasmid",
+            "prokvir": "ProkaryoteVirus",
         }
 
-        df["pred"] = df["best_choice"].map(choice_labels)
+        df["pred"] = df["label"].map(label_map)
 
-        count = pd.DataFrame(df.groupby("pred")["pred"].count())
-
+        count = df.groupby("pred")["pred"].count().to_frame()
         count["percent"] = (count["pred"] / count["pred"].sum()) * 100
 
         count_trans = count.transpose()
-        count_trans["bin"] = os.path.basename(input.pred)
-        count_trans["bin"] = count_trans["bin"].str.replace(
-            "_pred_one-hot_hybrid.tsv", ""
-        )
-        count_trans_edited = count_trans.drop(labels="pred")
+        count_trans["bin"] = os.path.basename(input.pred).replace("_pred.tsv", "")
+
+        count_trans_edited = count_trans.drop(labels="pred", axis=0)
         count_trans_edited.to_csv(output.percent, sep="\t", header=True)
 
 

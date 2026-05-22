@@ -10,6 +10,7 @@ rule install_software:
         ),
         os.path.join(RESULTS_DIR, "DB/Busco_euk/busco_euk.done"),
         os.path.join(RESULTS_DIR, "DB/SynTracker/syntracker.done"),
+        os.path.join(RESULTS_DIR, "DB/DeepMicroClass2/deepmicroclass.done"),
     output:
         touch("status/install_software.done"),
 
@@ -93,6 +94,22 @@ rule metabinner_install:
         touch {output.file} ) 2> {log.err} > {log.out}
         """
 
+rule deepmicroclass_install:
+    output:
+        folder=directory(os.path.join(RESULTS_DIR, "DB/DeepMicroClass2")),
+        file = os.path.join(RESULTS_DIR, "DB/DeepMicroClass2/deepmicroclass.done"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/deepmicroclass_install.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/deepmicroclass_install.err.log"),
+    priority: 20
+    localrule: True
+    shell:
+        """
+        (date &&  rm -rf DeepMicroClass2
+        git clone https://github.com/aiguo-11/DeepMicroClass2.git &> /dev/null
+        mv DeepMicroClass2 $(dirname {output.folder})
+        touch {output.file} ) 2> {log.err} > {log.out}
+        """
 
 rule metacat_install:
     output:

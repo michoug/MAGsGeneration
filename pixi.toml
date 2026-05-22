@@ -63,14 +63,19 @@ strobealign = "0.17.*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.deepmicroclass.dependencies]
-pip = "25.*"
-python = "3.10.*"
-requests = "2.*"
-packaging = "26.*"
+
+python = "*"
 
 [feature.deepmicroclass.pypi-dependencies]
-biopython = "==1.85"
-deepmicroclass = "==1.0.6.2"
+
+biopython = ">=1.80"
+numpy = ">=1.24"
+pandas = ">=2.0"
+pytorch-lightning = ">=2.0"
+torch = ">=2.0"
+torchmetrics = ">=1.0"
+scikit-learn = ">=1.0"
+pysam = ">=0.21.0"
 
 [feature.eggnog]
 channels = ["conda-forge", "bioconda"]
