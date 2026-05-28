@@ -33,10 +33,10 @@ steps: [
 work_dir: "/scratch/gmichoud/GlacierIce/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/gmichoud/GlacierIce/p25/contigs"
+assembly_dir: "/scratch/gmichoud/GlacierIce/assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/GlacierIce/p25_results"  
+results_dir: "/scratch/gmichoud/GlacierIce/cyano"
 
 # Directory for raw reads
 reads_dir: "/scratch/gmichoud/GlacierIce/reads"

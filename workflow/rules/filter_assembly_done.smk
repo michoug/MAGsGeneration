@@ -18,7 +18,8 @@ rule check_inputs_exist:
 
 rule filter_length:
     input:
-        os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
+        check = rules.check_inputs_exist.output,
+        fasta = os.path.join(ASSEMBLY_DIR, "{sample}.fna"),
     output:
         out=os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
         other=temp(os.path.join(RESULTS_DIR, "Assembly/{sample}_filter_name.fasta")),
@@ -26,4 +27,4 @@ rule filter_length:
     message:
         "Remove contigs less than 1.5kb"
     shell:
-        'pixi r -e seqkit seqkit seq -j {threads} --remove-gaps -o {output.other} -m 1500 {input} && perl -pe "s/ .*//g" {output.other} > {output.out}'
+        'pixi r -e seqkit seqkit seq -j {threads} --remove-gaps -o {output.other} -m 1500 {input.fasta} && perl -pe "s/ .*//g" {output.other} > {output.out}'

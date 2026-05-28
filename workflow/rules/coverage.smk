@@ -2,7 +2,7 @@ rule coverage_all:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Bins/intermediate/cat_mags_cov_{sample}.txt"),
-            sample=ASSEMBLY,
+            sample=SAMPLES,
         ),
         os.path.join(RESULTS_DIR, "cat_mags_cov.txt"),
     output:

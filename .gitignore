@@ -176,3 +176,5 @@ pkgs/
 uv-cache/
 repodata/
 conda-pypi-mapping
+
+diamond-*

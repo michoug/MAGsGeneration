@@ -7,7 +7,7 @@ rule checkm_all:
             os.path.join(
                 RESULTS_DIR, "Bins/intermediate/{sample}/checkm2/quality_report.tsv"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
     output:
         touch("status/checkm2.done"),
@@ -16,7 +16,10 @@ rule checkm_all:
 # Checking bin quality
 rule checkm2:
     input:
-        rules.dasTool_run.output,
+        os.path.join(
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/DasTool/das_DASTool_summary.tsv",
+            ),
     output:
         tsv=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/checkm2/quality_report.tsv"

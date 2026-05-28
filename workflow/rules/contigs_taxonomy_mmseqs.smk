@@ -4,7 +4,7 @@ rule contigs_taxonomy:
             os.path.join(
                 RESULTS_DIR, "Assembly/{sample}_taxonomy/{sample}_tax_good.tsv"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
     output:
         touch("status/taxonomy.done"),

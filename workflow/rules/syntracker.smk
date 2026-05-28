@@ -8,7 +8,7 @@ rule syntracker:
 
 rule cp_assemblies:
     input:
-        expand(rules.filter_length.output.out, sample=SAMPLES),
+        expand(rules.filter_length.output.out, sample=ASSEMBLY),
     output:
         dir=temp(
             directory(os.path.join(RESULTS_DIR, "SynTracker/intermediate/assemblies"))

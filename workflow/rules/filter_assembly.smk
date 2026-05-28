@@ -1,7 +1,7 @@
 rule chekAssembly:
     input:
         expand(
-            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample=SAMPLES
+            os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"), sample=ASSEMBLY
         ),
     output:
         touch("status/checkAssembly.done"),
