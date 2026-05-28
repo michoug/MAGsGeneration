@@ -30,16 +30,16 @@ steps: [
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
 # Directory where the workflow exists
-work_dir: "/scratch/gmichoud/CAMI/MAGsGeneration/"
+work_dir: "/scratch/gmichoud/GlacierIce/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/gmichoud/CAMI/p25/contigs"
+assembly_dir: "/scratch/gmichoud/GlacierIce/p25/contigs"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/CAMI/p25_results"  
+results_dir: "/scratch/gmichoud/GlacierIce/p25_results"  
 
 # Directory for raw reads
-reads_dir: "/scratch/gmichoud/CAMI/p25"
+reads_dir: "/scratch/gmichoud/GlacierIce/p25"
 
 ### Memory per cpus for your cluster
 
