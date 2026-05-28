@@ -113,12 +113,6 @@ channels = ["conda-forge", "bioconda"]
 [feature.metabat.dependencies]
 metabat2 = "2.15.*"
 
-[feature.metabinner]
-channels = ["conda-forge", "bioconda"]
-
-[feature.metabinner.dependencies]
-metabinner = "1.4.3.*"
-
 [feature.metabuli]
 channels = ["conda-forge", "bioconda"]
 
@@ -280,7 +274,6 @@ galah = { features = ["galah"], no-default-feature = true }
 gtdbtk = { features = ["gtdbtk"], no-default-feature = true }
 megahit = { features = ["megahit"], no-default-feature = true }
 metabat = { features = ["metabat"], no-default-feature = true }
-metabinner = { features = ["metabinner"], no-default-feature = true }
 metabuli = { features = ["metabuli"], no-default-feature = true }
 metacat = { features = ["metacat"], no-default-feature = true }
 mgthermometer = { features = ["mgthermometer"], no-default-feature = true }

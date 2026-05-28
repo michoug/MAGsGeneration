@@ -17,9 +17,9 @@ rule checkm_all:
 rule checkm2:
     input:
         os.path.join(
-                RESULTS_DIR,
-                "Bins/intermediate/{sample}/DasTool/das_DASTool_summary.tsv",
-            ),
+            RESULTS_DIR,
+            "Bins/intermediate/{sample}/DasTool/das_DASTool_summary.tsv",
+        ),
     output:
         tsv=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/checkm2/quality_report.tsv"

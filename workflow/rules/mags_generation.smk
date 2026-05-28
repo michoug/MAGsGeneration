@@ -217,7 +217,7 @@ rule metabat2:
         "date) 2> {log.err} > {log.out}"
 
 
-rule metabinner_coverage:
+rule clean_coverage:
     input:
         bam=expand(
             os.path.join(
@@ -230,15 +230,16 @@ rule metabinner_coverage:
     output:
         temp=temp(
             os.path.join(
-                RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_metabinner_temp.txt"
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/{sample}_clean_coverage_temp.txt",
             )
         ),
         final=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_metabinner_cov.txt"
+            RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_clean_coverage_cov.txt"
         ),
     log:
-        out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log"),
+        out=os.path.join(RESULTS_DIR, "logs/clean_coverage_mapping/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/clean_coverage_mapping/{sample}.err.log"),
     threads: 14
     resources:
         runtime=60,
@@ -246,7 +247,7 @@ rule metabinner_coverage:
     params:
         length=1500,
     message:
-        "Running the first part of metabinner to estimate the coverage"
+        "Get clean coverage"
     shell:
         """
         (date && pixi r -e metabat jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input.bam} && 
@@ -288,7 +289,7 @@ rule rosella:
 
 rule vamb_coverage:
     input:
-        rules.metabinner_coverage.output.final,
+        rules.clean_coverage.output.final,
         rules.check_bam_files_for_binning.output,
     output:
         os.path.join(

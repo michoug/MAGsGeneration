@@ -2,7 +2,6 @@ rule install_software:
     input:
         os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
         # os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
-        os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
         os.path.join(
             RESULTS_DIR,
@@ -38,6 +37,7 @@ rule downloadHuman:
         date) 2> {log.err} > {log.out}
         """
 
+
 # rule download_tax_db:
 #     output:
 #         file=os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
@@ -59,6 +59,7 @@ rule downloadHuman:
 #         date) 2> {log.err} > {log.out}
 #         """
 
+
 rule download_tax_db:
     output:
         file=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
@@ -67,31 +68,14 @@ rule download_tax_db:
     log:
         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
+    threads: 20
     resources:
         mem_mb=get_mem_mb,
         runtime=6 * 60,
-    threads: 20
     shell:
         '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
         "rm -f $(dirname {output.file})/$name* && "
         "pixi r -e mmseqs mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
-
-rule metabinner_install:
-    output:
-        dbs=directory(os.path.join(RESULTS_DIR, "DB/MetaBinner")),
-        file=os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabinner_install.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabinner_install.err.log"),
-    priority: 20
-    localrule: True
-    shell:
-        """
-        (date &&  rm -rf MetaBinner
-        git clone https://github.com/ziyewang/MetaBinner.git &> /dev/null
-        mv MetaBinner $(dirname {output.dbs})
-        touch {output.file} ) 2> {log.err} > {log.out}
-        """
 
 
 rule metacat_install:
@@ -123,7 +107,12 @@ rule singlem_data:
                 "DB/SingleM/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb",
             )
         ),
-        filegz = temp(os.path.join(RESULTS_DIR, "DB/SingleM/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb.tar.gz")),
+        filegz=temp(
+            os.path.join(
+                RESULTS_DIR,
+                "DB/SingleM/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb.tar.gz",
+            )
+        ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_data.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_data.err.log"),
