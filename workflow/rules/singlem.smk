@@ -35,9 +35,9 @@ rule singlem_reads:
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_raw/{sample}.err.log"),
-    threads: 8
+    threads: 12
     resources:
-        runtime=60 * 4,
+        runtime=60 * 8,
         mem_mb=get_mem_mb,
     shell:
         """
@@ -165,7 +165,7 @@ rule singlem_genomes:
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_genomes.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_genomes.err.log"),
-    threads: 8
+    threads: 16
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
