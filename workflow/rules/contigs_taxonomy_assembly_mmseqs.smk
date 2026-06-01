@@ -26,7 +26,7 @@ rule taxonomy:
     log:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_contig/{sample}.err.log"),
-    threads: 20
+    threads: 60
     resources:
         runtime=60 * 5,
         mem_mb=get_mem_mb,
