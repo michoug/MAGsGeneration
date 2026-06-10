@@ -1,11 +1,11 @@
 rule install_software:
     input:
-        os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
-        os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
+        os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
+        # os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
         os.path.join(
             RESULTS_DIR,
-            "DB/SingleM/S5.4.0.GTDB_r226.metapackage_20250331.smpkg.zb/CONTENTS.json",
+            "DB/SingleM/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb/CONTENTS.json",
         ),
         os.path.join(RESULTS_DIR, "DB/Busco_euk/busco_euk.done"),
         os.path.join(RESULTS_DIR, "DB/SynTracker/syntracker.done"),
@@ -38,12 +38,33 @@ rule downloadHuman:
         """
 
 
+# rule download_tax_db:
+#     output:
+#         file=os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
+#         folder=directory(os.path.join(RESULTS_DIR, "DB/gtdb")),
+#         tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
+#         done=touch(os.path.join(RESULTS_DIR, "DB/gtdb/gtdb.done")),
+#     log:
+#         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
+#         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
+#     threads: 20
+#     resources:
+#         mem_mb=get_mem_mb,
+#         runtime=6 * 60,
+#     shell:
+#         """
+#         (date
+#         pixi r -e metabuli metabuli databases GTDB $(dirname {output.folder}) {output.tmp} --threads {threads}
+#         touch {output.done}
+#         date) 2> {log.err} > {log.out}
+#         """
+
+
 rule download_tax_db:
     output:
-        file=os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
-        folder=directory(os.path.join(RESULTS_DIR, "DB/gtdb")),
+        file=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
+        look=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs.lookup"),
         tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp"))),
-        done=touch(os.path.join(RESULTS_DIR, "DB/gtdb/gtdb.done")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
@@ -52,30 +73,9 @@ rule download_tax_db:
         mem_mb=get_mem_mb,
         runtime=6 * 60,
     shell:
-        """
-        (date
-        pixi r -e metabuli metabuli databases GTDB $(dirname {output.folder}) {output.tmp} --threads {threads}
-        touch {output.done}
-        date) 2> {log.err} > {log.out}
-        """
-
-
-rule metabinner_install:
-    output:
-        dbs=directory(os.path.join(RESULTS_DIR, "DB/MetaBinner")),
-        file=os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabinner_install.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabinner_install.err.log"),
-    priority: 20
-    localrule: True
-    shell:
-        """
-        (date &&  rm -rf MetaBinner
-        git clone https://github.com/ziyewang/MetaBinner.git &> /dev/null
-        mv MetaBinner $(dirname {output.dbs})
-        touch {output.file} ) 2> {log.err} > {log.out}
-        """
+        '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
+        "rm -f $(dirname {output.file})/$name* && "
+        "pixi r -e mmseqs mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
 
 
 rule metacat_install:
@@ -89,7 +89,7 @@ rule metacat_install:
     shell:
         """
         (date
-        pixi r -e metacat pip install https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.3/metacat-1.0.3-py3-none-any.whl
+        pixi r -e metacat pip install https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.4/metacat-1.0.4-py3-none-any.whl
         touch {output.file}
         date) 2> {log.err} > {log.out}
         """
@@ -99,12 +99,18 @@ rule singlem_data:
     output:
         file=os.path.join(
             RESULTS_DIR,
-            "DB/SingleM/S5.4.0.GTDB_r226.metapackage_20250331.smpkg.zb/CONTENTS.json",
+            "DB/SingleM/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb/CONTENTS.json",
         ),
         folder=directory(
             os.path.join(
                 RESULTS_DIR,
-                "DB/SingleM/S5.4.0.GTDB_r226.metapackage_20250331.smpkg.zb",
+                "DB/SingleM/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb",
+            )
+        ),
+        filegz=temp(
+            os.path.join(
+                RESULTS_DIR,
+                "DB/SingleM/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb.tar.gz",
             )
         ),
     log:
@@ -115,7 +121,9 @@ rule singlem_data:
     shell:
         """
         (date
-        pixi r -e singlem singlem data --output-directory $(dirname {output.folder})
+        mkdir -p $(dirname {output.filegz})
+        wget https://zenodo.org/records/20150069/files/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb.tar.gz -O {output.filegz}
+        tar -xzf {output.filegz} -C $(dirname {output.filegz})
         date) 2> {log.err} > {log.out}
         """
 
@@ -131,7 +139,7 @@ rule busco_db_euk:
     threads: 2
     resources:
         mem_mb=get_mem_mb,
-        runtime=2 * 60,
+        runtime=10 * 60,
     shell:
         """
         (date

@@ -3,59 +3,59 @@ rule mags_generation:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR, "intermediate/BamFiles/{sample}/{sample}_{sample_2}.bam"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
             sample_2=SAMPLES,
         ),
         expand(
             os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Metabat"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/Rosella/UMAP_projection_with_clusters_final.png",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/Concoct/concoct_clustering_merged.csv",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/Comebin/comebin_res/comebin_res.tsv",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR, "Bins/intermediate/{sample}/Semibin/contig_bins.tsv"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat.done",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
     output:
         touch("status/mags_generation.done"),
@@ -99,7 +99,7 @@ rule check_reads_assembly_for_mapping:
         ),
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
             number=[100, 125, 150, 250, 400],
         ),
     output:
@@ -112,12 +112,16 @@ rule check_reads_assembly_for_mapping:
 rule mapping:
     input:
         check_reads=rules.check_reads_assembly_for_mapping.output,
-        read1=rules.getdedupreads.output.read1,
-        read2=rules.getdedupreads.output.read2,
+        read1=lambda wildcards: os.path.join(
+            RESULTS_DIR, f"TrimFinal/{wildcards.sample_2}_1.fq.gz"
+        ),
+        read2=lambda wildcards: os.path.join(
+            RESULTS_DIR, f"TrimFinal/{wildcards.sample_2}_2.fq.gz"
+        ),
         fasta=rules.filter_length.output.out,
         index=expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
             number=[100, 125, 150, 250, 400],
         ),
     output:
@@ -154,7 +158,7 @@ rule check_bam_files_for_binning:
             os.path.join(
                 RESULTS_DIR, "intermediate/BamFiles/{sample}/{sample}_{sample_2}.bam"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
             sample_2=SAMPLES,
         ),
     output:
@@ -213,7 +217,7 @@ rule metabat2:
         "date) 2> {log.err} > {log.out}"
 
 
-rule metabinner_coverage:
+rule clean_coverage:
     input:
         bam=expand(
             os.path.join(
@@ -226,15 +230,16 @@ rule metabinner_coverage:
     output:
         temp=temp(
             os.path.join(
-                RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_metabinner_temp.txt"
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/{sample}_clean_coverage_temp.txt",
             )
         ),
         final=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_metabinner_cov.txt"
+            RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_clean_coverage_cov.txt"
         ),
     log:
-        out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log"),
+        out=os.path.join(RESULTS_DIR, "logs/clean_coverage_mapping/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/clean_coverage_mapping/{sample}.err.log"),
     threads: 14
     resources:
         runtime=60,
@@ -242,7 +247,7 @@ rule metabinner_coverage:
     params:
         length=1500,
     message:
-        "Running the first part of metabinner to estimate the coverage"
+        "Get clean coverage"
     shell:
         """
         (date && pixi r -e metabat jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input.bam} && 
@@ -284,7 +289,7 @@ rule rosella:
 
 rule vamb_coverage:
     input:
-        rules.metabinner_coverage.output.final,
+        rules.clean_coverage.output.final,
         rules.check_bam_files_for_binning.output,
     output:
         os.path.join(
@@ -557,7 +562,7 @@ rule metacat_cluster:
         ),
         done=os.path.join(
             RESULTS_DIR,
-            "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat/Bins/{sample}_metacat.mapping",
+            "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat.done",
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/metacat_cluster/{sample}.out.log"),

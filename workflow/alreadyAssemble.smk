@@ -40,7 +40,7 @@ if "trim_reads" in STEPS:
 
 if "contigs_taxonomy" in STEPS:
 
-    include: "rules/contigs_taxonomy_assembly.smk"
+    include: "rules/contigs_taxonomy_assembly_mmseqs.smk"
 
     TARGETS += ["status/taxonomy.done"]
 
