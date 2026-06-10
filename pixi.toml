@@ -11,7 +11,7 @@ version = "0.1.0"
 
 snakemake= ">=9.0,<10"
 snakemake-executor-plugin-slurm= ">=2.0,<3"
-snakefmt = ">=1.0.0,<2"
+snakefmt = ">=2.0.0,<3"
 pathspec = ">=1.0.4,<2"
 polars = "*"
 

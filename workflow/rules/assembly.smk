@@ -31,9 +31,11 @@ rule assembly_megahit:
         name="{sample}",
     shell:
         """
-        (date
-        rm -rf {params}
-        pixi r -e megahit megahit -1 {input.read1} -2 {input.read2} -o {params.folder} --min-contig-len 1000 -t {threads}
-        perl -pe "s/>/>{params.name}_/" {output.fasta} > {output.final}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf {params}
+            pixi r -e megahit megahit -1 {input.read1} -2 {input.read2} -o {params.folder} --min-contig-len 1000 -t {threads}
+            perl -pe "s/>/>{params.name}_/" {output.fasta} >{output.final}
+            date
+        ) 2>{log.err} >{log.out}
         """

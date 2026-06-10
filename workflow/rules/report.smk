@@ -42,12 +42,14 @@ rule report:
         "Rendering Quarto summary report"
     shell:
         """
-        (date
-        mkdir -p {params.outdir}
-        pixi r -e report quarto render {input.qmd} \
-            -P results_dir:{params.results_dir} \
-            -P sample_list:{params.sample_list} \
-            -P steps:"{params.steps}" \
-            --output-dir {params.outdir}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            mkdir -p {params.outdir}
+            pixi r -e report quarto render {input.qmd} \
+                -P results_dir:{params.results_dir} \
+                -P sample_list:{params.sample_list} \
+                -P steps:"{params.steps}" \
+                --output-dir {params.outdir}
+            date
+        ) 2>{log.err} >{log.out}
         """

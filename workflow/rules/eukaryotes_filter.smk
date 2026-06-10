@@ -62,7 +62,7 @@ rule get_all_mags:
             base=$(basename "$file" .fna)
             cp "$file" "{output.dir}/vamb_${{base}}.fa"
         done
-        perl -pe 's/,(\\d+)/,concoct_$1/g' {input.concoct} > {output.concoct}
+        perl -pe 's/,(\\d+)/,concoct_$1/g' {input.concoct} >{output.concoct}
         pixi r -e concoct extract_fasta_bins.py {input.contigs} {output.concoct} --output_path {output.dir}
         for file in "$(dirname {input.semibin})"/output_bins/*.fa.gz; do
             [ -e "$file" ] || continue
@@ -131,8 +131,8 @@ rule get_length:
     shell:
         """
         date
-        pixi r -e seqkit seqkit stats -j {threads} {input}/*fa -T > {output.txt}
-        awk '$5>=2500000 && $7 >= 2500' {output.txt} | cut -f1 | tail -n +2 > {output.final}
+        pixi r -e seqkit seqkit stats -j {threads} {input}/*fa -T >{output.txt}
+        awk '$5>=2500000 && $7 >= 2500' {output.txt} | cut -f1 | tail -n +2 >{output.final}
         date
         """
 
@@ -163,13 +163,15 @@ checkpoint get_filtered_mags:
     shell:
         """
         set -euo pipefail
-        (date
-        mkdir -p {output.files}
-        cat {input.list} | while read -r line; do
-            base=$(basename "$line")
-            cp $line {output.files}/$base
-        done
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            mkdir -p {output.files}
+            cat {input.list} | while read -r line; do
+                base=$(basename "$line")
+                cp $line {output.files}/$base
+            done
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -208,7 +210,13 @@ rule deepmicroclass:
     message:
         "Running DeepMicroClass on {wildcards.mags}"
     shell:
-        "(date && pixi r -e deepmicroclass DeepMicroClass predict --input {input} --output_dir $(dirname {output}) --device cpu --cpu_thread {threads} && date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            pixi r -e deepmicroclass DeepMicroClass predict --input {input} --output_dir $(dirname {output}) --device cpu --cpu_thread {threads}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule deepmicroclass_percentage:
@@ -231,7 +239,6 @@ rule deepmicroclass_percentage:
         import pandas as pd
 
         df = pd.read_csv(input.pred, sep="\t", header=0)
-
         choice_labels = {
             1: "Eukaryote",
             2: "Eukaryote",
@@ -239,13 +246,9 @@ rule deepmicroclass_percentage:
             4: "Prokaryote",
             5: "Prokaryote",
         }
-
         df["pred"] = df["best_choice"].map(choice_labels)
-
         count = pd.DataFrame(df.groupby("pred")["pred"].count())
-
         count["percent"] = (count["pred"] / count["pred"].sum()) * 100
-
         count_trans = count.transpose()
         count_trans["bin"] = os.path.basename(input.pred)
         count_trans["bin"] = count_trans["bin"].str.replace(
@@ -280,19 +283,15 @@ rule concatenate_deepmicroclass:
                 contextlib.redirect_stderr(f_log),
             ):
                 dfs = []
-
                 for file in input.all_files:
                     df = pd.read_csv(file, sep="\t", header=0)
                     print(f"Loaded file: {file}, shape: {df.shape}")
                     dfs.append(df)
-
                 concatenated = pd.concat(dfs, ignore_index=True)
                 print(f"Concatenated DataFrame shape: {concatenated.shape}")
-
                 # Save the collated output
                 concatenated.to_csv(output.collated, sep="\t", index=False)
                 print(f"Collated output written to: {output.collated}")
-
                 # Filter and save eukaryotic bins
                 eukaryotic_bins = concatenated[concatenated["Eukaryote"] >= 80]
                 eukaryotic_bins[["bin"]].to_csv(
@@ -328,9 +327,11 @@ rule remag:
         "Running REMAG on {wildcards.sample}"
     shell:
         """
-        (date
-        pixi r -e remag remag --fasta {input.contig} --coverage {input.tsv} -o {output.folder} -t {threads}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e remag remag --fasta {input.contig} --coverage {input.tsv} -o {output.folder} -t {threads}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -354,18 +355,20 @@ rule concat_remag:
     shell:
         r"""
         set -euo pipefail
-        (date
-        rm -rf {output.folder}
-        mkdir -p {output.folder}
-        for file in {input}; do
-            sample=$(basename $(dirname $file))
-            for bins in "$(dirname $file)/bins/"*fa; do
-                [ -e "$bins" ] || continue
-                cp "$bins" {output.folder}/$sample\_$(basename "$bins")
+        (
+            date
+            rm -rf {output.folder}
+            mkdir -p {output.folder}
+            for file in {input}; do
+                sample=$(basename $(dirname $file))
+                for bins in "$(dirname $file)/bins/"*fa; do
+                    [ -e "$bins" ] || continue
+                    cp "$bins" {output.folder}/$sample\_$(basename "$bins")
+                done
             done
-        done
-        touch {output.file}
-        date) 2> {log.err} > {log.out}
+            touch {output.file}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -389,10 +392,12 @@ rule get_length_for_remag:
     threads: 4
     shell:
         """
-        (date
-        pixi r -e seqkit seqkit stats -j {threads} {input}/*fa -T > {output.txt}
-        awk '$5>=2500000' {output.txt} | cut -f1 | tail -n +2 > {output.final}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e seqkit seqkit stats -j {threads} {input}/*fa -T >{output.txt}
+            awk '$5>=2500000' {output.txt} | cut -f1 | tail -n +2 >{output.final}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -415,19 +420,21 @@ checkpoint get_eukaryotes_mags:
     shell:
         """
         set -euo pipefail
-        (date
-        rm -rf {output.folder}
-        mkdir -p {output.folder}
-        cat {input.deep} | while read -r line; do
-            base=$(basename "$line")
-            cp {input.folder}/$base {output.folder}/$base
-        done
-        while read -r line; do
-            base=$(basename "$line")
-            cp $line {output.folder}/$base
-        done < {input.remag}
-        touch {output.done}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf {output.folder}
+            mkdir -p {output.folder}
+            cat {input.deep} | while read -r line; do
+                base=$(basename "$line")
+                cp {input.folder}/$base {output.folder}/$base
+            done
+            while read -r line; do
+                base=$(basename "$line")
+                cp $line {output.folder}/$base
+            done <{input.remag}
+            touch {output.done}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -463,11 +470,13 @@ rule busco:
         "Running BUSCO on the eukaryotic MAGs"
     shell:
         """
-        (date
-        rm -rf {output.folder}
-        pixi r -e busco busco -i {input.folder} --out_path {output.folder} -m genome --auto-lineage-euk -c 10 -f --metaeuk --download_path {input.db} --offline || echo "BUSCO failed (possibly no genes found) — continuing anyway"
-        touch {output.done}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf {output.folder}
+            pixi r -e busco busco -i {input.folder} --out_path {output.folder} -m genome --auto-lineage-euk -c 10 -f --metaeuk --download_path {input.db} --offline || echo "BUSCO failed (possibly no genes found) — continuing anyway"
+            touch {output.done}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -505,10 +514,12 @@ rule busco_multiqc:
         "Running MultiQC on BUSCO results"
     shell:
         """
-        (date
-        rm -rf {output.folder}
-        pixi r -e multiqc multiqc $(dirname {input}) --verbose --ignore auto_lineage/ -o {output.folder} || echo "Multiqc failed (possibly no eukaryotic bins found) — continuing anyway"
-        date)   2> {log.err} > {log.out}
+        (
+            date
+            rm -rf {output.folder}
+            pixi r -e multiqc multiqc $(dirname {input}) --verbose --ignore auto_lineage/ -o {output.folder} || echo "Multiqc failed (possibly no eukaryotic bins found) — continuing anyway"
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -529,7 +540,6 @@ rule quality_eukaryotes:
 
         df = pd.read_csv(input.stats, sep="\t")
         src = pd.read_csv(input.source, sep="\t")
-
         required_cols = {
             "Sample",
             "busco-complete",
@@ -540,27 +550,23 @@ rule quality_eukaryotes:
         missing_cols = required_cols - set(df.columns)
         if missing_cols:
             raise ValueError(f"Missing required columns: {sorted(missing_cols)}")
-
         required_src_cols = {"Sample Name", "Source"}
         missing_src_cols = required_src_cols - set(src.columns)
         if missing_src_cols:
             raise ValueError(
                 f"Missing required columns in sources file: {sorted(missing_src_cols)}"
             )
-
         busco_total = (
             df["busco-complete_single_copy"]
             + df["busco-fragmented"]
             + df["busco-missing"]
         )
-
         if "busco-complete_duplicated" in df.columns:
             duplicated = df["busco-complete_duplicated"]
         else:
             duplicated = (
                 df["busco-complete"] - df["busco-complete_single_copy"]
             ).clip(lower=0)
-
         src["sample_key"] = src["Sample Name"].str.strip()
         src["genome"] = (
             src["Source"]
@@ -576,7 +582,6 @@ rule quality_eukaryotes:
             .drop_duplicates(subset=["sample_key"])
             .set_index("sample_key")["genome"]
         )
-
         df["sample_key"] = df["Sample"].str.strip()
         df["genome"] = df["sample_key"].map(sample_to_genome)
         fallback = (
@@ -588,12 +593,10 @@ rule quality_eukaryotes:
             .str.replace(r"\.fa(?:\.txt)?$", "", regex=True)
         )
         df["genome"] = df["genome"].fillna(fallback)
-
         df["completeness"] = (
             (df["busco-complete"] + df["busco-fragmented"]) * 100 / busco_total
         )
         df["contamination"] = duplicated * 100 / busco_total
-
         df[["genome", "completeness", "contamination"]].drop_duplicates().to_csv(
             output[0], index=False
         )
@@ -621,8 +624,10 @@ rule galah_euk:
         "Running Galah on all Eukaryotic MAGs"
     shell:
         """
-        (date
-        pixi r -e galah galah cluster --genome-fasta-directory {input.bins} --genome-info {input.busco} -x fa --output-representative-fasta-directory-copy {output.final} -t {threads}  --output-cluster-definition {output.cluster}
-        touch {output.done}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e galah galah cluster --genome-fasta-directory {input.bins} --genome-info {input.busco} -x fa --output-representative-fasta-directory-copy {output.final} -t {threads} --output-cluster-definition {output.cluster}
+            touch {output.done}
+            date
+        ) 2>{log.err} >{log.out}
         """

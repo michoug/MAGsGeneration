@@ -23,7 +23,14 @@ rule gtdbtk:
     message:
         "Running GTDB on MAGs"
     shell:
-        "(date && export GTDBTK_DATA_PATH={params.db} && pixi r -e gtdbtk gtdbtk classify_wf --cpus {threads} -x fa --genome_dir {input} --out_dir {output} && date) &> >(tee {log})"
+        """
+        (
+            date
+            export GTDBTK_DATA_PATH={params.db}
+            pixi r -e gtdbtk gtdbtk classify_wf --cpus {threads} -x fa --genome_dir {input} --out_dir {output}
+            date
+        ) &> >(tee {log})
+        """
 
 
 use rule checkm2_refine as checkm2_final with:
