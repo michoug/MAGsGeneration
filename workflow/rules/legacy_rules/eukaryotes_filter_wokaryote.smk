@@ -5,7 +5,7 @@ rule eukaryotes_filter:
                 RESULTS_DIR,
                 "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags"),
         os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_whokaryote.txt"),

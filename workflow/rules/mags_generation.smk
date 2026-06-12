@@ -266,9 +266,9 @@ rule clean_coverage:
         """
         (
             date
-            pixi r -e metabat jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input.bam} \
-                cat {output.temp} | awk '{{if ($2>{params.length}) print $0 }}' | cut -f -1,4- \
-                date >{output.final}
+            pixi r -e metabat jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input.bam}
+            cat {output.temp} | awk '{{if ($2>{params.length}) print $0 }}' | cut -f -1,4- >{output.final}
+            date
         ) 2>{log.err} >{log.out}
         """
 

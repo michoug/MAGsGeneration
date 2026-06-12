@@ -78,7 +78,7 @@ deepmicroclass = "==1.0.6.2"
 channels = ["conda-forge", "bioconda"]
 
 [feature.eggnog.dependencies]
-eggnog-mapper = "2.1.9.*"
+eggnog-mapper = ">2,<3"
 setuptools = "*"
 
 [feature.fastp]
@@ -113,7 +113,8 @@ megahit = "1.2.9.*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.metabat.dependencies]
-metabat2 = "2.15.*"
+metabat2 = "2.18.*"
+libboost = "*"
 
 [feature.metabuli]
 channels = ["conda-forge", "bioconda"]
@@ -168,8 +169,9 @@ multiqc = "1.35.*"
 channels = ["conda-forge", "numba", "bioconda"]
 
 [feature.rosella.dependencies]
-rosella = "==0.5.5"
+rosella = "==0.5.7"
 umap-learn = "0.5.3.*"
+setuptools = "<82"
 
 [feature.r]
 channels = ["conda-forge", "bioconda"]
@@ -185,13 +187,13 @@ r-ggrepel = "*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.semibin.dependencies]
-semibin = "2.1.*"
+semibin = "2.3.*"
 
 [feature.seqkit]
 channels = ["conda-forge", "bioconda"]
 
 [feature.seqkit.dependencies]
-seqkit = "2.8.*"
+seqkit = "2.13.*"
 
 [feature.singlem]
 channels = ["conda-forge", "bioconda"]

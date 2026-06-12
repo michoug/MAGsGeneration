@@ -341,7 +341,7 @@ rule concat_remag:
             os.path.join(
                 RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_remag/bins.csv"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
     output:
         folder=directory(os.path.join(RESULTS_DIR, "Bins/intermediate/remag_all_bins")),

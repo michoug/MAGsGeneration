@@ -5,7 +5,7 @@ rule contigs_taxonomy:
                 RESULTS_DIR,
                 "Assembly/intermediate/{sample}_taxonomy/{sample}_tax_good.tsv",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
     output:
         touch("status/taxonomy.done"),
