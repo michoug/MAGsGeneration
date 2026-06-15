@@ -646,10 +646,10 @@ rule galah_euk:
         """
         (
             date
-            if [[ $(wc -l < "{input.busco}") -le 1 ]]; then
+            if [[ $(wc -l <"{input.busco}") -le 1 ]]; then
                 echo "No BUSCO quality rows available; skipping galah clustering."
                 mkdir -p {output.final}
-                : > {output.cluster}
+                : >{output.cluster}
             else
                 pixi r -e galah galah cluster --genome-fasta-directory {input.bins} --genome-info {input.busco} -x fa --output-representative-fasta-directory-copy {output.final} -t {threads} --output-cluster-definition {output.cluster}
             fi
