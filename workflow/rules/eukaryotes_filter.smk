@@ -12,7 +12,7 @@ rule eukaryotes_filter:
         os.path.join(
             RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_deepmicroclass.txt"
         ),
-        os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/done.txt"),
+        os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco_done.txt"),
         os.path.join(RESULTS_DIR, "Bins/Eukaryotic_mags_dereplicated/done.txt"),
     output:
         touch("status/eukaryotes_filter.done"),
@@ -484,7 +484,7 @@ rule busco_done:
     input:
         get_file_eukaryotes,
     output:
-        os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco/done.txt"),
+        os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco_done.txt"),
     localrule: True
     message:
         "All BUSCO runs on eukaryotic MAGs are done"
@@ -517,7 +517,27 @@ rule busco_multiqc:
         (
             date
             rm -rf {output.folder}
-            pixi r -e multiqc multiqc $(dirname {input}) --verbose --ignore auto_lineage/ -o {output.folder} || echo "Multiqc failed (possibly no eukaryotic bins found) — continuing anyway"
+            mkdir -p {output.folder}/multiqc_data
+            if ! pixi r -e multiqc multiqc $(dirname {input})/eukaryotic_mags_busco --verbose --ignore auto_lineage/ -o {output.folder}; then
+                echo "Multiqc failed (possibly no eukaryotic bins found) — continuing anyway"
+            fi
+            # MultiQC can legitimately fail when no BUSCO result is found.
+            # Create minimal placeholder outputs so downstream rules can proceed.
+            if [ ! -s {output.html} ]; then
+                cat >{output.html} <<'EOF'
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>BUSCO MultiQC</title></head>
+<body><p>No BUSCO results were found for eukaryotic MAGs.</p></body>
+</html>
+EOF
+            fi
+            if [ ! -s {output.stats} ]; then
+                printf "Sample\tbusco-complete\tbusco-complete_single_copy\tbusco-fragmented\tbusco-missing\tbusco-complete_duplicated\n" >{output.stats}
+            fi
+            if [ ! -s {output.source} ]; then
+                printf "Sample Name\tSource\n" >{output.source}
+            fi
             date
         ) 2>{log.err} >{log.out}
         """
@@ -621,12 +641,18 @@ rule galah_euk:
         comp=70,
         cont=10,
     message:
-        "Running Galah on all Eukaryotic MAGs"
+        "Running Galah on all Eukaryotic MAGs (skip clustering if BUSCO table is empty)"
     shell:
         """
         (
             date
-            pixi r -e galah galah cluster --genome-fasta-directory {input.bins} --genome-info {input.busco} -x fa --output-representative-fasta-directory-copy {output.final} -t {threads} --output-cluster-definition {output.cluster}
+            if [[ $(wc -l < "{input.busco}") -le 1 ]]; then
+                echo "No BUSCO quality rows available; skipping galah clustering."
+                mkdir -p {output.final}
+                : > {output.cluster}
+            else
+                pixi r -e galah galah cluster --genome-fasta-directory {input.bins} --genome-info {input.busco} -x fa --output-representative-fasta-directory-copy {output.final} -t {threads} --output-cluster-definition {output.cluster}
+            fi
             touch {output.done}
             date
         ) 2>{log.err} >{log.out}

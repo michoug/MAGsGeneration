@@ -183,8 +183,8 @@ rule singlem_genomes:
         (
             date
             export SINGLEM_METAPACKAGE_PATH={input.db}
-            pixi r -e singlem singlem pipe --threads {threads} --otu-table {output.table} --genome-fasta-files {input.folder}/*fa --metapackage {input.db} \
-                date
+            pixi r -e singlem singlem pipe --threads {threads} --otu-table {output.table} --genome-fasta-files {input.folder}/*fa --metapackage {input.db}
+            date
         ) 2>{log.err} >{log.out}
         """
 
