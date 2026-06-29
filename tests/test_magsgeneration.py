@@ -5,6 +5,8 @@ import sys
 import pytest
 import tempfile
 import yaml
+import subprocess
+from unittest.mock import Mock, patch, MagicMock
 
 # Add the project root to path so we can import MAGsGeneration
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -268,3 +270,193 @@ class TestConstants:
             assert os.path.exists(
                 full_path
             ), f"Snakefile for pipeline '{name}' not found: {full_path}"
+
+
+# ---------------------------------------------------------------------------
+# unlock_snakemake and run_snakemake tests simplified (requires subprocess to work)
+# ---------------------------------------------------------------------------
+
+# These functions call subprocess.run which requires actual environment.
+# We skip detailed mocking tests here and instead rely on integration tests
+# and the existing validate_config tests which are comprehensive.
+# Full subprocess mocking would require pytest-mock which is not a dependency.
+
+
+# ---------------------------------------------------------------------------
+# Error handling and edge cases
+# ---------------------------------------------------------------------------
+
+
+class TestConfigValidationEdgeCases:
+    def test_config_with_extra_keys_passes(self, minimal_config):
+        """Config with extra keys should pass validation."""
+        minimal_config["extra_key"] = "extra_value"
+        validate_config(minimal_config)  # Should not raise
+
+    def test_empty_steps_list_passes(self, minimal_config):
+        """Config with empty steps list should still be valid."""
+        minimal_config["steps"] = []
+        validate_config(minimal_config)  # Should not raise
+
+    def test_steps_with_non_existent_steps_passes(self, minimal_config):
+        """Config with non-existent steps should pass (validation is lenient)."""
+        minimal_config["steps"] = ["trim_reads", "non_existent_step"]
+        validate_config(minimal_config)  # Should not raise
+
+
+class TestResolveOptionalStepsEdgeCases:
+    def test_resolve_with_mixed_case_steps(self):
+        """Test that step resolution works correctly with actual step names."""
+        all_steps = ["trim_reads", "assembly_all", "syntracker", "eggnog"]
+        result = resolve_optional_steps(["syntracker", "eggnog"], all_steps)
+        assert set(result) == {"syntracker", "eggnog"}
+
+    def test_resolve_filters_non_optional_correctly(self):
+        """Test that mandatory steps are properly filtered."""
+        all_steps = ["trim_reads", "assembly_all", "syntracker", "singlem_all"]
+        result = resolve_optional_steps(["trim_reads", "syntracker"], all_steps)
+        # trim_reads is mandatory, should not be in result
+        assert "trim_reads" not in result
+        assert "syntracker" in result
+
+    def test_resolve_with_only_mandatory_steps(self):
+        """Test resolution when only mandatory steps are provided."""
+        all_steps = ["trim_reads", "assembly_all", "mags_generation"]
+        result = resolve_optional_steps(["trim_reads"], all_steps)
+        assert result == []
+
+
+# ---------------------------------------------------------------------------
+# Subprocess-based functions with mocker
+# ---------------------------------------------------------------------------
+
+
+class TestUnlockSnakemake:
+    def test_unlock_snakemake_calls_subprocess(self, mocker):
+        """Test that unlock_snakemake calls subprocess.run with correct args."""
+        mock_run = mocker.patch("subprocess.run")
+        
+        from MAGsGeneration import unlock_snakemake
+        unlock_snakemake("test.smk", "test_config.yaml")
+        
+        mock_run.assert_called_once()
+        call_args = mock_run.call_args[0][0]
+        assert "snakemake" in call_args
+        assert "--unlock" in call_args
+
+    def test_unlock_snakemake_with_specific_files(self, mocker):
+        """Test that unlock_snakemake passes correct snakefile and config."""
+        mock_run = mocker.patch("subprocess.run")
+        
+        from MAGsGeneration import unlock_snakemake
+        snakefile = "workflow/runAll.smk"
+        configfile = "config.yaml"
+        unlock_snakemake(snakefile, configfile)
+        
+        call_args = mock_run.call_args[0][0]
+        assert snakefile in call_args
+        assert configfile in call_args
+
+
+class TestRunSnakemake:
+    def test_run_snakemake_calls_subprocess(self, mocker):
+        """Test that run_snakemake calls subprocess.run."""
+        mock_run = mocker.patch("subprocess.run")
+        
+        from MAGsGeneration import run_snakemake
+        run_snakemake(
+            snakefile="test.smk",
+            configfile="config.yaml",
+            cores=4,
+            dryrun=True,
+            use_conda=True,
+        )
+        
+        mock_run.assert_called_once()
+
+    def test_run_snakemake_with_dryrun(self, mocker):
+        """Test that dryrun flag is passed to snakemake."""
+        mock_run = mocker.patch("subprocess.run")
+        
+        from MAGsGeneration import run_snakemake
+        run_snakemake(
+            snakefile="test.smk",
+            configfile="config.yaml",
+            dryrun=True,
+        )
+        
+        call_args = mock_run.call_args[0][0]
+        assert "--dry-run" in call_args
+
+    def test_run_snakemake_with_cores(self, mocker):
+        """Test that cores parameter is passed."""
+        mock_run = mocker.patch("subprocess.run")
+        
+        from MAGsGeneration import run_snakemake
+        run_snakemake(
+            snakefile="test.smk",
+            configfile="config.yaml",
+            cores=8,
+        )
+        
+        call_args = mock_run.call_args[0][0]
+        assert "-j" in call_args or "--cores" in call_args or "8" in str(call_args)
+
+    def test_run_snakemake_with_conda(self, mocker):
+        """Test that use_conda flag enables conda."""
+        mock_run = mocker.patch("subprocess.run")
+        
+        from MAGsGeneration import run_snakemake
+        run_snakemake(
+            snakefile="test.smk",
+            configfile="config.yaml",
+            use_conda=True,
+        )
+        
+        call_args = mock_run.call_args[0][0]
+        assert "--use-conda" in call_args
+
+    def test_run_snakemake_with_profile(self, mocker):
+        """Test that profile parameter is passed."""
+        mock_run = mocker.patch("subprocess.run")
+        
+        from MAGsGeneration import run_snakemake
+        run_snakemake(
+            snakefile="test.smk",
+            configfile="config.yaml",
+            profile="slurm",
+        )
+        
+        call_args = mock_run.call_args[0][0]
+        assert "--profile" in call_args
+        assert "slurm" in call_args
+
+    def test_run_snakemake_with_continue_run(self, mocker):
+        """Test that continue_run flag is handled."""
+        mock_run = mocker.patch("subprocess.run")
+        
+        from MAGsGeneration import run_snakemake
+        run_snakemake(
+            snakefile="test.smk",
+            configfile="config.yaml",
+            continue_run=True,
+        )
+        
+        call_args = mock_run.call_args[0][0]
+        assert "--rerun-incomplete" in call_args
+
+    def test_run_snakemake_with_conda_prefix(self, mocker):
+        """Test that conda_prefix is passed."""
+        mock_run = mocker.patch("subprocess.run")
+        
+        from MAGsGeneration import run_snakemake
+        run_snakemake(
+            snakefile="test.smk",
+            configfile="config.yaml",
+            use_conda=True,
+            conda_prefix="/tmp/conda",
+        )
+        
+        call_args = mock_run.call_args[0][0]
+        assert "--conda-prefix" in call_args
+        assert "/tmp/conda" in call_args
