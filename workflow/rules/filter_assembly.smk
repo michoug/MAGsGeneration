@@ -28,7 +28,10 @@ rule filter_length:
         "Remove contigs less than 1.5kb"
     shell:
         """
-        (date
-        pixi r -e seqkit seqkit seq -j {threads} --remove-gaps -o {output.other} -m 1500 {input} && perl -pe "s/ .*//g" {output.other} > {output.out}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e seqkit seqkit seq -j {threads} --remove-gaps -o {output.other} -m 1500 {input}
+            perl -pe "s/ .*//g" {output.other} >{output.out}
+            date
+        ) 2>{log.err} >{log.out}
         """

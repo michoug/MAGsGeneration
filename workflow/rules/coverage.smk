@@ -43,10 +43,14 @@ rule mapping_all:
     message:
         "Running coverm to produce sorted bams for: {wildcards.sample}"
     shell:
-        "(date && "
-        "rm -f {output} && "
-        "TMPDIR=. pixi r -e coverm coverm make -r {input.cont} -t {threads} -o $(dirname {output}) --discard-unmapped -c {input.read1} {input.read2} && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            rm -f {output}
+            TMPDIR=. pixi r -e coverm coverm make -r {input.cont} -t {threads} -o $(dirname {output}) --discard-unmapped -c {input.read1} {input.read2}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 # COVERAGE
@@ -66,8 +70,13 @@ rule coverage:
     message:
         "Estimating coverage for concatenated MAGs"
     shell:
-        "(date && pixi r -e coverm coverm contig -b {input} -m trimmed_mean -t {threads} -o {output.final} && date)"
-        " 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            pixi r -e coverm coverm contig -b {input} -m trimmed_mean -t {threads} -o {output.final}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule concat_coverage:
@@ -86,5 +95,10 @@ rule concat_coverage:
     message:
         "Concatenating the coverage files"
     shell:
-        "(date && perl {input.script} {input.files} {output} && date)"
-        " 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            perl {input.script} {input.files} {output}
+            date
+        ) 2>{log.err} >{log.out}
+        """

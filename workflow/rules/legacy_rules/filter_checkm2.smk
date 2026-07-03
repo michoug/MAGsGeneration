@@ -17,7 +17,9 @@ rule get_list_mags:
     message:
         "Get list of MAGs that are more than 50% complete"
     shell:
-        """(date && cat {input.tsv} | perl -pe "s/Name.*\n//g" | awk '$2>=50 {{print}}' | cut -f1 > {output} && date)"""
+        """
+        (date && cat {input.tsv} | perl -pe "s/Name.*\n//g" | awk '$2>=50 {{print}}' | cut -f1 >{output} && date)
+        """
 
 
 rule cp_mags:
@@ -31,7 +33,9 @@ rule cp_mags:
     message:
         "Copy MAGs to another folder"
     shell:
-        """(date && mkdir {output} && for file in $(dirname {input}); do cp $file/das_DASTool_bins/*fa {output}; done && date)"""
+        """
+        (date && mkdir {output} && for file in $(dirname {input}); do cp $file/das_DASTool_bins/*fa {output}; done && date)
+        """
 
 
 checkpoint get_filtered_mags:
@@ -43,7 +47,7 @@ checkpoint get_filtered_mags:
     shell:
         """
         mkdir {output.files}
-        while read -r line; do cp {input.renamed}/$line.fa {output.files}/$line.fa; done < {input.list}
+        while read -r line; do cp {input.renamed}/$line.fa {output.files}/$line.fa; done <{input.list}
         """
 
 

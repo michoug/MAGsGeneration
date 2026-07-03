@@ -41,9 +41,12 @@ rule annotation:
     message:
         "Prodigal annotation for {wildcards.mags}"
     shell:
-        """(date
-        pixi r -e annotations pyrodigal -a {output.protein} -j {threads} -d {output.nucl} -f gff -i {input.fasta} -o {output.gff}
-        date) 2> {log.err} > {log.out}
+        """
+        (
+            date
+            pixi r -e annotations pyrodigal -a {output.protein} -j {threads} -d {output.nucl} -f gff -i {input.fasta} -o {output.gff}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 

@@ -19,14 +19,18 @@ check = { depends-on = ["snake_format", "ruff_format", "air_format", "jarl_forma
 
 snakemake= ">=9.0,<10"
 snakemake-executor-plugin-slurm= ">=2.0,<3"
-snakefmt = ">=1.0.0,<2"
+snakefmt = ">=2.0.0,<3"
 pathspec = ">=1.0.4,<2"
+<<<<<<< HEAD
 ruff = ">=0.14,<0.20"
 air = "0.10.*"
 pytest-mock = ">=3.15,<4"
 
 [pypi-dependencies]
 jarl-linter = ">=0.5"
+=======
+polars = "*"
+>>>>>>> origin/remag
 
 [feature.annotations]
 channels = ["conda-forge", "bioconda"]
@@ -46,6 +50,7 @@ channels = ["conda-forge", "bioconda"]
 
 [feature.busco.dependencies]
 busco = "6.*"
+sepp = "4.5.5.*"
 
 [feature.checkm2]
 channels = ["conda-forge", "bioconda"]
@@ -90,7 +95,7 @@ deepmicroclass = "==1.0.6.2"
 channels = ["conda-forge", "bioconda"]
 
 [feature.eggnog.dependencies]
-eggnog-mapper = "2.1.9.*"
+eggnog-mapper = ">2,<3"
 setuptools = "*"
 
 [feature.fastp]
@@ -125,7 +130,8 @@ megahit = "1.2.9.*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.metabat.dependencies]
-metabat2 = "2.15.*"
+metabat2 = "2.18.*"
+libboost = "*"
 
 [feature.metabuli]
 channels = ["conda-forge", "bioconda"]
@@ -180,8 +186,9 @@ multiqc = "1.35.*"
 channels = ["conda-forge", "numba", "bioconda"]
 
 [feature.rosella.dependencies]
-rosella = "==0.5.5"
+rosella = "==0.5.7"
 umap-learn = "0.5.3.*"
+setuptools = "<82"
 
 [feature.r]
 channels = ["conda-forge", "bioconda"]
@@ -197,13 +204,13 @@ r-ggrepel = "*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.semibin.dependencies]
-semibin = "2.1.*"
+semibin = "2.3.*"
 
 [feature.seqkit]
 channels = ["conda-forge", "bioconda"]
 
 [feature.seqkit.dependencies]
-seqkit = "2.8.*"
+seqkit = "2.13.*"
 
 [feature.singlem]
 channels = ["conda-forge", "bioconda"]
@@ -267,6 +274,12 @@ hmmer = ">=3.4,<4"
 pip = ">=26.0.1,<27"
 fraggenescan = ">=1.32,<2"
 
+[feature.remag]
+channels = ["conda-forge", "bioconda"]
+
+[feature.remag.dependencies]
+remag = ">=0.4.0,<1.0.0"
+
 [feature.mmseqs]
 channels = ["conda-forge", "bioconda"]
 
@@ -297,6 +310,7 @@ multiqc = { features = ["multiqc"], no-default-feature = true }
 rosella = { features = ["rosella"], no-default-feature = true }
 r = { features = ["r"], no-default-feature = true }
 report     = { features = ["report"],     no-default-feature = true }
+remag = { features = ["remag"], no-default-feature = true }
 semibin = { features = ["semibin"], no-default-feature = true }
 seqkit = { features = ["seqkit"], no-default-feature = true }
 singlem = { features = ["singlem"], no-default-feature = true }

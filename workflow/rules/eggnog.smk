@@ -33,8 +33,14 @@ checkpoint prep_eggnog:
     message:
         "Splitting the large concactenated protein file into chunks of 1000000"
     shell:
-        "(date && rm -f {output.dir}/* && pixi r -e seqkit seqkit split -s 1000000 -O {output.dir} {input.fa} "
-        "&& date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            rm -f {output.dir}/*
+            pixi r -e seqkit seqkit split -s 1000000 -O {output.dir} {input.fa}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 def aggregate_emapper(wildcards):
@@ -73,11 +79,15 @@ rule emapper:
     message:
         "Running EggNog-mapper on {wildcards.i}"
     shell:
-        "(date && "
-        "rm -f {input}.emapper.hits && "
-        "pixi r -e eggnog emapper.py -m diamond --data_dir {params.db} --no_annot --no_file_comments --cpu {threads} -i {input} -o {input} && "
-        "mv {input}.emapper.hits {output.hits} && mv {input}.emapper.seed_orthologs {output.seed} && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            rm -f {input}.emapper.hits
+            pixi r -e eggnog emapper.py -m diamond --data_dir {params.db} --no_annot --no_file_comments --cpu {threads} -i {input} -o {input}
+            mv {input}.emapper.hits {output.hits} && mv {input}.emapper.seed_orthologs {output.seed}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule cat_emapper_out:
@@ -109,6 +119,10 @@ rule emapper_final:
     message:
         "Running EggNog-mapper on All MAGs"
     shell:
-        "(date && "
-        "pixi r -e eggnog emapper.py --data_dir {params.db} --annotate_hits_table {input} --no_file_comments -o $(echo {output} | sed 's/.emapper.annotations//g' ) --cpu {threads} --dbmem && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            pixi r -e eggnog emapper.py --data_dir {params.db} --annotate_hits_table {input} --no_file_comments -o $(echo {output} | sed 's/.emapper.annotations//g') --cpu {threads} --dbmem
+            date
+        ) 2>{log.err} >{log.out}
+        """

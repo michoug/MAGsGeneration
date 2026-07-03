@@ -16,8 +16,8 @@ rule galah_prepare:
         "Adjusting CheckM output for input to Galah"
     shell:
         """
-        cat {input.check} | sed '/^Name/d' | awk '{{print $1","$2","$3}}' > {output.temp} &&
-        (echo "genome,completeness,contamination" && cat {output.temp}) > {output.final}
+        cat {input.check} | sed '/^Name/d' | awk '{{print $1","$2","$3}}' >{output.temp}
+        (echo "genome,completeness,contamination" && cat {output.temp}) >{output.final}
         """
 
 
@@ -43,8 +43,12 @@ checkpoint galah:
         comp=70,
         cont=10,
     message:
-        "Running Galah on all NOMIS MAGs"
+        "Running Galah on all MAGs"
     shell:
-        "(date && "
-        "pixi r -e galah galah cluster --genome-fasta-directory {input.bins} -x fa --genome-info {input.check} --min-completeness {params.comp} --max-contamination {params.cont} --output-representative-fasta-directory-copy {output.final} --output-cluster-definition {output.cluster} -t {threads} && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            pixi r -e galah galah cluster --genome-fasta-directory {input.bins} -x fa --genome-info {input.check} --min-completeness {params.comp} --max-contamination {params.cont} --output-representative-fasta-directory-copy {output.final} --output-cluster-definition {output.cluster} -t {threads}
+            date
+        ) 2>{log.err} >{log.out}
+        """

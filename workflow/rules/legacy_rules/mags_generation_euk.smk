@@ -59,9 +59,11 @@ rule indexAssembly:
         numb="{number}",
     shell:
         """
-        (date 
-        strobealign --create-index -t {threads} {input.fa} -r {params.numb}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            strobealign --create-index -t {threads} {input.fa} -r {params.numb}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -98,12 +100,14 @@ rule mapping:
         mem_mb=get_mem_mb,
     shell:
         """
-        (date
-        rm -f {output}.tmp*
-        strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
-        samtools sort -@ {threads} -o {output}
-        samtools index {output}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            rm -f {output}.tmp*
+            strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} \
+                | samtools sort -@ {threads} -o {output}
+            samtools index {output}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -152,10 +156,12 @@ rule metabat2:
         "Running metabat2 to obtain bins"
     shell:
         """
-        (date
-        metabat2 -i {input.contig} -a {input.cov} -o {output.folder}/metabat -t {threads}
-        touch {output.file}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            metabat2 -i {input.contig} -a {input.cov} -o {output.folder}/metabat -t {threads}
+            touch {output.file}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -185,9 +191,9 @@ rule metabinner_coverage:
         "Running the first part of metabinner to estimate the coverage"
     shell:
         """
-        (date && jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input} && 
-        cat {output.temp} | awk '{{if ($2>{params.length}) print $0 }}' | cut -f -1,4- > {output.final} && 
-        date) 2> {log.err} > {log.out}
+        (date && jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input} \
+            && cat {output.temp} | awk '{{if ($2>{params.length}) print $0 }}' | cut -f -1,4- >{output.final} \
+            && date) 2>{log.err} >{log.out}
         """
 
 

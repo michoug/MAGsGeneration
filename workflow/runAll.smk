@@ -1,4 +1,4 @@
-# Pipeline for analysing the NOMIS MAGs
+# Pipeline for analysing MAGs
 # Example call: snakemake -s workflow/Snakefile --configfile config/config.yaml --use-conda --conda-prefix ${CONDA_PREFIX}/pipeline --cores 1 -rpn
 
 ##############################
@@ -177,6 +177,6 @@ if len(TARGETS) == 0:
     raise Exception("You are not serious. Nothing to be done? Really?")
 
 
-rule NOMIS_MAGS:
+rule MAGS_Generation:
     input:
         TARGETS,

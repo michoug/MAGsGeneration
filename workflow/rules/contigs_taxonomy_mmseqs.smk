@@ -30,11 +30,17 @@ rule taxonomy:
         runtime=60 * 5,
         mem_mb=get_mem_mb,
     shell:
-        '(date && name=$(echo $(basename {output.taxonomy}) | sed "s/_tax.tsv//g") && '
-        "rm -rf $(dirname {output.dbfasta})/* && "
-        "pixi r -e mmseqs mmseqs createdb  {input.fasta} {output.dbfasta} && "
-        "pixi r -e mmseqs mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/GTDB_mmseqs $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1 && "
-        "pixi r -e mmseqs mmseqs createtsv {output.dbfasta} $(dirname {output.taxonomy})/$name {output.taxonomy} && date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            name=$(echo $(basename {output.taxonomy}) | sed 's/_tax.tsv//g')
+            rm -rf $(dirname {output.dbfasta})/*
+            pixi r -e mmseqs mmseqs createdb {input.fasta} {output.dbfasta}
+            pixi r -e mmseqs mmseqs taxonomy {output.dbfasta} $(dirname {input.file})/GTDB_mmseqs $(dirname {output.taxonomy})/$name {output.tmp} --threads {threads} --tax-lineage 1
+            pixi r -e mmseqs mmseqs createtsv {output.dbfasta} $(dirname {output.taxonomy})/$name {output.taxonomy}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule taxconverter:
@@ -54,8 +60,13 @@ rule taxconverter:
     resources:
         mem_mb=get_mem_mb,
     shell:
-        "(date && "
-        "pixi r -e taxconverter taxconverter mmseqs2 -i {input.tax} -o {output} && date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            pixi r -e taxconverter taxconverter mmseqs2 -i {input.tax} -o {output}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule tax_add_missing:
@@ -76,14 +87,10 @@ rule tax_add_missing:
             for line in f:
                 if line.startswith(">"):
                     contigs.append(line[1:].strip().split()[0])
-
         tax_df = pd.read_csv(
             input[1], sep="\t", header=None, names=["contigs", "predictions"]
         )
-
         all_df = pd.DataFrame({"contigs": contigs})
-
         merged = all_df.merge(tax_df, on="contigs", how="left")
         merged["predictions"].fillna("unknown", inplace=True)
-
         merged.to_csv(output[0], sep="\t", index=False, header=True)

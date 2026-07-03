@@ -5,7 +5,7 @@ rule eukaryotes_filter:
                 RESULTS_DIR,
                 "Bins/euk_potential_mags_length/{sample}_length_filtered_list.txt",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         os.path.join(RESULTS_DIR, "Bins/eukaryotes_filter_mags"),
         os.path.join(RESULTS_DIR, "Bins/eukaryotic_mags_whokaryote.txt"),
@@ -51,7 +51,7 @@ rule get_all_mags:
             base=$(basename "$file" .fna)
             cp "$file" "{output.dir}/vamb_${{base}}.fa"
         done
-        perl -pe 's/,(\\d+)/,concoct_$1/g' {input.concoct} > {output.concoct}
+        perl -pe 's/,(\\d+)/,concoct_$1/g' {input.concoct} >{output.concoct}
         extract_fasta_bins.py {input.contigs} {output.concoct} --output_path {output.dir}
         cp $(dirname {input.semibin})/output_bins/*.fa.gz {output.dir}
         for file in {output.dir}/*gz; do [[ -f "$file" && "$file" == *.gz ]] && gunzip "$file"; done
@@ -117,8 +117,8 @@ rule get_length:
     shell:
         """
         date
-        seqkit stats -j {threads} {input}/*fa -T > {output.txt}
-        awk '$5>=2500000 && $7 >= 2500' {output.txt} | cut -f1 | tail -n +2 > {output.final}
+        seqkit stats -j {threads} {input}/*fa -T >{output.txt}
+        awk '$5>=2500000 && $7 >= 2500' {output.txt} | cut -f1 | tail -n +2 >{output.final}
         date
         """
 
@@ -208,11 +208,8 @@ rule percentage_whokaryote:
         import pandas as pd
 
         df = pd.read_csv(input.pred, sep="\t", header=0)
-
         count = pd.DataFrame(df.groupby("predicted")["predicted"].count())
-
         count["percent"] = (count["predicted"] / count["predicted"].sum()) * 100
-
         count_trans = count.transpose()
         count_trans["bin"] = os.path.basename(os.path.dirname(input.pred))
         count_trans_edited = count_trans.drop(labels="predicted")
@@ -241,19 +238,15 @@ rule concatenate_whokaryote:
                 contextlib.redirect_stderr(f_log),
             ):
                 dfs = []
-
                 for file in input.all_files:
                     df = pd.read_csv(file, sep="\t", header=0)
                     print(f"Loaded file: {file}, shape: {df.shape}")
                     dfs.append(df)
-
                 concatenated = pd.concat(dfs, ignore_index=True)
                 print(f"Concatenated DataFrame shape: {concatenated.shape}")
-
                 # Save the collated output
                 concatenated.to_csv(output.collated, sep="\t", index=False)
                 print(f"Collated output written to: {output.collated}")
-
                 # Filter and save eukaryotic bins
                 eukaryotic_bins = concatenated[concatenated["eukaryote"] >= 80]
                 eukaryotic_bins[["bin"]].to_csv(

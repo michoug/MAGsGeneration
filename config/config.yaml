@@ -22,7 +22,7 @@ steps: [
   "annotations",
   "quality",
   "mgthermometer",
-  "eggnog",
+  # "eggnog",
   "singlem_all",
   "report"
  ]  ###USER INPUT REQUIRED###
@@ -36,7 +36,7 @@ work_dir: "/scratch/gmichoud/GlacierIce/MAGsGeneration/"
 assembly_dir: "/scratch/gmichoud/GlacierIce/assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/GlacierIce/cyano"
+results_dir: "/scratch/gmichoud/GlacierIce/remag"  
 
 # Directory for raw reads
 reads_dir: "/scratch/gmichoud/GlacierIce/reads"
