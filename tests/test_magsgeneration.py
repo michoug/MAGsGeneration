@@ -5,8 +5,6 @@ import sys
 import pytest
 import tempfile
 import yaml
-import subprocess
-from unittest.mock import Mock, patch, MagicMock
 
 # Add the project root to path so we can import MAGsGeneration
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -276,11 +274,8 @@ class TestConstants:
 # unlock_snakemake and run_snakemake tests simplified (requires subprocess to work)
 # ---------------------------------------------------------------------------
 
-# These functions call subprocess.run which requires actual environment.
-# We skip detailed mocking tests here and instead rely on integration tests
-# and the existing validate_config tests which are comprehensive.
-# Full subprocess mocking would require pytest-mock which is not a dependency.
-
+# These functions call subprocess.run; we test them by mocking subprocess.run via pytest-mock's `mocker` fixture.
+# Detailed integration behavior is covered elsewhere; these tests focus on CLI argument-to-command translation.
 
 # ---------------------------------------------------------------------------
 # Error handling and edge cases

@@ -8,5 +8,4 @@ updates:
       dependencies:
         patterns:
           - '*'
-    cooldown:
-      default-days: 7
+    open-pull-requests-limit: 10
