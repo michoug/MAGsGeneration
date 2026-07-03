@@ -16,11 +16,11 @@ import sys
 import os
 import argparse
 import subprocess
-import glob
+# import glob
 from signal import signal, SIGPIPE, SIG_DFL
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import tempfile
+# import tempfile
 
 
 def check_bed_file_for_errors(bedfile):
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Get sample names
-    if args.samplenames != None:
+    if args.samplenames is not None:
         samplenames = [s[:-1] for s in open(args.samplenames).readlines()]
         if len(samplenames) != len(args.bamfiles):
             raise Exception(
