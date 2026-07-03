@@ -3,9 +3,7 @@
 import os
 import sys
 import pytest
-import tempfile
 import subprocess
-from unittest.mock import Mock, patch, MagicMock, mock_open
 
 # Add the project root to path so we can import MAGsGeneration
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -105,14 +103,14 @@ class TestEnsureAndInstallPixiEnvs:
 
     def test_pixi_toml_path_validation(self, mocker, tmp_path):
         """Test that invalid paths are handled."""
-        # Mock shutil.which
+        mock_run = mocker.patch("subprocess.run")
         mocker.patch("shutil.which", return_value=None)
-        
+
         # Call with non-existent directory
         ensure_and_install_pixi_envs(str(tmp_path / "nonexistent"))
-        
-        # Should complete without error
 
+        # Should not attempt any subprocess calls
+        mock_run.assert_not_called()
     def test_pixi_install_with_features(self, mocker, tmp_path):
         """Test pixi install is called with proper parameters."""
         # Create a pixi.toml file

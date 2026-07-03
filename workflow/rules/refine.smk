@@ -52,10 +52,13 @@ rule rosella_ref:
         "Refine bins with Rosella"
     shell:
         """
-        (date && 
-        rm -rf $(dirname {output})/* && pixi r -e rosella rosella refine --min-bin-size 200000 --checkm-results {input.check} -d $(dirname {input.bins})/das_DASTool_bins --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) && 
-        touch {output} &&
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf $(dirname {output})/*
+            pixi r -e rosella rosella refine --min-bin-size 200000 --checkm-results {input.check} -d $(dirname {input.bins})/das_DASTool_bins --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output})
+            touch {output}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -83,16 +86,18 @@ rule rename_refine:
         sample="{sample}",
     shell:
         """
-        (date 
-        rm -f $(dirname {output.list})/*
-        for f in $(dirname {input.ref})/*bins/*fa; 
-        do name=$(basename $f);
-        echo cp $f $(dirname {output.list})/{params.sample}_$name >> {output.list_temp};
-        done && 
-        perl -pe 's/{params.sample}_{params.sample}/{params.sample}/g' {output.list_temp} | perl -pe 's/.*rosella_unbinned.*//g'> {output.bash_temp}
-        bash {output.bash_temp}
-        ls $(dirname {output.list})/*fa >> {output.list}; 
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -f $(dirname {output.list})/*
+            for f in $(dirname {input.ref})/*bins/*fa; do
+                name=$(basename $f)
+                echo cp $f $(dirname {output.list})/{params.sample}_$name >>{output.list_temp}
+            done
+            perl -pe 's/{params.sample}_{params.sample}/{params.sample}/g' {output.list_temp} | perl -pe 's/.*rosella_unbinned.*//g' >{output.bash_temp}
+            bash {output.bash_temp}
+            ls $(dirname {output.list})/*fa >>{output.list}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -135,7 +140,11 @@ rule checkm2_refine:
     message:
         "Running CheckM2 for directory renamed bins"
     shell:
-        "(date && "
-        "export CHECKM2DB={params.db} && "
-        "pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input {input} --output-directory $(dirname {output.tsv}) --force && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            export CHECKM2DB={params.db}
+            pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input {input} --output-directory $(dirname {output.tsv}) --force
+            date
+        ) 2>{log.err} >{log.out}
+        """

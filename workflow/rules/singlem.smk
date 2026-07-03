@@ -41,10 +41,12 @@ rule singlem_reads:
         mem_mb=get_mem_mb,
     shell:
         """
-        (date
-        export SINGLEM_METAPACKAGE_PATH={input.db}
-        pixi r -e singlem singlem pipe --threads {threads} -1 {input.read1} -2 {input.read2} --otu-table {output.table} -p {output.profile} --metapackage {input.db}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            export SINGLEM_METAPACKAGE_PATH={input.db}
+            pixi r -e singlem singlem pipe --threads {threads} -1 {input.read1} -2 {input.read2} --otu-table {output.table} -p {output.profile} --metapackage {input.db}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -65,9 +67,11 @@ rule singlem_cluster:
         mem_mb=get_mem_mb,
     shell:
         """
-        (date
-        pixi r -e singlem singlem summarise --input-otu-tables {input} --cluster --clustered-output-otu-table {output}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e singlem singlem summarise --input-otu-tables {input} --cluster --clustered-output-otu-table {output}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -90,9 +94,11 @@ rule singlem_unifrac:
         "otu_table",
     shell:
         """
-        (date
-        pixi r -e singlem singlem summarise --input-otu-table {input} --unifrac-by-otu $(dirname {output})/{params}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e singlem singlem summarise --input-otu-table {input} --unifrac-by-otu $(dirname {output})/{params}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -117,12 +123,13 @@ rule singlem_betadiv:
         "otu_table",
     shell:
         """
-        (date
-        for file in $(dirname {input})/*.unifrac; do
-            pixi r -e singlem convertToEBD.py $file $(dirname {output.ebd})/$(basename $file .unifrac).ebd
-            pixi r -e singlem ExpressBetaDiversity -s $(dirname {output.tree})/$(basename $file .unifrac).ebd -c Bray-Curtis -p $(dirname {output.tree})/$(basename $file .unifrac)
-        done
-        ) 2> {log.err} > {log.out}
+        (
+            date
+            for file in $(dirname {input})/*.unifrac; do
+                pixi r -e singlem convertToEBD.py $file $(dirname {output.ebd})/$(basename $file .unifrac).ebd
+                pixi r -e singlem ExpressBetaDiversity -s $(dirname {output.tree})/$(basename $file .unifrac).ebd -c Bray-Curtis -p $(dirname {output.tree})/$(basename $file .unifrac)
+            done
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -147,11 +154,13 @@ rule singlem_microbial:
         mem_mb=get_mem_mb,
     shell:
         """
-        (date
-        export SINGLEM_METAPACKAGE_PATH={input.db}
-        pixi r -e singlem singlem summarise --input-taxonomic-profiles {input.profile} --output-taxonomic-profile {output.profile} --metapackage {input.db}
-        pixi r -e singlem singlem microbial_fraction -1 {input.read1} -2 {input.read2} -p {output.profile} > {output.mf} --metapackage {input.db}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            export SINGLEM_METAPACKAGE_PATH={input.db}
+            pixi r -e singlem singlem summarise --input-taxonomic-profiles {input.profile} --output-taxonomic-profile {output.profile} --metapackage {input.db}
+            pixi r -e singlem singlem microbial_fraction -1 {input.read1} -2 {input.read2} -p {output.profile} --metapackage {input.db} >{output.mf}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -171,10 +180,12 @@ rule singlem_genomes:
         mem_mb=get_mem_mb,
     shell:
         """
-        (date
-        export SINGLEM_METAPACKAGE_PATH={input.db}
-        pixi r -e singlem singlem pipe --threads {threads} --otu-table {output.table} --genome-fasta-files {input.folder}/*fa --metapackage {input.db} &&
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            export SINGLEM_METAPACKAGE_PATH={input.db}
+            pixi r -e singlem singlem pipe --threads {threads} --otu-table {output.table} --genome-fasta-files {input.folder}/*fa --metapackage {input.db}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -194,8 +205,10 @@ rule singlem_appraise:
     localrule: True
     shell:
         """
-        (date
-        export SINGLEM_METAPACKAGE_PATH={input.db}
-        pixi r -e singlem singlem appraise --metagenome-otu-tables {input.metagenomes} --genome-otu-tables {input.genomes} --imperfect --metapackage {input.db} > {output}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            export SINGLEM_METAPACKAGE_PATH={input.db}
+            pixi r -e singlem singlem appraise --metagenome-otu-tables {input.metagenomes} --genome-otu-tables {input.genomes} --imperfect --metapackage {input.db} >{output}
+            date
+        ) 2>{log.err} >{log.out}
         """

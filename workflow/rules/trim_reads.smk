@@ -25,9 +25,13 @@ rule trimming:
         runtime=60 * 3,
         mem_mb=get_mem_mb,
     shell:
-        "(date && "
-        "pixi r -e trimgalore trim_galore --paired -j {threads} --output_dir $(dirname {output.trim1}) {input.read1} {input.read2} && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            pixi r -e trimgalore trim_galore --paired -j {threads} --output_dir $(dirname {output.trim1}) {input.read1} {input.read2}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule indexHuman:
@@ -47,9 +51,11 @@ rule indexHuman:
         numb="{number}",
     shell:
         """
-        (date
-        pixi r -e coverm strobealign --create-index -t {threads} {input.fa} -r {params.numb}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e coverm strobealign --create-index -t {threads} {input.fa} -r {params.numb}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -82,10 +88,12 @@ rule mappingHuman:
         mem_mb=get_mem_mb,
     shell:
         """
-        (date
-        pixi r -e coverm strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
-        pixi r -e coverm samtools view -@ {threads} -bS - > {output} &&
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e coverm strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} \
+                | pixi r -e coverm samtools view -@ {threads} -bS - >{output}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -104,10 +112,12 @@ rule removeHuman:
         mem_mb=get_mem_mb,
     shell:
         """
-        (date
-        rm -f {output}.tmp*
-        pixi r -e coverm samtools view -@ {threads} -b -f 12 -F 256 {input} | pixi r -e coverm samtools sort -@ {threads} - -o {output}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            rm -f {output}.tmp*
+            pixi r -e coverm samtools view -@ {threads} -b -f 12 -F 256 {input} | pixi r -e coverm samtools sort -@ {threads} - -o {output}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -127,9 +137,11 @@ rule getcleanreads:
         mem_mb=get_mem_mb,
     shell:
         """
-        (date
-        pixi r -e coverm samtools fastq -@ {threads} -1 {output.read1} -2 {output.read2} {input} &&
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e coverm samtools fastq -@ {threads} -1 {output.read1} -2 {output.read2} {input}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -152,7 +164,9 @@ rule getdedupreads:
         mem_mb=get_mem_mb,
     shell:
         """
-        (date
-        pixi r -e fastp fastp -i {input.read1} -I {input.read2} -h {output.report_html} -j {output.report_json} -o {output.read1} -O {output.read2} --dedup --thread {threads} &&
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e fastp fastp -i {input.read1} -I {input.read2} -h {output.report_html} -j {output.report_json} -o {output.read1} -O {output.read2} --dedup --thread {threads}
+            date
+        ) 2>{log.err} >{log.out}
         """

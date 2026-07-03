@@ -308,19 +308,13 @@ class TestPixiLockFile:
             "pixi.lock"
         )
         try:
-            import tomllib
-        except ImportError:
-            try:
-                import tomli as tomllib
-            except ImportError:
-                pytest.skip("tomllib/tomli not available")
-        
-        try:
-            with open(lock_path, "rb") as f:
-                lock_data = tomllib.load(f)
-                # Lock file should have metadata or packages section
-                assert "metadata" in lock_data or "package" in lock_data or len(lock_data) > 0, (
-                    "pixi.lock appears invalid or empty"
-                )
+            import yaml
+
+            with open(lock_path, "r", encoding="utf-8") as f:
+                lock_data = yaml.safe_load(f)
+
+            assert isinstance(lock_data, dict) and "version" in lock_data and "environments" in lock_data, (
+                "pixi.lock appears invalid or missing expected keys"
+            )
         except Exception as e:
-            pytest.skip(f"Could not parse pixi.lock: {e}")
+            pytest.skip(f"Could not parse pixi.lock as YAML: {e}")

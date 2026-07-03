@@ -54,13 +54,13 @@ rule mdmcleaner:
         "Running MDMCleaner"
     shell:
         """
-        (date && mdmcleaner clean -i {input.file} -o {output.out} -c {input.config} -t {threads} --fast_run &&
-        if [[ -f {params.final} ]] ; then
-            touch {output.done}
-        fi && 
-        rename.sh in={params.final} out={output.renamed} prefix={params.prefix} ignorejunk=t && 
-        gunzip -c {output.renamed} > {output.final} &&
-        date) 2> {log.err} > {log.out}
+        (date && mdmcleaner clean -i {input.file} -o {output.out} -c {input.config} -t {threads} --fast_run \
+            && if [[ -f {params.final} ]]; then
+                touch {output.done}
+            fi \
+            && rename.sh in={params.final} out={output.renamed} prefix={params.prefix} ignorejunk=t \
+            && gunzip -c {output.renamed} >{output.final} \
+            && date) 2>{log.err} >{log.out}
         """
 
 

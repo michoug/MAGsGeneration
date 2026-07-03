@@ -30,9 +30,13 @@ rule MGthermometer_run:
     message:
         "Calculate proportion of IVYWREL for {wildcards.mags}"
     shell:
-        "(date && "
-        "pixi r -e mgthermometer perl {input.script} {input.fasta} {output.proportion} && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            pixi r -e mgthermometer perl {input.script} {input.fasta} {output.proportion}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule concatResults:

@@ -116,7 +116,10 @@ class TestWorkflowStructure:
     def test_rules_directory_is_subdirectory(self):
         """Test that rules is a subdirectory of workflow."""
         assert os.path.isdir(RULES_DIR), "rules is not a directory"
-        assert RULES_DIR.startswith(WORKFLOW_DIR), "rules is not a subdirectory of workflow"
+        assert (
+            os.path.commonpath([os.path.abspath(RULES_DIR), os.path.abspath(WORKFLOW_DIR)])
+            == os.path.abspath(WORKFLOW_DIR)
+        ), "rules is not a subdirectory of workflow"
 
 
 class TestRuleFileContent:

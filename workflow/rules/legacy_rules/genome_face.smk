@@ -16,9 +16,11 @@ rule renameAssembly:
     localrule: True
     shell:
         """
-        (date 
-        perl -pe "s/_k141/_C_k141/g" {input.fa} > {output}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            perl -pe "s/_k141/_C_k141/g" {input.fa} >{output}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -52,9 +54,11 @@ rule indexAssemblyGenomeFace:
         numb="{number}",
     shell:
         """
-        (date 
-        strobealign --create-index -t {threads} {input.fa} -r {params.numb}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            strobealign --create-index -t {threads} {input.fa} -r {params.numb}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -99,11 +103,13 @@ rule coverage_genome_face_bam:
         "Running coverm to produce sorted bams for GenomeFace"
     shell:
         """
-        (date
-        rm -f {output}.tmp*
-        strobealign -t {threads} --use-index {input.cont} {input.read1} {input.read2} | 
-        samtools sort -@ {threads} -o {output}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -f {output}.tmp*
+            strobealign -t {threads} --use-index {input.cont} {input.read1} {input.read2} \
+                | samtools sort -@ {threads} -o {output}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 

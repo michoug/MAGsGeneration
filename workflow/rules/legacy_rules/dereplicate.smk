@@ -39,8 +39,8 @@ rule dRep_prepare:
         "Adjusting CheckM output for input to dRep"
     shell:
         """
-        cat {input.check} | sed '/^Name/d' | awk '{{print $1".fasta,"$2","$3}}' > {output.temp} &&
-        (echo "genome,completeness,contamination" && cat {output.temp}) > {output.final}
+        cat {input.check} | sed '/^Name/d' | awk '{{print $1".fasta,"$2","$3}}' >{output.temp} \
+            && (echo "genome,completeness,contamination" && cat {output.temp}) >{output.final}
         """
 
 
@@ -63,7 +63,7 @@ rule dRep:
         comp=config["dRep"]["comp"],
         cont=config["dRep"]["cont"],
     message:
-        "Running dRep on all NOMIS MAGs"
+        "Running dRep on all MAGs"
     shell:
         "(date && "
         "dRep dereplicate $(dirname {output.temp}) -p {threads} -comp {params.comp} -con {params.cont} --genomeInfo {input.check} -g $(dirname {input.bins})/*fasta -d && "

@@ -27,14 +27,16 @@ rule downloadHuman:
         url="https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.fna.gz",
     shell:
         """
-        (date
-        wget \
-            --tries=3 \
-            --waitretry=30 \
-            --timeout=120 \
-            -O {output.file} \
-            {params.url}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            wget \
+                --tries=3 \
+                --waitretry=30 \
+                --timeout=120 \
+                -O {output.file} \
+                {params.url}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -73,9 +75,15 @@ rule download_tax_db:
         mem_mb=get_mem_mb,
         runtime=6 * 60,
     shell:
-        '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
-        "rm -f $(dirname {output.file})/$name* && "
-        "pixi r -e mmseqs mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            name=$(echo $(basename {output.file}) | sed 's/_mapping//g')
+            rm -f $(dirname {output.file})/$name*
+            pixi r -e mmseqs mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule metacat_install:
@@ -88,10 +96,12 @@ rule metacat_install:
     localrule: True
     shell:
         """
-        (date
-        pixi r -e metacat pip install https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.4/metacat-1.0.4-py3-none-any.whl
-        touch {output.file}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e metacat pip install https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.4/metacat-1.0.4-py3-none-any.whl
+            touch {output.file}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -120,11 +130,13 @@ rule singlem_data:
     localrule: True
     shell:
         """
-        (date
-        mkdir -p $(dirname {output.filegz})
-        wget https://zenodo.org/records/20150069/files/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb.tar.gz -O {output.filegz}
-        tar -xzf {output.filegz} -C $(dirname {output.filegz})
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            mkdir -p $(dirname {output.filegz})
+            wget https://zenodo.org/records/20150069/files/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb.tar.gz -O {output.filegz}
+            tar -xzf {output.filegz} -C $(dirname {output.filegz})
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -142,11 +154,13 @@ rule busco_db_euk:
         runtime=10 * 60,
     shell:
         """
-        (date
-        rm -rf {output.dir}
-        pixi r -e busco busco --download all --download_path {output.dir}
-        touch {output.done}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf {output.dir}
+            pixi r -e busco busco --download all --download_path {output.dir}
+            touch {output.done}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -161,8 +175,11 @@ rule syntracker_install:
     localrule: True
     shell:
         """
-        (date &&  rm -rf SynTracker
-        git clone https://github.com/leylabmpi/SynTracker.git &> /dev/null
-        mv SynTracker $(dirname {output.dbs})
-        touch {output.file} ) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf SynTracker
+            git clone https://github.com/leylabmpi/SynTracker.git &>/dev/null
+            mv SynTracker $(dirname {output.dbs})
+            touch {output.file}
+        ) 2>{log.err} >{log.out}
         """
