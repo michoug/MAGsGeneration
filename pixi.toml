@@ -22,9 +22,9 @@ snakemake-executor-plugin-slurm= ">=2.0,<3"
 snakefmt = ">=2.0.0,<3"
 pathspec = ">=1.0.4,<2"
 ruff = ">=0.14,<0.20"
-air = "0.10.*"
+air = ">=0.10,<0.20"
 pytest-mock = ">=3.15,<4"
-polars = "*"
+polars = ">=1.40,<1.50"
 
 [pypi-dependencies]
 jarl-linter = ">=0.5"
@@ -131,11 +131,11 @@ channels = ["conda-forge", "bioconda"]
 metabat2 = "2.18.*"
 libboost = "*"
 
-[feature.metabuli]
-channels = ["conda-forge", "bioconda"]
+#[feature.metabuli]
+#channels = ["conda-forge", "bioconda"]
 
-[feature.metabuli.dependencies]
-metabuli = "1.1.*"
+#[feature.metabuli.dependencies]
+#metabuli = "1.1.*"
 
 [feature.mgthermometer]
 channels = ["conda-forge", "bioconda"]
@@ -216,6 +216,7 @@ channels = ["conda-forge", "bioconda"]
 [feature.singlem.dependencies]
 singlem = "0.21.*"
 expressbetadiversity = "1.0.10.*"
+diamond = "2.2.1.*"
 
 [feature.syntracker]
 channels = ["conda-forge", "bioconda"]
@@ -299,7 +300,7 @@ galah = { features = ["galah"], no-default-feature = true }
 gtdbtk = { features = ["gtdbtk"], no-default-feature = true }
 megahit = { features = ["megahit"], no-default-feature = true }
 metabat = { features = ["metabat"], no-default-feature = true }
-metabuli = { features = ["metabuli"], no-default-feature = true }
+# metabuli = { features = ["metabuli"], no-default-feature = true }
 metacat = { features = ["metacat"], no-default-feature = true }
 mgthermometer = { features = ["mgthermometer"], no-default-feature = true }
 microtrait = { features = ["microtrait"], no-default-feature = true }
