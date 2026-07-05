@@ -518,25 +518,23 @@ rule busco_multiqc:
             date
             rm -rf {output.folder}
             mkdir -p {output.folder}/multiqc_data
-            if ! pixi r -e multiqc multiqc $(dirname {input})/eukaryotic_mags_busco --verbose --ignore auto_lineage/ -o {output.folder}; then
-                echo "Multiqc failed (possibly no eukaryotic bins found) — continuing anyway"
-            fi
-            # MultiQC can legitimately fail when no BUSCO result is found.
-            # Create minimal placeholder outputs so downstream rules can proceed.
+
+            pixi r -e multiqc multiqc $(dirname {input[0]})/eukaryotic_mags_busco \
+                --verbose --ignore auto_lineage/ -o {output.folder} --force || true
+
             if [ ! -s {output.html} ]; then
-                cat >{output.html} <<'EOF'
-<!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"><title>BUSCO MultiQC</title></head>
-<body><p>No BUSCO results were found for eukaryotic MAGs.</p></body>
-</html>
-EOF
+                printf '%s\\n' \
+                    '<!doctype html>' \
+                    '<html lang="en">' \
+                    '<head><meta charset="utf-8"><title>BUSCO MultiQC</title></head>' \
+                    '<body><p>No BUSCO results were found for eukaryotic MAGs.</p></body>' \
+                    '</html>' >{output.html}
             fi
             if [ ! -s {output.stats} ]; then
-                printf "Sample\tbusco-complete\tbusco-complete_single_copy\tbusco-fragmented\tbusco-missing\tbusco-complete_duplicated\n" >{output.stats}
+                printf "Sample\\tbusco-complete\\tbusco-complete_single_copy\\tbusco-fragmented\\tbusco-missing\\tbusco-complete_duplicated\\n" >{output.stats}
             fi
             if [ ! -s {output.source} ]; then
-                printf "Sample Name\tSource\n" >{output.source}
+                printf "Sample Name\\tSource\\n" >{output.source}
             fi
             date
         ) 2>{log.err} >{log.out}
@@ -617,9 +615,13 @@ rule quality_eukaryotes:
             (df["busco-complete"] + df["busco-fragmented"]) * 100 / busco_total
         )
         df["contamination"] = duplicated * 100 / busco_total
-        df[["genome", "completeness", "contamination"]].drop_duplicates().to_csv(
-            output[0], index=False
+        result = (
+            df[["genome", "completeness", "contamination"]]
+            .sort_values("completeness", ascending=False)
+            .drop_duplicates(subset="genome", keep="first")
+            .sort_values("genome")
         )
+        result.to_csv(output[0], index=False)
 
 
 rule galah_euk:
