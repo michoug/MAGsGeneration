@@ -270,8 +270,10 @@ channels = ["conda-forge", "bioconda"]
 [feature.metacat.dependencies]
 python = ">=3.12.13,<3.13"
 hmmer = ">=3.4,<4"
-pip = ">=26.0.1,<27"
 fraggenescan = ">=1.32,<2"
+
+[feature.metacat.pypi-dependencies]
+metacat = { url = "https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.4/metacat-1.0.4-py3-none-any.whl" }
 
 [feature.remag]
 channels = ["conda-forge", "bioconda"]

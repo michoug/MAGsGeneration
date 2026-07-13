@@ -545,6 +545,7 @@ rule quality_eukaryotes:
     input:
         stats=rules.busco_multiqc.output.stats,
         source=rules.busco_multiqc.output.source,
+        mags_done=rules.get_eukaryotes_mags.output.done,
     output:
         os.path.join(RESULTS_DIR, "qc/busco_euk.csv"),
     log:
@@ -554,6 +555,8 @@ rule quality_eukaryotes:
     message:
         "Extracting quality metrics for eukaryotic MAGs from MultiQC report"
     run:
+        from pathlib import Path
+
         import pandas as pd
 
         df = pd.read_csv(input.stats, sep="\t")
@@ -619,8 +622,24 @@ rule quality_eukaryotes:
             df[["genome", "completeness", "contamination"]]
             .sort_values("completeness", ascending=False)
             .drop_duplicates(subset="genome", keep="first")
-            .sort_values("genome")
         )
+
+        mags_folder = Path(input.mags_done).parent
+        all_genomes = {p.stem for p in mags_folder.glob("*.fa")}
+        present_genomes = set(result["genome"].astype(str))
+        missing_genomes = sorted(all_genomes - present_genomes)
+
+        if missing_genomes:
+            missing_df = pd.DataFrame(
+                {
+                    "genome": missing_genomes,
+                    "completeness": 0.0,
+                    "contamination": 0.0,
+                }
+            )
+            result = pd.concat([result, missing_df], ignore_index=True)
+
+        result = result.sort_values("genome")
         result.to_csv(output[0], index=False)
 
 

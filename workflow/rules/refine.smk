@@ -89,13 +89,28 @@ rule rename_refine:
         (
             date
             rm -f $(dirname {output.list})/*
+            : >{output.list_temp}
+
+            shopt -s nullglob
             for f in $(dirname {input.ref})/*bins/*fa; do
                 name=$(basename $f)
                 echo cp $f $(dirname {output.list})/{params.sample}_$name >>{output.list_temp}
             done
-            perl -pe 's/{params.sample}_{params.sample}/{params.sample}/g' {output.list_temp} | perl -pe 's/.*rosella_unbinned.*//g' >{output.bash_temp}
-            bash {output.bash_temp}
-            ls $(dirname {output.list})/*fa >>{output.list}
+            shopt -u nullglob
+
+            if [ -s {output.list_temp} ]; then
+                perl -pe 's/{params.sample}_{params.sample}/{params.sample}/g' {output.list_temp} \
+                    | perl -pe 's/.*rosella_unbinned.*//g' >{output.bash_temp}
+                bash {output.bash_temp}
+            else
+                echo "WARNING: no bins found for sample {params.sample}" >&2
+                : >{output.bash_temp}
+            fi
+
+            ls $(dirname {output.list})/*fa >>{output.list} 2>/dev/null \
+                || echo "WARNING: sample {params.sample} produced 0 bins, writing empty list" >&2
+
+            touch {output.list}
             date
         ) 2>{log.err} >{log.out}
         """
@@ -116,7 +131,12 @@ rule cp_mags:
     message:
         "Copy MAGs to another folder"
     shell:
-        "(date && mkdir {output} && for file in $(dirname {input}); do cp $file/*fa {output}; done && date)"
+        """
+        (date
+        shopt -s nullglob
+        mkdir -p {output} && for file in $(dirname {input}); do cp $file/*fa {output}; done
+        date)
+        """
 
 
 # Checking bin quality

@@ -22,7 +22,7 @@ steps: [
   "annotations",
   "quality",
   "mgthermometer",
-  # "eggnog",
+  "eggnog",
   "singlem_all",
   "report"
  ]  ###USER INPUT REQUIRED###
@@ -30,16 +30,16 @@ steps: [
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
 # Directory where the workflow exists
-work_dir: "/scratch/gmichoud/GlacierIce/MAGsGeneration/"
+work_dir: "/scratch/gmichoud/Metalp/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/gmichoud/GlacierIce/assembly"
+assembly_dir: "/scratch/gmichoud/Metalp/assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/GlacierIce/remag"  
+results_dir: "/scratch/gmichoud/Metalp/Ferret"  
 
 # Directory for raw reads
-reads_dir: "/scratch/gmichoud/GlacierIce/reads"
+reads_dir: "/scratch/gmichoud/Metalp/reads/Ferret"
 
 ### Memory per cpus for your cluster
 

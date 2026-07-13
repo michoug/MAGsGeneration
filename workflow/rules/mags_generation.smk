@@ -325,6 +325,7 @@ rule vamb_coverage:
 
         df = pd.read_csv(input[0], sep="\t")
         df.rename(columns={"contigName": "contigname"}, inplace=True)
+        df = df.loc[:, (df != 0).any(axis=0)]
         df.to_csv(output[0], sep="\t", index=False, header=True)
 
 
@@ -491,8 +492,20 @@ rule comebin:
         """
         (
             date
-            rm -r {params.folder}
+            rm -rf {params.folder}
+            set +e
             pixi r -e comebin run_comebin.sh -a {input.cont} -o {params.folder} -t {threads} -p {params.bam}
+            status=$?
+            set -e
+            if [[ ! -s {output} ]]; then
+                mkdir -p $(dirname {output})
+                : > {output}
+                if [[ $status -ne 0 ]]; then
+                    echo "Comebin produced no bins; created empty output file {output}"
+                fi
+            elif [[ $status -ne 0 ]]; then
+                exit $status
+            fi
             date
         ) 2>{log.err} >{log.out}
         """
