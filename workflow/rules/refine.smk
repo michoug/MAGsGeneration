@@ -132,10 +132,12 @@ rule cp_mags:
         "Copy MAGs to another folder"
     shell:
         """
-        (date
-        shopt -s nullglob
-        mkdir -p {output} && for file in $(dirname {input}); do cp $file/*fa {output}; done
-        date)
+        (
+            date
+            shopt -s nullglob
+            mkdir -p {output} && for file in $(dirname {input}); do cp $file/*fa {output}; done
+            date
+        )
         """
 
 

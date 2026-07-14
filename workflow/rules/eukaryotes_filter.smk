@@ -556,7 +556,6 @@ rule quality_eukaryotes:
         "Extracting quality metrics for eukaryotic MAGs from MultiQC report"
     run:
         from pathlib import Path
-
         import pandas as pd
 
         df = pd.read_csv(input.stats, sep="\t")
@@ -623,12 +622,10 @@ rule quality_eukaryotes:
             .sort_values("completeness", ascending=False)
             .drop_duplicates(subset="genome", keep="first")
         )
-
         mags_folder = Path(input.mags_done).parent
         all_genomes = {p.stem for p in mags_folder.glob("*.fa")}
         present_genomes = set(result["genome"].astype(str))
         missing_genomes = sorted(all_genomes - present_genomes)
-
         if missing_genomes:
             missing_df = pd.DataFrame(
                 {
@@ -638,7 +635,6 @@ rule quality_eukaryotes:
                 }
             )
             result = pd.concat([result, missing_df], ignore_index=True)
-
         result = result.sort_values("genome")
         result.to_csv(output[0], index=False)
 

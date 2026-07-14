@@ -499,7 +499,7 @@ rule comebin:
             set -e
             if [[ ! -s {output} ]]; then
                 mkdir -p $(dirname {output})
-                : > {output}
+                : >{output}
                 if [[ $status -ne 0 ]]; then
                     echo "Comebin produced no bins; created empty output file {output}"
                 fi
