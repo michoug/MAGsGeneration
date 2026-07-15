@@ -6,14 +6,15 @@ There are two main options of this pipeline, either you have assemblies and want
 
 ### Mandatory steps
 
-- The reads are trimmed with trim_galore and human reads are removed with [strobealign](https://github.com/ksahlin/strobealign) and [samtools](https://github.com/samtools/samtools) across the human genome (hg38, GCF_000001405.40).
-- The trimmed reads are then assembled with [megahit](https://github.com/voutcn/megahit) (`runAll` pipeline) or not (`alreadyAssemble` pipeline).
-- The coverage is calculated with [strobealign](https://github.com/ksahlin/strobealign) for bay mapping all the reads across all assemblies.
-- Bins are generated with [Comebin](https://github.com/ziyewang/COMEBin), [Concoct](https://github.com/BinPro/CONCOCT), [Metabat2](https://bitbucket.org/berkeleylab/metabat), [Rosella](https://github.com/rhysnewell/rosella), [Sembin2](https://github.com/BigDataBiology/SemiBin) and [Taxvamb](https://github.com/RasmussenLab/vamb) per sample.
-- [DAS Tool](https://github.com/cmks/DAS_Tool) is then used to generate a non-redundant set of bins per sample.
-- These redundant sets are refined using [Rosella](https://github.com/rhysnewell/rosella).
-- All bins from all samples are then combined in a single folder and [Checkm2](https://github.com/chklovski/CheckM2) is used to estimate quality (completeness and contamination)
-- All the bins that passes a quality threshold of 70% completeness and <10% contamination are dereplicated with [Galah](https://github.com/wwood/galah).
+- The reads are trimmed with [trim_galore](https://github.com/FelixKrueger/TrimGalore) and human reads are removed with [strobealign](https://github.com/ksahlin/strobealign) and [samtools](https://github.com/samtools/samtools) across the human genome (hg38, GCF_000001405.40). Duplicate reads are then removed with [fastp](https://github.com/OpenGene/fastp).
+- The trimmed reads are then assembled with [megahit](https://github.com/voutcn/megahit) (`runAll` pipeline) or not (`alreadyAssemble` pipeline). Contigs shorter than 1.5 kb are filtered out with [seqkit](https://github.com/shenwei356/seqkit).
+- Contig taxonomy is assigned using [MMseqs2](https://github.com/soedinglab/MMseqs2) against the GTDB database. This taxonomy is used as input for the taxonomy-aware binning step.
+- The coverage is calculated with [strobealign](https://github.com/ksahlin/strobealign) by mapping all reads across all assemblies.
+- Bins are generated with [Comebin](https://github.com/ziyewang/COMEBin), [Concoct](https://github.com/BinPro/CONCOCT), [MetaCAT](https://github.com/liu-congcong/MetaCAT), [Metabat2](https://bitbucket.org/berkeleylab/metabat), [Rosella](https://github.com/rhysnewell/rosella), [Semibin2](https://github.com/BigDataBiology/SemiBin) and [Taxvamb](https://github.com/RasmussenLab/vamb) per sample.
+- [DAS Tool](https://github.com/cmks/DAS_Tool) is then used to select the best bins from all binners per sample.
+- The DAS Tool bins are refined using [Rosella](https://github.com/rhysnewell/rosella).
+- All bins from all samples are then combined in a single folder and [CheckM2](https://github.com/chklovski/CheckM2) is used to estimate quality (completeness and contamination).
+- All the bins that pass a quality threshold of 70% completeness and <10% contamination are dereplicated with [Galah](https://github.com/wwood/galah).
 - [CheckM2](https://github.com/chklovski/CheckM2) and [GtdbTk](https://github.com/Ecogenomics/GTDBTk) are then used to estimate the quality and taxonomy of the final MAGs.
 - Read mapping of all samples against the final sets of MAGs are done using [CoverM](https://github.com/wwood/CoverM).
 
@@ -27,7 +28,7 @@ OGT = 937 * F_{IVYWREL} − 335
 ```
 - [SynTracker](https://github.com/leylabmpi/SynTracker) is used to track strains across samples based on synteny
 - [SingleM](https://github.com/wwood/singlem) is a read-based software used to profile the samples based on single copy marker genes (mostly ribosomal) and assess how much of the diversity is captured in the MAGs
-- Putative eukaryotics bins are first filtered based on size (>2.5Mb) and then with [DeepMicroClass](https://github.com/chengsly/DeepMicroClass) that classifies contigs as prokaryotic or eukaryotic. Bins with >80% of eukaryotic contigs are considered eukaryotic bins. Their completeness and contamination are then estimated with [Busco](https://busco.ezlab.org/)
+- Putative eukaryotic bins are first re-assembled and refined with [remag](https://github.com/deng-lab/remag), then filtered based on size (>2.5 Mb) and classified with [DeepMicroClass](https://github.com/chengsly/DeepMicroClass), which distinguishes prokaryotic from eukaryotic contigs. Bins with >80% of eukaryotic contigs are considered eukaryotic bins. Their completeness and contamination are then estimated with [Busco](https://busco.ezlab.org/) and dereplicated with [Galah](https://github.com/wwood/galah).
 
 ## Setup
 
