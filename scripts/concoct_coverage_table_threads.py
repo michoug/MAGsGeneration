@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 A script to generate the input coverage table for CONCOCT using a BEDFile.
 
@@ -11,16 +10,31 @@ subcontigs without specifically mapping reads against the subcontigs.
 Modified with Claude AI to add multithreading support.
 """
 
-from __future__ import print_function
-import sys
-import os
 import argparse
+import os
 import subprocess
-# import glob
-from signal import signal, SIGPIPE, SIG_DFL
-import pandas as pd
+import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from io import StringIO
+
+# import glob
+from signal import SIG_DFL, SIGPIPE, signal
+
+import pandas as pd
+
 # import tempfile
+
+
+class BamProcessingError(Exception):
+    """Raised when no BAM files could be successfully processed."""
+
+
+class ContigMismatchError(Exception):
+    """Raised when contig order differs between BAM files."""
+
+
+class SampleNameCountMismatchError(Exception):
+    """Raised when the number of sample names doesn't match the number of BAM files."""
 
 
 def check_bed_file_for_errors(bedfile):
@@ -33,10 +47,8 @@ def check_bed_file_for_errors(bedfile):
                 assert "concoct_part_" in cutup_id
             except AssertionError:
                 sys.stderr.write(
-                    (
-                        "ERROR! Something is wrong with the line:\n'{}'\n"
-                        "Perhaps 'concoct_part_' is misplaced or missing? Exiting!\n"
-                    ).format(line)
+                    f"ERROR! Something is wrong with the line:\n'{line}'\n"
+                    "Perhaps 'concoct_part_' is misplaced or missing? Exiting!\n"
                 )
                 sys.exit(-1)
 
@@ -57,12 +69,6 @@ def process_single_bam(bedfile, bamfile, samplename):
             )
             return None
 
-        # Parse output
-        if sys.version_info[0] < 3:
-            from StringIO import StringIO
-        else:
-            from io import StringIO
-
         fh = StringIO(out.decode("utf-8"))
         df = pd.read_csv(fh, header=None, sep="\t")
 
@@ -75,8 +81,8 @@ def process_single_bam(bedfile, bamfile, samplename):
             "coverage": avg_coverage.values,
         }
 
-    except Exception as e:
-        sys.stderr.write("Exception processing {}: {}\n".format(bamfile, str(e)))
+    except (OSError, subprocess.SubprocessError, ValueError, pd.errors.ParserError) as e:
+        sys.stderr.write(f"Exception processing {bamfile}: {e!s}\n")
         return None
 
 
@@ -106,19 +112,19 @@ def generate_input_table(bedfile, bamfiles, samplenames=None, threads=1):
 
         # Collect results as they complete
         for future in as_completed(future_to_bam):
-            bamfile, samplename = future_to_bam[future]
+            bamfile, _samplename = future_to_bam[future]
             try:
                 result = future.result()
                 if result is not None:
                     results.append(result)
-                    sys.stderr.write("Completed processing: {}\n".format(bamfile))
+                    sys.stderr.write(f"Completed processing: {bamfile}\n")
                 else:
-                    sys.stderr.write("Failed to process: {}\n".format(bamfile))
-            except Exception as e:
-                sys.stderr.write("Exception for {}: {}\n".format(bamfile, str(e)))
+                    sys.stderr.write(f"Failed to process: {bamfile}\n")
+            except (OSError, subprocess.SubprocessError, ValueError) as e:
+                sys.stderr.write(f"Exception for {bamfile}: {e!s}\n")
 
     if not results:
-        raise Exception("No BAM files were successfully processed")
+        raise BamProcessingError("No BAM files were successfully processed")
 
     # Build the dataframe from results
     # Use the first result to establish contig order
@@ -129,7 +135,7 @@ def generate_input_table(bedfile, bamfiles, samplenames=None, threads=1):
     for result in results:
         # Ensure contig order matches
         if not all(result["contig_ids"] == contig_ids):
-            raise Exception("Contig order mismatch between BAM files")
+            raise ContigMismatchError("Contig order mismatch between BAM files")
 
         col_name = "cov_mean_sample_{}".format(result["samplename"])
         df_dict[col_name] = result["coverage"]
@@ -170,11 +176,12 @@ if __name__ == "__main__":
 
     # Get sample names
     if args.samplenames is not None:
-        samplenames = [s[:-1] for s in open(args.samplenames).readlines()]
+        with open(args.samplenames) as sn_fh:
+            samplenames = [s[:-1] for s in sn_fh]
         if len(samplenames) != len(args.bamfiles):
-            raise Exception(
-                "Nr of names ({0}) in samplenames should be equal to nr of given "
-                "bamfiles ({1})".format(len(samplenames), len(args.bamfiles))
+            raise SampleNameCountMismatchError(
+                f"Nr of names ({len(samplenames)}) in samplenames should be equal to nr of given "
+                f"bamfiles ({len(args.bamfiles)})"
             )
     else:
         samplenames = None
