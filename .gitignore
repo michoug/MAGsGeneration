@@ -178,3 +178,5 @@ repodata/
 conda-pypi-mapping
 
 diamond-*
+diff.md
+.gitignore

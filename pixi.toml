@@ -27,7 +27,7 @@ pytest-mock = ">=3.15,<4"
 polars = ">=1.40,<1.50"
 
 [pypi-dependencies]
-jarl-linter = ">=0.5"
+jarl-linter = ">=0.5, <1"
 
 
 [feature.annotations]
@@ -35,46 +35,46 @@ channels = ["conda-forge", "bioconda"]
 
 [feature.annotations.dependencies]
 prodigal = "2.6.3.*"
-pyrodigal = "3.5.*"
+pyrodigal = ">=3.5,<4"
 
 [feature.dastool]
 channels = ["conda-forge", "bioconda"]
 
 [feature.dastool.dependencies]
-das_tool = "1.1.7.*"
+das_tool = ">=1.1.7,<2"
 
 [feature.busco]
 channels = ["conda-forge", "bioconda"]
 
 [feature.busco.dependencies]
-busco = "6.*"
+busco = ">=6,<7"
 sepp = "4.5.5.*"
 
 [feature.checkm2]
 channels = ["conda-forge", "bioconda"]
 
 [feature.checkm2.dependencies]
-checkm2 = "1.1.*"
+checkm2 = ">=1.1,<1.5"
 
 [feature.comebin]
 channels = ["conda-forge", "bioconda"]
 
 [feature.comebin.dependencies]
-comebin = "1.0.3.*"
+comebin = ">=1.0.3, <1.1"
 
 [feature.concoct]
 channels = ["conda-forge", "bioconda"]
 
 [feature.concoct.dependencies]
-concoct = "1.1.0.*"
+concoct = ">=1.1.0, <1.2"
 
 [feature.coverm]
 channels = ["conda-forge", "bioconda"]
 
 [feature.coverm.dependencies]
-coverm = "0.7.0.*"
+coverm = ">=0.7.0,<1"
 samtools = "1.*"
-strobealign = "0.17.*"
+strobealign = ">=0.17,<0.20"
 
 [feature.deepmicroclass]
 channels = ["conda-forge", "bioconda"]
@@ -100,7 +100,7 @@ setuptools = "*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.fastp.dependencies]
-fastp = "1.0.*"
+fastp = "1.*"
 
 [feature.galah]
 channels = ["conda-forge", "bioconda"]
@@ -115,27 +115,26 @@ dashing = "0.4.*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.gtdbtk.dependencies]
-gtdbtk = "2.7.*"
-mash = "2.2.2.*"
+gtdbtk = ">=2.7,<3"
 
 [feature.megahit]
 channels = ["conda-forge", "bioconda"]
 
 [feature.megahit.dependencies]
-megahit = "1.2.9.*"
+megahit = ">=1.2.9,<1.5"
 
 [feature.metabat]
 channels = ["conda-forge", "bioconda"]
 
 [feature.metabat.dependencies]
-metabat2 = "2.18.*"
+metabat2 = ">=2.18,<2.30"
 libboost = "*"
 
 #[feature.metabuli]
 #channels = ["conda-forge", "bioconda"]
 
 #[feature.metabuli.dependencies]
-#metabuli = "1.1.*"
+#metabuli = ">=1.1,<1.5"
 
 [feature.mgthermometer]
 channels = ["conda-forge", "bioconda"]
@@ -178,13 +177,13 @@ r-vegan = "*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.multiqc.dependencies]
-multiqc = "1.35.*"
+multiqc = ">=1.35,<2"
 
 [feature.rosella]
 channels = ["conda-forge", "numba", "bioconda"]
 
 [feature.rosella.dependencies]
-rosella = "==0.5.7"
+rosella = ">=0.5.7,<1"
 umap-learn = "0.5.3.*"
 setuptools = "<82"
 
@@ -202,19 +201,19 @@ r-ggrepel = "*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.semibin.dependencies]
-semibin = "2.3.*"
+semibin = ">=2.3,<2.5"
 
 [feature.seqkit]
 channels = ["conda-forge", "bioconda"]
 
 [feature.seqkit.dependencies]
-seqkit = "2.13.*"
+seqkit = ">=2.13,<3"
 
 [feature.singlem]
 channels = ["conda-forge", "bioconda"]
 
 [feature.singlem.dependencies]
-singlem = "0.21.*"
+singlem = ">=0.21,<1"
 expressbetadiversity = "1.0.10.*"
 diamond = "2.2.1.*"
 
@@ -236,7 +235,7 @@ pip = "25.1.1.*"
 python = "3.10.17.*"
 
 [feature.taxconverter.pypi-dependencies]
-taxconverter = "==1.1.0"
+taxconverter = ">=1.1.0"
 
 [feature.vamb]
 channels = ["conda-forge", "bioconda"]
@@ -251,7 +250,7 @@ vamb = ">=5.0.4"
 channels = ["conda-forge", "bioconda"]
 
 [feature.trimgalore.dependencies]
-trim-galore = "2.2*"
+trim-galore = ">=2.2,<2.5"
 
 [feature.report]
 channels = ["conda-forge", "bioconda"]
