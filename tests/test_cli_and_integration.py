@@ -264,25 +264,3 @@ class TestWorkflowIntegration:
         # Should have called run_snakemake with profile
         mock_run_snakemake.assert_called()
 
-    def test_workflow_with_conda(self, mocker, tmp_config_file):
-        """Test workflow with conda environment."""
-        mock_run_snakemake = mocker.patch("MAGsGeneration.run_snakemake")
-        mock_ensure_pixi = mocker.patch("MAGsGeneration.ensure_and_install_pixi_envs")
-        
-        test_args = [
-            "MAGsGeneration.py",
-            "-c",
-            tmp_config_file,
-            "-p",
-            "runAll",
-            "--use-conda",
-        ]
-        mocker.patch.object(sys, "argv", test_args)
-        
-        try:
-            main()
-        except SystemExit:
-            pass
-        
-        # Should have called run_snakemake
-        mock_run_snakemake.assert_called()

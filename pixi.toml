@@ -12,7 +12,10 @@ ruff_format = "ruff check scripts/"
 air_format = "air format scripts/"
 jarl_format = "jarl check scripts/"
 test = "pytest tests/ -v"
+lint_runAll = "snakemake -s workflow/runAll.smk --configfile config/lint_config.yaml --lint"
+lint_alreadyAssemble = "snakemake -s workflow/alreadyAssemble.smk --configfile config/lint_config.yaml --lint"
 
+snakemake_lint = { depends-on = ["lint_runAll", "lint_alreadyAssemble"] }
 check = { depends-on = ["snake_format", "ruff_format", "air_format", "jarl_format", "test"] }
 
 [dependencies]
@@ -28,7 +31,6 @@ polars = ">=1.40,<1.50"
 
 [pypi-dependencies]
 jarl-linter = ">=0.5, <1"
-
 
 [feature.annotations]
 channels = ["conda-forge", "bioconda"]
@@ -262,6 +264,7 @@ r-tidyverse = "*"
 r-ggrepel = "*"
 r-knitr = "*"
 r-rmarkdown = "*"
+r-jsonlite = "*"
 
 [feature.metacat]
 channels = ["conda-forge", "bioconda"]

@@ -72,7 +72,7 @@ rule emapper:
         err=os.path.join(RESULTS_DIR, "logs/eggnog/emapper_{i}.err.log"),
     threads: 10
     resources:
-        mem_mb=lambda wildcards, threads: threads * config["memory_per_thread"],
+        mem_mb=get_mem_mb,
         runtime=60 * 12,
     params:
         db=config["eggnog"]["db"],

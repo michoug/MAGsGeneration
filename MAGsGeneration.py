@@ -1,10 +1,16 @@
-import os
-import subprocess
-import yaml
 import argparse
 import logging
+import os
 import shutil
+import subprocess
 import sys
+import tempfile
+
+import yaml
+
+# Pinned pixi release used for auto-install (bump deliberately, not silently).
+# https://github.com/prefix-dev/pixi/releases
+PIXI_INSTALL_VERSION = "v0.41.0"
 
 # Setup logging
 logging.basicConfig(
@@ -75,25 +81,38 @@ def ensure_and_install_pixi_envs(pixi_project_path):
 
     # Ensure Pixi exists
     if shutil.which("pixi") is None:
-        print("⚠️ Pixi not found. Attempting automatic installation…")
+        print(
+            f"⚠️ Pixi not found. Attempting automatic installation of {PIXI_INSTALL_VERSION}…"
+        )
+        installer_fd, installer_path = tempfile.mkstemp(
+            prefix="pixi_install_", suffix=".sh"
+        )
         try:
+            os.close(installer_fd)
             subprocess.run(
                 [
                     "curl",
                     "-fsSL",
                     "https://pixi.sh/install.sh",
                     "-o",
-                    "install_pixi.sh",
+                    installer_path,
                 ],
                 check=True,
             )
-            subprocess.run(["sh", "install_pixi.sh"], check=True)
+            if os.path.getsize(installer_path) == 0:
+                raise RuntimeError("Downloaded pixi installer is empty")
+            # Pin the installed release instead of trusting whatever "latest" resolves to.
+            env = {**os.environ, "PIXI_VERSION": PIXI_INSTALL_VERSION}
+            subprocess.run(["sh", installer_path], check=True, env=env)
             print("✅ Pixi installed successfully.\n")
         except Exception:
             print(
                 "❌ Failed to auto-install Pixi.\nPlease install manually: https://prefix.dev/pixi"
             )
             sys.exit(1)
+        finally:
+            if os.path.exists(installer_path):
+                os.remove(installer_path)
 
     # Install all Pixi environments
     print("📦 Installing Pixi environments defined in pixi.toml...")
@@ -113,8 +132,6 @@ def run_snakemake(
     snakefile,
     configfile,
     cores=1,
-    use_conda=False,
-    conda_prefix=None,
     dryrun=False,
     continue_run=False,
     profile=None,
@@ -129,11 +146,6 @@ def run_snakemake(
         cmd += ["--profile", profile]
     else:
         cmd += ["--cores", str(cores)]
-
-    if use_conda:
-        cmd += ["--use-conda"]
-        if conda_prefix:
-            cmd += ["--conda-prefix", conda_prefix]
 
     if dryrun:
         cmd.append("--dry-run")
@@ -163,6 +175,21 @@ def validate_config(config, continue_run=False):
 
     if not isinstance(config.get("steps"), list):
         raise ValueError("Config key 'steps' must be a list")
+
+    # These directories are read from steps this pipeline may or may not run,
+    # so a missing path is a warning (fail fast) rather than a hard error.
+    for key in ("work_dir", "assembly_dir", "reads_dir"):
+        path = config.get(key)
+        if path and not os.path.exists(path):
+            logger.warning(f"Config key '{key}' points to a path that does not exist: {path}")
+
+    for db_key, db_path in (
+        ("checkm2.db", config.get("checkm2", {}).get("db")),
+        ("gtdbtk.path", config.get("gtdbtk", {}).get("path")),
+        ("eggnog.db", config.get("eggnog", {}).get("db")),
+    ):
+        if db_path and not os.path.exists(db_path):
+            logger.warning(f"Config key '{db_key}' points to a path that does not exist: {db_path}")
 
 
 def validate_optional_steps(steps):
@@ -235,14 +262,6 @@ def main():
         "--dryrun",
         action="store_true",
         help="Perform a dry-run without executing",
-    )
-    parser.add_argument(
-        "--use-conda", action="store_true", help="Use conda environments"
-    )
-    parser.add_argument(
-        "--conda-prefix",
-        default=None,
-        help="Conda prefix directory (default: $CONDA_PREFIX/pipeline or ./conda)",
     )
     parser.add_argument(
         "--cores",
@@ -344,16 +363,6 @@ def main():
         f"Steps to run:\n  Mandatory: {mandatory_run}\n  Optional: {optional_run}"
     )
 
-    # Determine conda prefix
-    if args.conda_prefix:
-        conda_prefix = args.conda_prefix
-    elif args.use_conda:
-        conda_prefix = os.path.join(
-            os.environ.get("CONDA_PREFIX", "./conda"), "pipeline"
-        )
-    else:
-        conda_prefix = None
-
     # Determine profile path for Snakemake
     # Priority: --profile > --slurm > None
     profile_path = None
@@ -383,8 +392,6 @@ def main():
         snakefile=snakefile,
         configfile=run_config_path,
         cores=args.cores,
-        use_conda=args.use_conda,
-        conda_prefix=conda_prefix,
         dryrun=args.dryrun,
         continue_run=args.continue_run,
         profile=profile_path,

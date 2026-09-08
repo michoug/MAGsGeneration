@@ -116,8 +116,6 @@ pixi r python MAGsGeneration.py -c <results_path>/config_run.yaml --continue --c
 | `--dryrun`       | Perform a dry-run to preview steps.                                           |
 | `--profile`      | Base Snakemake profile directory (default: `profile/`).                       |
 | `--slurm`        | Use the Slurm profile for execution.                                          |
-| `--use-conda`    | Enable `--use-conda` in Snakemake.                                            |
-| `--conda-prefix` | Conda environment prefix path.                                                |
 | `--cores`        | Number of cores to use.                                                       |
 | `--continue`     | Continue previous run using the same results folder.                          |
 

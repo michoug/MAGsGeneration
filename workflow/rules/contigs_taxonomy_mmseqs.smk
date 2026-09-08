@@ -79,18 +79,5 @@ rule tax_add_missing:
         out=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/taxonomy_missing/{sample}.err.log"),
     localrule: True
-    run:
-        import pandas as pd
-
-        contigs = []
-        with open(input[0], "r") as f:
-            for line in f:
-                if line.startswith(">"):
-                    contigs.append(line[1:].strip().split()[0])
-        tax_df = pd.read_csv(
-            input[1], sep="\t", header=None, names=["contigs", "predictions"]
-        )
-        all_df = pd.DataFrame({"contigs": contigs})
-        merged = all_df.merge(tax_df, on="contigs", how="left")
-        merged["predictions"].fillna("unknown", inplace=True)
-        merged.to_csv(output[0], sep="\t", index=False, header=True)
+    script:
+        "../../scripts/tax_add_missing.py"

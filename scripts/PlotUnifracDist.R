@@ -7,8 +7,6 @@ library(fs)
 file_list <- dir_ls("MAGsGeneration/Results/UnifracDist", regexp = "\\.diss$")
 
 
-#ggbiplot(fit, labels =  rownames(USArrests))par(mfrow = c(4, 4))
-
 for (i in seq_along(file_list)) {
   filename <- file_list[[i]]
   a <- paste("tail -n 1 ", filename, " | wc -w")

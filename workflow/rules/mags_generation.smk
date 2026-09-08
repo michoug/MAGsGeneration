@@ -114,12 +114,8 @@ rule check_reads_assembly_for_mapping:
 rule mapping:
     input:
         check_reads=rules.check_reads_assembly_for_mapping.output,
-        read1=lambda wildcards: os.path.join(
-            RESULTS_DIR, f"TrimFinal/{wildcards.sample_2}_1.fq.gz"
-        ),
-        read2=lambda wildcards: os.path.join(
-            RESULTS_DIR, f"TrimFinal/{wildcards.sample_2}_2.fq.gz"
-        ),
+        read1=os.path.join(RESULTS_DIR, "TrimFinal/{sample_2}_1.fq.gz"),
+        read2=os.path.join(RESULTS_DIR, "TrimFinal/{sample_2}_2.fq.gz"),
         fasta=rules.filter_length.output.out,
         index=expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
@@ -320,13 +316,8 @@ rule vamb_coverage:
     localrule: True
     params:
         name="{sample}",
-    run:
-        import pandas as pd
-
-        df = pd.read_csv(input[0], sep="\t")
-        df.rename(columns={"contigName": "contigname"}, inplace=True)
-        df = df.loc[:, (df != 0).any(axis=0)]
-        df.to_csv(output[0], sep="\t", index=False, header=True)
+    script:
+        "../../scripts/vamb_coverage.py"
 
 
 rule vamb_length:
@@ -348,25 +339,16 @@ rule vamb_length:
 
 rule vamb_filter:
     input:
-        rules.tax_add_missing.output,
-        rules.vamb_length.output,
+        tax=rules.tax_add_missing.output,
+        fasta=rules.vamb_length.output,
     output:
         temp(os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_tax.tsv")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/vamb_filter/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/vamb_filter/{sample}.err.log"),
     localrule: True
-    run:
-        import pandas as pd
-
-        ids = []
-        with open(input[1], "r") as file:
-            for line in file:
-                if line.startswith(">"):
-                    ids.append(line[1:].strip())
-        df = pd.read_csv(input[0], sep="\t")
-        filtered_df = df[df.iloc[:, 0].isin(ids)]
-        filtered_df.to_csv(output[0], sep="\t", index=False, header=True)
+    script:
+        "../../scripts/vamb_filter.py"
 
 
 rule taxvamb:

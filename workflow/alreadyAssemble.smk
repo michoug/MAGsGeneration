@@ -1,5 +1,5 @@
 # Pipeline for analysing MAGs
-# Example call: snakemake -s workflow/Snakefile --configfile config/config.yaml --use-conda --conda-prefix ${CONDA_PREFIX}/pipeline --cores 1 -rpn
+# Example call: snakemake -s workflow/alreadyAssemble.smk --configfile config/config.yaml --cores 1 -rpn
 
 ##############################
 # MODULES

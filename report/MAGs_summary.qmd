@@ -5,6 +5,7 @@ format:
   html:
     toc: true
     toc-float: true
+    number-sections: true
     code-fold: true
     embed-resources: true
 params:
@@ -23,9 +24,25 @@ results_dir  <- params$results_dir
 sample_list  <- params$sample_list
 steps_run    <- str_trim(str_split(params$steps, ",")[[1]])
 
+not_run_callout <- function(kind, path) {
+  cat(paste0(
+    "::: {.callout-warning}\n",
+    "**", kind, " not found:** `", path, "` — this step may not have been run.\n",
+    ":::\n\n"
+  ))
+}
+
 file_exists_msg <- function(path) {
   if (!file.exists(path)) {
-    cat(paste0("> **File not found:** `", path, "` — this step may not have been run.\n\n"))
+    not_run_callout("File", path)
+    return(FALSE)
+  }
+  TRUE
+}
+
+dir_exists_msg <- function(path) {
+  if (!dir.exists(path)) {
+    not_run_callout("Directory", path)
     return(FALSE)
   }
   TRUE
@@ -42,12 +59,14 @@ Results directory: **`r results_dir`**
 
 The sections below cover a run summary (samples, assemblies, MAGs), pipeline steps executed,
 MAG quality, taxonomy, coverage, eukaryotic MAGs, synteny (SynTracker), metagenome completeness
-(SingleM), optimal growth temperature (MGThermometer), functional annotation (EggNOG), and a
-table of all tools and references.
+(SingleM), optimal growth temperature (MGThermometer), functional annotation (EggNOG-mapper), and
+a table of all tools and references.
 
 ---
 
-# 1. Run Summary
+# Run Summary
+
+Key counts for this run, computed from the pipeline's intermediate and final output directories.
 
 ```{r run-summary}
 # ── samples ───────────────────────────────────────────────────────────────────
@@ -123,7 +142,7 @@ knitr::kable(summary_tbl, caption = "Run summary")
 
 ---
 
-# 2. Pipeline Steps
+# Pipeline Steps
 
 ```{r pipeline-steps, results='asis'}
 step_info <- tribble(
@@ -162,22 +181,135 @@ if (nrow(active) == 0) {
 
 ---
 
-# 3. Final MAG Statistics
+# Read QC (fastp)
 
-```{r final-mags}
-if (!dir.exists(final_bins_dir)) {
-  cat(paste0("> **Directory not found:** `", final_bins_dir,
-             "` — dereplication step may not have been run.\n"))
-} else {
+Per-sample read counts, quality, and duplication metrics from **fastp**, run after adapter
+trimming and human-read removal (the pipeline's final read-cleaning step before assembly).
+
+```{r fastp-qc, results='asis'}
+fastp_dir <- file.path(results_dir, "TrimFinal", "Fastp")
+
+read_fastp <- function(path) {
+  j <- jsonlite::fromJSON(path)
+  tibble(
+    Sample               = str_remove(basename(path), "_fastp\\.json$"),
+    `Reads before`       = j$summary$before_filtering$total_reads,
+    `Reads after`        = j$summary$after_filtering$total_reads,
+    `Q30 (%)`            = 100 * j$summary$after_filtering$q30_rate,
+    `GC content (%)`     = 100 * j$summary$after_filtering$gc_content,
+    `Duplication (%)`    = 100 * j$duplication$rate
+  )
+}
+
+if (dir_exists_msg(fastp_dir)) {
+  fastp_files <- list.files(fastp_dir, pattern = "_fastp\\.json$", full.names = TRUE)
+  if (length(fastp_files) == 0) {
+    not_run_callout("File", file.path(fastp_dir, "*_fastp.json"))
+  } else {
+    fastp_stats <- map_dfr(fastp_files, read_fastp)
+    cat(paste0("**Samples with fastp reports:** ", nrow(fastp_stats), "\n\n"))
+    knitr::kable(
+      fastp_stats,
+      digits = c(NA, 0, 0, 2, 2, 2),
+      caption = "Per-sample read QC (fastp)"
+    )
+  }
+}
+```
+
+```{r fastp-qc-plot, fig.width=9, fig.height=5}
+if (exists("fastp_stats") && nrow(fastp_stats) > 0) {
+  fastp_stats |>
+    mutate(`Reads removed (%)` = 100 * (1 - `Reads after` / `Reads before`)) |>
+    ggplot(aes(x = fct_reorder(Sample, `Reads removed (%)`), y = `Reads removed (%)`)) +
+    geom_col(fill = "#4393c3") +
+    coord_flip() +
+    labs(
+      title = "Reads removed by trimming, human-read removal, and deduplication",
+      x     = NULL,
+      y     = "Reads removed (%)"
+    ) +
+    theme_bw()
+}
+```
+
+---
+
+# MAG Dereplication (Galah)
+
+Genome clustering results from **Galah**, which groups near-identical bins recovered across
+samples and keeps a single representative genome per cluster.
+
+```{r galah, results='asis'}
+cluster_path <- file.path(results_dir, "Bins", "intermediate", "cluster_galah.txt")
+
+if (file_exists_msg(cluster_path)) {
+  clusters <- read_tsv(
+    cluster_path,
+    col_names = c("representative", "genome"),
+    show_col_types = FALSE
+  )
+
+  if (nrow(clusters) == 0) {
+    cat("> No clusters found in `cluster_galah.txt`.\n\n")
+  } else {
+    cluster_sizes <- clusters |>
+      count(representative, name = "cluster_size")
+
+    cat(paste0("**Input bins clustered:** ", nrow(clusters), "\n\n"))
+    cat(paste0("**Representative (final) MAGs:** ", nrow(cluster_sizes), "\n\n"))
+    cat(paste0(
+      "**Bins removed as redundant:** ", nrow(clusters) - nrow(cluster_sizes),
+      " (", round(100 * (1 - nrow(cluster_sizes) / nrow(clusters)), 1), "%)\n\n"
+    ))
+
+    cluster_size_counts <- cluster_sizes |>
+      count(cluster_size, name = "n_clusters") |>
+      arrange(cluster_size)
+
+    knitr::kable(
+      cluster_size_counts,
+      col.names = c("Cluster size (genomes)", "Number of clusters"),
+      caption = "Distribution of Galah cluster sizes"
+    )
+  }
+}
+```
+
+```{r galah-plot, fig.width=8, fig.height=5}
+if (exists("cluster_sizes") && nrow(cluster_sizes) > 0) {
+  ggplot(cluster_sizes, aes(x = cluster_size)) +
+    geom_histogram(binwidth = 1, fill = "#4393c3", colour = "white") +
+    labs(
+      title = "Distribution of Galah cluster sizes",
+      x     = "Genomes per cluster",
+      y     = "Number of clusters"
+    ) +
+    theme_bw()
+}
+```
+
+---
+
+# Final MAG Statistics
+
+The dereplicated, non-redundant set of MAGs produced by the pipeline after all binning,
+refinement, and dereplication steps.
+
+```{r final-mags, results='asis'}
+if (dir_exists_msg(final_bins_dir)) {
   cat(paste0("**Number of final dereplicated MAGs:** ", n_mags, "\n"))
 }
 ```
 
 ---
 
-# 4. MAG Quality (CheckM2)
+# MAG Quality (CheckM2)
 
-```{r checkm2}
+Completeness and contamination estimates for every final MAG, as assessed by **CheckM2**, binned
+into the standard High/Medium/Low quality tiers.
+
+```{r checkm2, results='asis'}
 checkm2_path <- file.path(results_dir, "Bins", "checkm2", "quality_report.tsv")
 
 if (file_exists_msg(checkm2_path)) {
@@ -232,9 +364,9 @@ if (exists("checkm2")) {
 
 ---
 
-# 5. MAG Taxonomy (GTDBTk)
+# MAG Taxonomy (GTDBTk)
 
-```{r gtdbtk}
+```{r gtdbtk, results='asis'}
 gtdbtk_dir <- file.path(results_dir, "Bins", "GDTBTk")
 
 read_gtdb_summary <- function(dir, pattern) {
@@ -246,12 +378,9 @@ read_gtdb_summary <- function(dir, pattern) {
 gtdb_bac <- NULL
 gtdb_arc <- NULL
 
-if (dir.exists(gtdbtk_dir)) {
+if (dir_exists_msg(gtdbtk_dir)) {
   gtdb_bac <- read_gtdb_summary(gtdbtk_dir, "gtdbtk\\.bac120\\.summary\\.tsv")
   gtdb_arc <- read_gtdb_summary(gtdbtk_dir, "gtdbtk\\.ar53\\.summary\\.tsv")
-} else {
-  cat(paste0("> **Directory not found:** `", gtdbtk_dir,
-             "` — GTDBTk step may not have been run.\n\n"))
 }
 
 # Combine bacteria and archaea
@@ -312,9 +441,11 @@ if (exists("gtdb_all")) {
 
 ---
 
-# 6. MAG Coverage
+# MAG Coverage
 
-```{r coverage}
+Per-sample read coverage of the final MAGs (trimmed mean), computed by **CoverM**.
+
+```{r coverage, results='asis'}
 cov_path <- file.path(results_dir, "cat_mags_cov.txt")
 
 if (file_exists_msg(cov_path)) {
@@ -356,13 +487,16 @@ if (exists("cov_long")) {
 
 ---
 
-# 7. Eukaryotic MAGs (BUSCO)
+# Eukaryotic MAGs (BUSCO)
 
-```{r eukaryotes}
+Putative eukaryotic MAGs, identified by **DeepMicroClass** and assessed for completeness with
+**BUSCO**.
+
+```{r eukaryotes, results='asis'}
 euk_dir  <- file.path(results_dir, "Eukaryotic_mags")
 busco_qc <- file.path(results_dir, "qc", "busco", "multiqc_report.html")
 
-if (dir.exists(euk_dir)) {
+if (dir_exists_msg(euk_dir)) {
   euk_files <- list.files(euk_dir, pattern = "\\.fa$", full.names = FALSE)
   n_euk <- length(euk_files)
   cat(paste0("**Number of putative eukaryotic MAGs:** ", n_euk, "\n\n"))
@@ -370,31 +504,27 @@ if (dir.exists(euk_dir)) {
     cat("MAG names:\n\n")
     cat(paste0("- ", euk_files, collapse = "\n"), "\n")
   }
-} else {
-  cat(paste0("> **Directory not found:** `", euk_dir,
-             "` — eukaryotic filtering step may not have been run.\n\n"))
 }
 
-if (file.exists(busco_qc)) {
+if (file_exists_msg(busco_qc)) {
   cat(paste0("\nBUSCO MultiQC report available at: `", busco_qc, "`\n"))
-} else {
-  cat(paste0("> **BUSCO MultiQC report not found** (`", busco_qc,
-             "`) — BUSCO step may not have been run.\n"))
 }
 ```
 
 ---
 
-# 8. SynTracker (Synteny-based strain tracking)
+# SynTracker (Synteny-based strain tracking)
 
-```{r syntracker}
+Pairwise synteny scores between conspecific genomes across samples, from **SynTracker**.
+
+```{r syntracker, results='asis'}
 syn_path <- file.path(results_dir, "SynTracker", "avg_synteny_scores_all_regions.csv")
 
 if (file_exists_msg(syn_path)) {
   syn <- read_csv(syn_path, show_col_types = FALSE)
   cat(paste0("**MAGs with synteny data:** ", n_distinct(syn[[1]]), "\n\n"))
   cat(paste0("**Total pairwise comparisons:** ", nrow(syn), "\n\n"))
-  print(head(syn))
+  knitr::kable(head(syn), caption = "Preview of synteny scores (first 6 rows)")
 }
 ```
 
@@ -417,11 +547,11 @@ if (exists("syn") && ncol(syn) >= 3) {
 
 ---
 
-# 9. SingleM (Metagenome completeness)
+# SingleM (Metagenome completeness)
 
-## 9.1 Microbial fraction
+## Microbial fraction
 
-```{r singlem-mf}
+```{r singlem-mf, results='asis'}
 mf_path <- file.path(results_dir, "SingleM", "SingleM_MF.tsv")
 
 if (file_exists_msg(mf_path)) {
@@ -450,9 +580,9 @@ if (exists("mf")) {
 }
 ```
 
-## 9.2 Appraise — fraction of diversity captured in MAGs
+## Appraise — fraction of diversity captured in MAGs
 
-```{r singlem-appraise}
+```{r singlem-appraise, results='asis'}
 appraise_path <- file.path(results_dir, "SingleM", "SingleM_appraise.tsv")
 
 if (file_exists_msg(appraise_path)) {
@@ -463,9 +593,9 @@ if (file_exists_msg(appraise_path)) {
 
 ---
 
-# 10. MGThermometer (Optimal Growth Temperature)
+# MGThermometer (Optimal Growth Temperature)
 
-```{r mgthermometer}
+```{r mgthermometer, results='asis'}
 ogt_path <- file.path(results_dir, "MGthermometer", "table_OGT.txt")
 
 if (file_exists_msg(ogt_path)) {
@@ -495,9 +625,9 @@ if (exists("ogt")) {
 
 ---
 
-# 11. Functional Annotation (EggNOG-mapper)
+# Functional Annotation (EggNOG-mapper)
 
-```{r eggnog}
+```{r eggnog, results='asis'}
 egg_path <- file.path(results_dir, "EggNOG", "allMAGs_egg.txt.emapper.annotations")
 
 if (file_exists_msg(egg_path)) {
@@ -534,7 +664,7 @@ if (file_exists_msg(egg_path)) {
 
 ---
 
-# 12. Tools & References
+# Tools & References
 
 The table below lists all tools used in this pipeline, their roles, and links to the relevant publications or repositories.
 
@@ -575,7 +705,7 @@ knitr::kable(tools_tbl,
 
 ---
 
-# Session info
+# Session info {.unnumbered}
 
 ```{r session-info}
 sessionInfo()

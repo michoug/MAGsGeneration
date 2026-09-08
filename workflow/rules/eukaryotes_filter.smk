@@ -235,27 +235,8 @@ rule deepmicroclass_percentage:
     localrule: True
     message:
         "Getting the percentage for contigs identified as 'eukarya' in {wildcards.mags}"
-    run:
-        import pandas as pd
-
-        df = pd.read_csv(input.pred, sep="\t", header=0)
-        choice_labels = {
-            1: "Eukaryote",
-            2: "Eukaryote",
-            3: "Prokaryote",
-            4: "Prokaryote",
-            5: "Prokaryote",
-        }
-        df["pred"] = df["best_choice"].map(choice_labels)
-        count = pd.DataFrame(df.groupby("pred")["pred"].count())
-        count["percent"] = (count["pred"] / count["pred"].sum()) * 100
-        count_trans = count.transpose()
-        count_trans["bin"] = os.path.basename(input.pred)
-        count_trans["bin"] = count_trans["bin"].str.replace(
-            "_pred_one-hot_hybrid.tsv", ""
-        )
-        count_trans_edited = count_trans.drop(labels="pred")
-        count_trans_edited.to_csv(output.percent, sep="\t", header=True)
+    script:
+        "../../scripts/deepmicroclass_percentage.py"
 
 
 rule concatenate_deepmicroclass:
@@ -273,31 +254,8 @@ rule concatenate_deepmicroclass:
         out=os.path.join(RESULTS_DIR, "logs/all_files_collation_deepmicroclass.log"),
     message:
         "Collecting all the percentages into one file"
-    run:
-        import pandas as pd
-        import contextlib
-
-        with open(log.out, "w") as f_log:
-            with (
-                contextlib.redirect_stdout(f_log),
-                contextlib.redirect_stderr(f_log),
-            ):
-                dfs = []
-                for file in input.all_files:
-                    df = pd.read_csv(file, sep="\t", header=0)
-                    print(f"Loaded file: {file}, shape: {df.shape}")
-                    dfs.append(df)
-                concatenated = pd.concat(dfs, ignore_index=True)
-                print(f"Concatenated DataFrame shape: {concatenated.shape}")
-                # Save the collated output
-                concatenated.to_csv(output.collated, sep="\t", index=False)
-                print(f"Collated output written to: {output.collated}")
-                # Filter and save eukaryotic bins
-                eukaryotic_bins = concatenated[concatenated["Eukaryote"] >= 80]
-                eukaryotic_bins[["bin"]].to_csv(
-                    output.final_list, sep="\t", index=False, header=False
-                )
-                print(f"Eukaryotic bins written to: {output.final_list}")
+    script:
+        "../../scripts/concatenate_deepmicroclass.py"
 
 
 rule remag:
@@ -554,89 +512,8 @@ rule quality_eukaryotes:
     localrule: True
     message:
         "Extracting quality metrics for eukaryotic MAGs from MultiQC report"
-    run:
-        from pathlib import Path
-        import pandas as pd
-
-        df = pd.read_csv(input.stats, sep="\t")
-        src = pd.read_csv(input.source, sep="\t")
-        required_cols = {
-            "Sample",
-            "busco-complete",
-            "busco-complete_single_copy",
-            "busco-fragmented",
-            "busco-missing",
-        }
-        missing_cols = required_cols - set(df.columns)
-        if missing_cols:
-            raise ValueError(f"Missing required columns: {sorted(missing_cols)}")
-        required_src_cols = {"Sample Name", "Source"}
-        missing_src_cols = required_src_cols - set(src.columns)
-        if missing_src_cols:
-            raise ValueError(
-                f"Missing required columns in sources file: {sorted(missing_src_cols)}"
-            )
-        busco_total = (
-            df["busco-complete_single_copy"]
-            + df["busco-fragmented"]
-            + df["busco-missing"]
-        )
-        if "busco-complete_duplicated" in df.columns:
-            duplicated = df["busco-complete_duplicated"]
-        else:
-            duplicated = (
-                df["busco-complete"] - df["busco-complete_single_copy"]
-            ).clip(lower=0)
-        src["sample_key"] = src["Sample Name"].str.strip()
-        src["genome"] = (
-            src["Source"]
-            .str.extract(r"/eukaryotic_mags_busco/([^/]+)/", expand=False)
-            .fillna(
-                src["Source"].str.extract(
-                    r"/BUSCO_([^/]+)\.fa(?:/|$)", expand=False
-                )
-            )
-        )
-        sample_to_genome = (
-            src.dropna(subset=["genome"])
-            .drop_duplicates(subset=["sample_key"])
-            .set_index("sample_key")["genome"]
-        )
-        df["sample_key"] = df["Sample"].str.strip()
-        df["genome"] = df["sample_key"].map(sample_to_genome)
-        fallback = (
-            df["sample_key"]
-            .str.replace(
-                r"^short_summary\.specific\.eukaryota_odb12\.", "", regex=True
-            )
-            .str.replace(r"^BUSCO_", "", regex=True)
-            .str.replace(r"\.fa(?:\.txt)?$", "", regex=True)
-        )
-        df["genome"] = df["genome"].fillna(fallback)
-        df["completeness"] = (
-            (df["busco-complete"] + df["busco-fragmented"]) * 100 / busco_total
-        )
-        df["contamination"] = duplicated * 100 / busco_total
-        result = (
-            df[["genome", "completeness", "contamination"]]
-            .sort_values("completeness", ascending=False)
-            .drop_duplicates(subset="genome", keep="first")
-        )
-        mags_folder = Path(input.mags_done).parent
-        all_genomes = {p.stem for p in mags_folder.glob("*.fa")}
-        present_genomes = set(result["genome"].astype(str))
-        missing_genomes = sorted(all_genomes - present_genomes)
-        if missing_genomes:
-            missing_df = pd.DataFrame(
-                {
-                    "genome": missing_genomes,
-                    "completeness": 0.0,
-                    "contamination": 0.0,
-                }
-            )
-            result = pd.concat([result, missing_df], ignore_index=True)
-        result = result.sort_values("genome")
-        result.to_csv(output[0], index=False)
+    script:
+        "../../scripts/quality_eukaryotes.py"
 
 
 rule galah_euk:

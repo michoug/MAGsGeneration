@@ -1,2 +1,7 @@
 # SCM syntax highlighting & preventing 3-way merges
 pixi.lock merge=binary linguist-language=YAML linguist-generated=true
+
+# Force LF regardless of core.autocrlf, so Windows checkouts don't fail
+# tests/test_workflow_files.py::test_no_windows_line_endings (and don't
+# introduce CRLF noise for snakefmt/git diffs on other source files).
+* text=auto eol=lf

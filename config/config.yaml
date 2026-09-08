@@ -42,6 +42,9 @@ results_dir: "/scratch/gmichoud/Metalp/Ferret"
 reads_dir: "/scratch/gmichoud/Metalp/reads/Ferret"
 
 ### Memory per cpus for your cluster
+# Optional: defaults to DEFAULT_MEMORY_PER_THREAD_MB in workflow/rules/init.smk
+# if omitted. Can also be overridden per-run without editing this file via
+# --config memory_per_thread=<value>.
 
 memory_per_thread : 7000
 

@@ -1,0 +1,63 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+description: MAGsGeneration workflow configuration (config/config.yaml)
+type: object
+properties:
+  steps:
+    type: array
+    description: ordered list of pipeline steps to run
+    items:
+      type: string
+    minItems: 1
+  work_dir:
+    type: string
+    description: directory containing the workflow checkout
+  assembly_dir:
+    type: string
+    description: directory containing pre-computed assemblies (alreadyAssemble pipeline)
+  results_dir:
+    type: string
+    description: directory to write results to
+  reads_dir:
+    type: string
+    description: directory containing raw paired-end reads
+  memory_per_thread:
+    type: integer
+    description: >-
+      memory in MB to request per thread for rules using get_mem_mb.
+      Optional (defaults to DEFAULT_MEMORY_PER_THREAD_MB in workflow/rules/init.smk);
+      can also be overridden per-run without editing this file via
+      --config memory_per_thread=<value>.
+    exclusiveMinimum: 0
+  checkm2:
+    type: object
+    properties:
+      db:
+        type: string
+        description: path to the CheckM2 diamond database
+    required:
+      - db
+  gtdbtk:
+    type: object
+    properties:
+      path:
+        type: string
+        description: path to the GTDB-Tk reference release
+    required:
+      - path
+  eggnog:
+    type: object
+    properties:
+      db:
+        type: string
+        description: path to the eggNOG-mapper database directory
+    required:
+      - db
+  pipeline:
+    type: string
+    description: pipeline name, injected by MAGsGeneration.py at run time
+required:
+  - steps
+  - work_dir
+  - assembly_dir
+  - results_dir
+  - reads_dir

@@ -357,16 +357,15 @@ class TestRunSnakemake:
     def test_run_snakemake_calls_subprocess(self, mocker):
         """Test that run_snakemake calls subprocess.run."""
         mock_run = mocker.patch("subprocess.run")
-        
+
         from MAGsGeneration import run_snakemake
         run_snakemake(
             snakefile="test.smk",
             configfile="config.yaml",
             cores=4,
             dryrun=True,
-            use_conda=True,
         )
-        
+
         mock_run.assert_called_once()
 
     def test_run_snakemake_with_dryrun(self, mocker):
@@ -397,20 +396,6 @@ class TestRunSnakemake:
         call_args = mock_run.call_args[0][0]
         assert "-j" in call_args or "--cores" in call_args or "8" in str(call_args)
 
-    def test_run_snakemake_with_conda(self, mocker):
-        """Test that use_conda flag enables conda."""
-        mock_run = mocker.patch("subprocess.run")
-        
-        from MAGsGeneration import run_snakemake
-        run_snakemake(
-            snakefile="test.smk",
-            configfile="config.yaml",
-            use_conda=True,
-        )
-        
-        call_args = mock_run.call_args[0][0]
-        assert "--use-conda" in call_args
-
     def test_run_snakemake_with_profile(self, mocker):
         """Test that profile parameter is passed."""
         mock_run = mocker.patch("subprocess.run")
@@ -440,18 +425,3 @@ class TestRunSnakemake:
         call_args = mock_run.call_args[0][0]
         assert "--rerun-incomplete" in call_args
 
-    def test_run_snakemake_with_conda_prefix(self, mocker):
-        """Test that conda_prefix is passed."""
-        mock_run = mocker.patch("subprocess.run")
-        
-        from MAGsGeneration import run_snakemake
-        run_snakemake(
-            snakefile="test.smk",
-            configfile="config.yaml",
-            use_conda=True,
-            conda_prefix="/tmp/conda",
-        )
-        
-        call_args = mock_run.call_args[0][0]
-        assert "--conda-prefix" in call_args
-        assert "/tmp/conda" in call_args

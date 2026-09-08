@@ -1,0 +1,4 @@
+# Snakemake's `script:` directive injects a `snakemake` object into these
+# scripts' global namespace at run time; it is not an import or a real
+# builtin, so ruff must be told about it explicitly to avoid F821.
+builtins = ["snakemake"]

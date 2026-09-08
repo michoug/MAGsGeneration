@@ -47,7 +47,6 @@ rule indexHuman:
         runtime=60,
         mem_mb=get_mem_mb,
     params:
-        # numb = lambda wildcards, output: output[0][-7:-4]
         numb="{number}",
     shell:
         """

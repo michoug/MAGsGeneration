@@ -173,12 +173,15 @@ rule syntracker_install:
         err=os.path.join(RESULTS_DIR, "logs/syntracker_install.err.log"),
     priority: 20
     localrule: True
+    params:
+        # Pin to a tagged release instead of tracking the default branch head.
+        version="1.4.0",
     shell:
         """
         (
             date
             rm -rf SynTracker
-            git clone https://github.com/leylabmpi/SynTracker.git &>/dev/null
+            git clone --branch {params.version} --depth 1 https://github.com/leylabmpi/SynTracker.git
             mv SynTracker $(dirname {output.dbs})
             touch {output.file}
         ) 2>{log.err} >{log.out}
