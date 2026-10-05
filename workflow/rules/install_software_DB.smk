@@ -98,7 +98,7 @@ rule metacat_install:
         """
         (
             date
-            pixi r -e metacat pip install https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.4/metacat-1.0.4-py3-none-any.whl
+            pixi r -e metacat pip install https://github.com/liu-congcong/MetaCAT/releases/download/MetaCAT-1.0.7/metacat-1.0.7-py3-none-any.whl
             touch {output.file}
             date
         ) 2>{log.err} >{log.out}

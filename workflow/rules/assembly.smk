@@ -34,7 +34,7 @@ rule assembly_megahit:
         (
             date
             rm -rf {params}
-            pixi r -e megahit megahit -1 {input.read1} -2 {input.read2} -o {params.folder} --min-contig-len 1000 -t {threads}
+            pixi r -e megahit megahit -1 {input.read1} -2 {input.read2} -o {params.folder} --min-contig-len 1000 -t {threads} --presets meta-large
             perl -pe "s/>/>{params.name}_/" {output.fasta} >{output.final}
             date
         ) 2>{log.err} >{log.out}

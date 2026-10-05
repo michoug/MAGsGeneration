@@ -431,7 +431,7 @@ rule concoct_prepare:
             date
             rm -f {output.bed} {output.cont} {output.cov}
             pixi r -e concoct cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} >{output.cont}
-            pixi r -e concoct {params.script} {output.bed} {input.bam} --threads {threads} >{output.cov}
+            pixi r -e concoct python {params.script} {output.bed} {input.bam} --threads {threads} >{output.cov}
             [[ -s {output.cov} ]]
             date
         ) 2>{log.err} >{log.out}
