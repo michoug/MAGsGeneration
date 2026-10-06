@@ -13,33 +13,33 @@ steps: [
   "check_assembly",
   "mags_generation",
   "binning_refinement",
-  "eukaryotes_filter",
+#  "eukaryotes_filter",
   "checkm",
   "refine_all",
   "dereplicate",
-  "syntracker",
+#  "syntracker",
   "coverage",
-  "annotations",
+#  "annotations",
   "quality",
-  "mgthermometer",
-  "eggnog",
+#  "mgthermometer",
+#  "eggnog",
   "singlem_all",
-  "report"
+#  "report"
  ]  ###USER INPUT REQUIRED###
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
 # Directory where the workflow exists
-work_dir: "/scratch/gmichoud/Metalp/MAGsGeneration/"
+work_dir: "/scratch/gmichoud/test/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/gmichoud/Metalp/assembly"
+assembly_dir: "/scratch/gmichoud/test/assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/Metalp/Ferret"  
+results_dir: "/scratch/gmichoud/test/output"  
 
 # Directory for raw reads
-reads_dir: "/scratch/gmichoud/Metalp/reads/Ferret"
+reads_dir: "/scratch/gmichoud/test/reads/"
 
 ### Memory per cpus for your cluster
 
