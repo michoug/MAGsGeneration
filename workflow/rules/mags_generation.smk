@@ -539,7 +539,23 @@ rule semibin:
             date
             rm -rf $(dirname {output})
             pixi r -e semibin SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster --minfasta 200000
-            touch {output}
+            bins_dir=$(dirname {output})/output_bins
+            : >{output}
+            if compgen -G "$bins_dir/*.fa.gz" >/dev/null 2>&1; then
+                echo -e "contig_id\tbin_id" >{output}
+                for f in "$bins_dir"/*.fa.gz; do
+                    bin=$(basename "$f" .fa.gz)
+                    zgrep '^>' "$f" | sed 's/^>//' | awk -v b="$bin" '{{print $1"\t"b}}' >>{output}
+                done
+            elif compgen -G "$bins_dir/*.fa" >/dev/null 2>&1; then
+                echo -e "contig_id\tbin_id" >{output}
+                for f in "$bins_dir"/*.fa; do
+                    bin=$(basename "$f" .fa)
+                    grep '^>' "$f" | sed 's/^>//' | awk -v b="$bin" '{{print $1"\t"b}}' >>{output}
+                done
+            else
+                echo "SemiBin2 produced no bins; created empty output file {output}" >&2
+            fi
             date
         ) 2>{log.err} >{log.out}
         """

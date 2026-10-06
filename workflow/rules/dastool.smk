@@ -19,7 +19,8 @@ rule prepare_dasTool:
         concoct=rules.concoct.output,
         comebin=rules.comebin.output,
         semibin=rules.semibin.output,
-        metacat=rules.metacat_cluster.output.done,
+        metacat=rules.metacat_cluster.output.folder,
+        metacat_done=rules.metacat_cluster.output.done,
     output:
         metabatout=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/metabat_das.tsv"
@@ -55,6 +56,8 @@ rule prepare_dasTool:
         (
             date
             pixi r -e dastool Fasta_to_Contig2Bin.sh -e fa -i {input.metabat} >{output.metabatout}
+            perl -pe 's/^(\S+)[^\t]*(\t.*)$/$1$2/' {output.metabatout} >$(dirname {output.metabatout})/t.txt
+            mv $(dirname {output.metabatout})/t.txt {output.metabatout}
             perl -pe 's/metabat./{params.value}_metabat_/g' {output.metabatout} >$(dirname {output.metabatout})/t.txt
             mv $(dirname {output.metabatout})/t.txt {output.metabatout}
             pixi r -e dastool Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.rosella}) >{output.rosellaout}
@@ -66,7 +69,9 @@ rule prepare_dasTool:
             perl -pe 's/,/\t{params.value}_concoct_/g' {input.concoct} | tail -n +2 >{output.concoctout}
             perl -pe 's/\tgroup/\t{params.value}_comebin_/g' {input.comebin} >{output.comebinout}
             perl -pe 's/\t/\t{params.value}_semibin_/g' {input.semibin} | tail -n +2 >{output.semibinout}
-            perl -pe 's/metacat\./metacat_/g' {input.metacat} | tail -n +2 >{output.metacatout}
+            pixi r -e dastool Fasta_to_Contig2Bin.sh -e fasta -i {input.metacat} >{output.metacatout}
+            perl -pe 's/_metacat\./_metacat_/g' {output.metacatout} >$(dirname {output.metabatout})/t4.txt
+            mv $(dirname {output.metabatout})/t4.txt {output.metacatout}
             date
         ) 2>{log.err} >{log.out}
         """
