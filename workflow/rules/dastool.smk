@@ -1,3 +1,11 @@
+if "binning_refinement" in STEPS and "binner_selection" not in STEPS:
+    raise Exception(
+        "'binning_refinement' requires 'binner_selection' earlier in config "
+        "'steps' - it provides Bins/intermediate/selected_binners.txt, even "
+        "when binners.selection.enabled is false."
+    )
+
+
 rule binning_refinement:
     input:
         expand(
@@ -87,6 +95,7 @@ rule dasTool_run:
         semibin=rules.prepare_dasTool.output.semibinout,
         metacat=rules.prepare_dasTool.output.metacatout,
         cont=rules.filter_length.output.out,
+        sel=os.path.join(RESULTS_DIR, "Bins/intermediate/selected_binners.txt"),
     output:
         os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/das_DASTool_summary.tsv"
@@ -99,12 +108,18 @@ rule dasTool_run:
         runtime=60 * 12,
         mem_mb=get_mem_mb,
     message:
-        "Running DasTool"
+        "Running DasTool on the binners selected by binner_selection"
     shell:
         """
         (
             date
-            pixi r -e dastool DAS_Tool -i {input.metabat},{input.taxvamb},{input.rosella},{input.concoct},{input.comebin},{input.semibin},{input.metacat} --score_threshold -42 -l metabat,taxvamb,rosella,concoct,comebin,semibin,metacat -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads}
+            mapfile -t B <{input.sel}
+            IFS=,
+            LABELS="${{B[*]}}"
+            unset IFS
+            PATHS=$(printf "$(dirname {output})/%s_das.tsv," "${{B[@]}}")
+            PATHS=${{PATHS%,}}
+            pixi r -e dastool DAS_Tool -i "$PATHS" --score_threshold -42 -l "$LABELS" -c {input.cont} -o $(dirname {output})/das --write_bins --search_engine diamond --threads {threads}
             date
         ) 2>{log.err} >{log.out}
         """

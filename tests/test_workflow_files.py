@@ -46,6 +46,7 @@ class TestWorkflowFilesExist:
             "assembly.smk",
             "filter_assembly.smk",
             "mags_generation.smk",
+            "binner_selection.smk",
             "dastool.smk",
             "checkm2.smk",
             "refine.smk",
