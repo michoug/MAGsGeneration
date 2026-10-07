@@ -68,7 +68,7 @@ if "binner_selection" in STEPS:
 
 if "binning_refinement" in STEPS:
 
-    include: "rules/dastool.smk"
+    include: "rules/binette.smk"
 
     TARGETS += ["status/binning_refinement.done"]
 

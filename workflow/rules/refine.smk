@@ -1,4 +1,4 @@
-# Refine DasTool Bins with rosella
+# Refine Binette bins with rosella
 
 
 rule refine_all:
@@ -36,7 +36,7 @@ rule rosella_ref:
             sample_2=SAMPLES,
         ),
         check=rules.checkm2.output,
-        bins=rules.filter_dastool_bins.output,
+        bins=rules.binette_run.output.bins,
     output:
         os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine/rosella.done"),
     log:

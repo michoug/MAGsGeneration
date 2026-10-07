@@ -14,9 +14,13 @@ rule checkm_all:
 
 
 # Checking bin quality
+# Binette already runs CheckM2 internally to score and select its final
+# bins (see rule binette_run), so this reformats its own quality report into
+# CheckM2's native schema instead of re-running checkm2 predict from scratch
+# for no new information.
 rule checkm2:
     input:
-        bins=rules.filter_dastool_bins.output,
+        tsv=rules.binette_run.output.quality,
     output:
         tsv=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/checkm2/quality_report.tsv"
@@ -24,21 +28,16 @@ rule checkm2:
     log:
         out=os.path.join(RESULTS_DIR, "logs/checkm/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/checkm/{sample}.err.log"),
-    threads: 10
-    resources:
-        runtime=60 * 4,
-        mem_mb=get_mem_mb,
+    localrule: True
     params:
-        ext="fa",
-        db=config["checkm2"]["db"],
+        script=os.path.join(WORK_DIR, "scripts/binette_quality_to_checkm2.py"),
     message:
-        "Running CheckM2 for directory renamed bins"
+        "Reformatting Binette's quality report for {wildcards.sample} into CheckM2's native schema"
     shell:
         """
         (
             date
-            export CHECKM2DB={params.db}
-            pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input {input.bins} --output-directory $(dirname {output.tsv}) --force
+            python3 {params.script} --binette-tsv {input.tsv} --out {output.tsv}
             date
         ) 2>{log.err} >{log.out}
         """
