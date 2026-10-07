@@ -123,3 +123,50 @@ rule dasTool_run:
             date
         ) 2>{log.err} >{log.out}
         """
+
+
+rule filter_dastool_bins:
+    # DAS Tool's --write_bins writes a FASTA for every candidate bin it
+    # evaluated (including SCG-split "_sub" candidates and original bins
+    # that lost every contig to a better-scoring competitor), not just its
+    # final non-redundant selection. Only the bin names listed in
+    # das_DASTool_summary.tsv are DAS Tool's actual answer - feeding the
+    # raw das_DASTool_bins/ directory to CheckM2/Rosella refine (as the
+    # unfiltered directory does) lets rejected bins that still score well
+    # on their own (e.g. a near-complete bin that lost its contigs to a
+    # different winning bin) pass every quality gate and reach Galah as a
+    # bogus "distinct" genome that still shares raw contigs with the bin
+    # that actually won them.
+    input:
+        summary=rules.dasTool_run.output,
+    output:
+        directory(
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/DasTool/das_DASTool_bins_filtered",
+            )
+        ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/filter_dastool_bins/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/filter_dastool_bins/{sample}.err.log"),
+    localrule: True
+    params:
+        ext="fa",
+    message:
+        "Keeping only DAS Tool's selected bins for {wildcards.sample}"
+    shell:
+        """
+        (
+            date
+            mkdir -p {output}
+            src=$(dirname {input.summary})/das_DASTool_bins
+            tail -n +2 {input.summary} | cut -f1 | while read -r bin; do
+                if [[ -f "$src/$bin.{params.ext}" ]]; then
+                    cp "$src/$bin.{params.ext}" {output}/
+                else
+                    echo "WARNING: expected winning bin file missing: $src/$bin.{params.ext}" >&2
+                fi
+            done
+            date
+        ) 2>{log.err} >{log.out}
+        """
