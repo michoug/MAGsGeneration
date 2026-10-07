@@ -66,6 +66,13 @@ if "mags_generation" in STEPS:
     TARGETS += ["status/mags_generation.done"]
 
 
+if "binner_selection" in STEPS:
+
+    include: "rules/binner_selection.smk"
+
+    TARGETS += ["status/binner_selection.done"]
+
+
 if "binning_refinement" in STEPS:
 
     include: "rules/dastool.smk"
