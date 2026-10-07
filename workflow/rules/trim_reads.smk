@@ -81,6 +81,11 @@ rule mappingHuman:
     log:
         out=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.err.log"),
+    # Without this, {sample} (default regex .+) can absorb "<real_sample>.noHuman"
+    # and produce the exact same output path as removeHuman's
+    # {sample}.noHuman.bam, which Snakemake then reports as an ambiguous rule.
+    wildcard_constraints:
+        sample="[^/.]+",
     priority: 20
     threads: 10
     resources:

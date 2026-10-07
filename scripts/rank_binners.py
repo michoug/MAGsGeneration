@@ -39,7 +39,7 @@ def count_tiers(quality_df, tiers=None):
         if len(quality_df) == 0:
             counts[name] = 0
             continue
-        mask = (quality_df["Completeness"] > thresh["completeness"]) & (
+        mask = (quality_df["Completeness"] >= thresh["completeness"]) & (
             quality_df["Contamination"] < thresh["contamination"]
         )
         counts[name] = int(mask.sum())

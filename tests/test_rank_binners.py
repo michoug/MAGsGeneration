@@ -65,6 +65,21 @@ class TestCountTiers:
         counts = count_tiers(df, tiers=TIERS)
         assert counts == {"n_bins": 0, "mq": 0, "nc": 0, "nc_strict": 0}
 
+    def test_completeness_thresholds_are_inclusive(self):
+        # A bin landing exactly on a completeness cutoff must count toward
+        # that tier (matches report/MAGs_summary.qmd's >= convention).
+        df = pd.DataFrame(
+            {
+                "Name": ["at_mq", "at_nc", "at_nc_strict"],
+                "Completeness": [50, 90, 95],
+                "Contamination": [1, 1, 1],
+            }
+        )
+        counts = count_tiers(df, tiers=TIERS)
+        assert counts["mq"] == 3
+        assert counts["nc"] == 2
+        assert counts["nc_strict"] == 1
+
 
 class TestRankScore:
     def test_lower_score_is_better(self):

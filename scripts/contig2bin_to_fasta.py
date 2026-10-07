@@ -93,10 +93,12 @@ def main(argv=None):
     )
     if n_missing:
         print(
-            f"warning: {n_missing} contig IDs in {args.contig2bin} "
-            f"were not found in {args.assembly}",
+            f"error: {n_missing} contig IDs in {args.contig2bin} "
+            f"were not found in {args.assembly} - contig2bin table and "
+            "assembly are out of sync, refusing to score a truncated bin",
             file=sys.stderr,
         )
+        return 1
     print(f"wrote {n_written} bin(s) to {args.outdir}", file=sys.stderr)
     return 0
 

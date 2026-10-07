@@ -68,7 +68,9 @@ if SELECTION_ENABLED:
             (
                 date
                 python3 {params.script} --contig2bin {input.c2b} --assembly {input.assembly} --outdir {output} --min-size {params.min_size}
+                status=$?
                 date
+                exit $status
             ) 2>{log.err} >{log.out}
             """
 

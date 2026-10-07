@@ -114,6 +114,10 @@ rule dasTool_run:
         (
             date
             mapfile -t B <{input.sel}
+            if [[ ${{#B[@]}} -eq 0 ]]; then
+                echo "ERROR: {input.sel} is empty - no binners selected for DAS Tool" >&2
+                exit 1
+            fi
             IFS=,
             LABELS="${{B[*]}}"
             unset IFS
@@ -160,13 +164,19 @@ rule filter_dastool_bins:
             date
             mkdir -p {output}
             src=$(dirname {input.summary})/das_DASTool_bins
-            tail -n +2 {input.summary} | cut -f1 | while read -r bin; do
+            missing=0
+            while read -r bin; do
                 if [[ -f "$src/$bin.{params.ext}" ]]; then
                     cp "$src/$bin.{params.ext}" {output}/
                 else
-                    echo "WARNING: expected winning bin file missing: $src/$bin.{params.ext}" >&2
+                    echo "ERROR: expected winning bin file missing: $src/$bin.{params.ext}" >&2
+                    missing=$((missing + 1))
                 fi
-            done
+            done < <(tail -n +2 {input.summary} | cut -f1)
+            if [[ $missing -gt 0 ]]; then
+                echo "ERROR: $missing winning bin(s) listed in das_DASTool_summary.tsv were missing from $src" >&2
+                exit 1
+            fi
             date
         ) 2>{log.err} >{log.out}
         """

@@ -44,15 +44,20 @@ def get_mem_mb(wildcards, threads):
 
 ##############################
 # Global wildcard constraints
-# {sample} must never contain "/" or ".": Snakemake's default wildcard regex
-# (.+) matches both, which makes rule outputs ambiguous wherever a literal
-# "." or "/" follows {sample} elsewhere in the workflow - e.g.
+# {sample} must never contain "/": Snakemake's default wildcard regex (.+)
+# matches it, which makes rule outputs ambiguous wherever a literal "/"
+# follows {sample} elsewhere in the workflow - e.g.
 # Bins/intermediate/{sample}/checkm2/... (checkm2.smk) vs.
 # Bins/intermediate/{sample}/BinnerEval/{binner}/checkm2/... (binner_selection.smk),
 # where the former's {sample} can absorb "<real_sample>/BinnerEval/<binner>"
-# as one token; or intermediate/TrimHuman/{sample}.bam (mappingHuman) vs.
-# intermediate/TrimHuman/{sample}.noHuman.bam (removeHuman) in
-# trim_reads.smk, where {sample} can absorb "<real_sample>.noHuman". Actual
-# sample names (config/sample_list.txt) never contain either character.
+# as one token. No sample/assembly identifier in this workflow legitimately
+# contains "/".
+#
+# A narrower, rule-scoped `sample="[^/.]+"` constraint also lives on
+# rule mappingHuman (trim_reads.smk) to resolve a similar ambiguity with
+# removeHuman's {sample}.noHuman.bam output - scoped there rather than here
+# because alreadyAssemble.smk derives ASSEMBLY (which feeds {sample}
+# elsewhere) from arbitrary {assembly}.fna basenames, which may legitimately
+# contain dots.
 wildcard_constraints:
-    sample="[^/.]+",
+    sample="[^/]+",
