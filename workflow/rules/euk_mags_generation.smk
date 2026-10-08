@@ -140,7 +140,7 @@ rule deepmicroclass_list:
 
 rule filter_euk:
     input:
-        assembly=rules.assembly_megahit.output.final,
+        assembly=rules.filter_length.output.out,
         lst=rules.deepmicroclass_list.output.lst,
     output:
         os.path.join(RESULTS_DIR, "Assembly/{sample}_filter_euk.fasta"),
@@ -217,7 +217,9 @@ use rule prok_mapping as euk_mapping with:
         ),
         fasta=rules.filter_euk.output,
         index=expand(
-            os.path.join(RESULTS_DIR, "Assembly/{sample}_euk.fasta.r{number}.sti"),
+            os.path.join(
+                RESULTS_DIR, "Assembly/{sample}_filter_euk.fasta.r{number}.sti"
+            ),
             sample=ASSEMBLY,
             number=[100, 125, 150, 250, 400],
         ),
@@ -415,8 +417,8 @@ use rule prok_concoct as euk_concoct with:
             "Bins/intermediate/{sample}/Concoct_euk/concoct_clustering_merged.csv",
         ),
     log:
-        out=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/concoct/{sample}.err.log"),
+        out=os.path.join(RESULTS_DIR, "logs/concoct_euk/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/concoct_euk/{sample}.err.log"),
 
 
 use rule prok_semibin as euk_semibin with:
