@@ -1,5 +1,5 @@
 
-rule mags_generation:
+rule prok_mags_generation:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
@@ -58,10 +58,10 @@ rule mags_generation:
             sample=ASSEMBLY,
         ),
     output:
-        touch("status/mags_generation.done"),
+        touch("status/prok_mags_generation.done"),
 
 
-rule indexAssembly:
+rule prok_indexAssembly:
     input:
         fa=rules.filter_length.output.out,
     output:
@@ -89,7 +89,7 @@ rule indexAssembly:
         """
 
 
-rule check_reads_assembly_for_mapping:
+rule prok_check_reads_assembly_for_mapping:
     input:
         expand(
             os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"),
@@ -105,15 +105,15 @@ rule check_reads_assembly_for_mapping:
             number=[100, 125, 150, 250, 400],
         ),
     output:
-        os.path.join(RESULTS_DIR, "Assembly/check_reads_for_mapping.done"),
+        os.path.join(RESULTS_DIR, "Assembly/prok_check_reads_for_mapping.done"),
     localrule: True
     shell:
         "touch {output}"
 
 
-rule mapping:
+rule prok_mapping:
     input:
-        check_reads=rules.check_reads_assembly_for_mapping.output,
+        check_reads=rules.prok_check_reads_assembly_for_mapping.output,
         read1=lambda wildcards: os.path.join(
             RESULTS_DIR, f"TrimFinal/{wildcards.sample_2}_1.fq.gz"
         ),
@@ -156,7 +156,7 @@ rule mapping:
         """
 
 
-rule check_bam_files_for_binning:
+rule prok_check_bam_files_for_binning:
     input:
         expand(
             os.path.join(
@@ -174,7 +174,7 @@ rule check_bam_files_for_binning:
         "touch {output}"
 
 
-rule metabat2_mapping:
+rule prok_metabat2_mapping:
     input:
         bam=expand(
             os.path.join(
@@ -183,7 +183,7 @@ rule metabat2_mapping:
             ),
             sample_2=SAMPLES,
         ),
-        check=rules.check_bam_files_for_binning.output,
+        check=rules.prok_check_bam_files_for_binning.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_metabat_cov.txt"),
     log:
@@ -205,10 +205,10 @@ rule metabat2_mapping:
         """
 
 
-rule metabat2:
+rule prok_metabat2:
     input:
         contig=rules.filter_length.output.out,
-        cov=rules.metabat2_mapping.output,
+        cov=rules.prok_metabat2_mapping.output,
     output:
         directory(os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Metabat/")),
     log:
@@ -231,7 +231,7 @@ rule metabat2:
         """
 
 
-rule clean_coverage:
+rule prok_clean_coverage:
     input:
         bam=expand(
             os.path.join(
@@ -240,7 +240,7 @@ rule clean_coverage:
             ),
             sample_2=SAMPLES,
         ),
-        check=rules.check_bam_files_for_binning.output,
+        check=rules.prok_check_bam_files_for_binning.output,
     output:
         temp=temp(
             os.path.join(
@@ -273,7 +273,7 @@ rule clean_coverage:
         """
 
 
-rule rosella:
+rule prok_rosella:
     input:
         cont=rules.filter_length.output.out,
         cov=expand(
@@ -283,7 +283,7 @@ rule rosella:
             ),
             sample_2=SAMPLES,
         ),
-        check=rules.check_bam_files_for_binning.output,
+        check=rules.prok_check_bam_files_for_binning.output,
     output:
         os.path.join(
             RESULTS_DIR,
@@ -309,10 +309,10 @@ rule rosella:
         """
 
 
-rule vamb_coverage:
+rule prok_vamb_coverage:
     input:
-        rules.clean_coverage.output.final,
-        rules.check_bam_files_for_binning.output,
+        rules.prok_clean_coverage.output.final,
+        rules.prok_check_bam_files_for_binning.output,
     output:
         os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/Vamb/{sample}_aemb_cov.txt"
@@ -329,7 +329,7 @@ rule vamb_coverage:
         df.to_csv(output[0], sep="\t", index=False, header=True)
 
 
-rule vamb_length:
+rule prok_vamb_length:
     input:
         rules.filter_length.output.out,
     output:
@@ -346,10 +346,10 @@ rule vamb_length:
         "pixi r -e seqkit seqkit seq -j {threads} --remove-gaps -o {output} -m 1501 {input}"
 
 
-rule vamb_filter:
+rule prok_vamb_filter:
     input:
         rules.tax_add_missing.output,
-        rules.vamb_length.output,
+        rules.prok_vamb_length.output,
     output:
         temp(os.path.join(RESULTS_DIR, "Assembly/intermediate/{sample}_tax.tsv")),
     log:
@@ -369,11 +369,11 @@ rule vamb_filter:
         filtered_df.to_csv(output[0], sep="\t", index=False, header=True)
 
 
-rule taxvamb:
+rule prok_taxvamb:
     input:
-        contig=rules.vamb_length.output,
-        tax=rules.vamb_filter.output,
-        cov=rules.vamb_coverage.output,
+        contig=rules.prok_vamb_length.output,
+        tax=rules.prok_vamb_filter.output,
+        cov=rules.prok_vamb_coverage.output,
     output:
         os.path.join(
             RESULTS_DIR,
@@ -397,7 +397,7 @@ rule taxvamb:
         """
 
 
-rule concoct_prepare:
+rule prok_concoct_prepare:
     input:
         contig=rules.filter_length.output.out,
         bam=expand(
@@ -407,7 +407,7 @@ rule concoct_prepare:
             ),
             sample_2=SAMPLES,
         ),
-        check=rules.check_bam_files_for_binning.output,
+        check=rules.prok_check_bam_files_for_binning.output,
     output:
         bed=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_10k.bed"),
         cont=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_10k.fa"),
@@ -438,10 +438,10 @@ rule concoct_prepare:
         """
 
 
-rule concoct:
+rule prok_concoct:
     input:
-        contig=rules.concoct_prepare.output.cont,
-        cov=rules.concoct_prepare.output.cov,
+        contig=rules.prok_concoct_prepare.output.cont,
+        cov=rules.prok_concoct_prepare.output.cov,
     output:
         os.path.join(
             RESULTS_DIR,
@@ -470,7 +470,7 @@ rule concoct:
 rule comebin:
     input:
         cont=rules.filter_length.output.out,
-        check=rules.check_bam_files_for_binning.output,
+        check=rules.prok_check_bam_files_for_binning.output,
     output:
         os.path.join(
             RESULTS_DIR,
@@ -511,7 +511,7 @@ rule comebin:
         """
 
 
-rule semibin:
+rule prok_semibin:
     input:
         cont=rules.filter_length.output.out,
         bam=expand(
@@ -521,7 +521,7 @@ rule semibin:
             ),
             sample_2=SAMPLES,
         ),
-        check=rules.check_bam_files_for_binning.output,
+        check=rules.prok_check_bam_files_for_binning.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Semibin/contig_bins.tsv"),
     log:
@@ -571,7 +571,7 @@ rule metacat_cov:
             ),
             sample_2=SAMPLES,
         ),
-        check=rules.check_bam_files_for_binning.output,
+        check=rules.prok_check_bam_files_for_binning.output,
     output:
         os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat.cov"

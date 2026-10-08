@@ -45,7 +45,8 @@ class TestWorkflowFilesExist:
             "trim_reads.smk",
             "assembly.smk",
             "filter_assembly.smk",
-            "mags_generation.smk",
+            "euk_mags_generation.smk",
+            "prok_mags_generation.smk",
             "binner_selection.smk",
             "dastool.smk",
             "checkm2.smk",
@@ -58,7 +59,7 @@ class TestWorkflowFilesExist:
             "singlem.smk",
             "syntracker.smk",
             "mgthermometer.smk",
-            "eukaryotes_filter.smk",
+            # "eukaryotes_filter.smk",
         ]
         for rule_file in expected_rules:
             full_path = os.path.join(RULES_DIR, rule_file)
