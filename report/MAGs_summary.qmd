@@ -10,7 +10,7 @@ format:
 params:
   results_dir: "results"
   sample_list: "config/sample_list.txt"
-  steps: "trim_reads,assembly_all,contigs_taxonomy,check_assembly,mags_generation,binning_refinement,eukaryotes_filter,checkm,refine_all,dereplicate,syntracker,coverage,annotations,quality,mgthermometer,eggnog,singlem_all"
+  steps: "trim_reads,assembly_all,contigs_taxonomy,check_assembly,prok_mags_generation,euk_mags_generation,binning_refinement,eukaryotes_quality,checkm,refine_all,dereplicate,syntracker,coverage,annotations,quality,mgthermometer,eggnog,singlem_all"
 ---
 
 ```{r setup, include=FALSE}
@@ -133,9 +133,10 @@ step_info <- tribble(
   "assembly_all",        "De novo metagenome assembly per sample with **MEGAHIT** (min contig length 1 000 bp), followed by length filtering (≥1 500 bp) with **seqkit**.",
   "contigs_taxonomy",    "Contig-level taxonomic classification used to guide the TaxVAMB binner.",
   "check_assembly",      "Quality-check filtered assemblies and index them with **strobealign** for downstream read mapping.",
-  "mags_generation",     "Cross-sample read mapping with **strobealign**; parallel binning with **Metabat2**, **Rosella**, **TaxVAMB**, **CONCOCT**, **COMEBin** and **SemiBin2**.",
+  "prok_mags_generation", "Cross-sample read mapping with **strobealign**; parallel binning with **Metabat2**, **Rosella**, **TaxVAMB**, **CONCOCT**, **COMEBin** and **SemiBin2**.",
   "binning_refinement",  "Per-sample bin consolidation with **DAS_Tool**, quality estimation with **CheckM2**.",
-  "eukaryotes_filter",   "Size-filter large bins (>2.5 Mb), classify contigs as prokaryote/eukaryote with **DeepMicroClass** (>80% eukaryotic contigs retained), assess completeness with **BUSCO**.",
+  "euk_mags_generation", "Classify contigs as eukaryotic (incl. eukaryotic viruses) with **DeepMicroClass**, then map reads to the eukaryotic contigs and bin them with **Metabat2**, **Rosella**, **TaxVAMB**, **CONCOCT**, **SemiBin2** and **REMAG**.",
+  "eukaryotes_quality",  "Collect the eukaryotic bins from all binners and keep those ≥2.5 Mb with an average contig length ≥2.5 kb.",
   "checkm",              "Quality assessment of per-sample DAS_Tool bins with **CheckM2**.",
   "refine_all",          "Bin refinement using **Rosella refine**, rename bins, then re-run **CheckM2** on the refined set.",
   "dereplicate",         "Filter bins (≥70% completeness, ≤10% contamination) and dereplicate across all samples with **Galah**.",

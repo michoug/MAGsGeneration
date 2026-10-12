@@ -18,7 +18,8 @@ OPTIONAL_STEPS = {
     "singlem_all",
     "eggnog",
     "mgthermometer",
-    "eukaryotes_filter",
+    "euk_mags_generation",
+    "eukaryotes_quality",
 }
 PIPELINES = {
     "runAll": "workflow/runAll.smk",

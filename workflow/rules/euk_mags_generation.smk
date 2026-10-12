@@ -1,3 +1,22 @@
+def euk_assemblies(wildcards):
+    """Assemblies with at least one eukaryotic contig according to DeepMicroClass.
+
+    Assemblies without eukaryotic contigs are skipped by the eukaryotic binning,
+    as the mapping and binning tools fail on an empty fasta.
+    """
+    samples = []
+    for sample in ASSEMBLY:
+        lst = checkpoints.deepmicroclass_list.get(sample=sample).output.lst
+        with open(lst) as f:
+            if any(line.strip() for line in f):
+                samples.append(sample)
+    return samples
+
+
+def euk_expand(path, **kwargs):
+    """expand() over the assemblies with eukaryotic contigs, as an input function."""
+    return lambda wildcards: expand(path, sample=euk_assemblies(wildcards), **kwargs)
+
 
 rule euk_mags_generation:
     input:
@@ -19,54 +38,46 @@ rule euk_mags_generation:
             ),
             sample=ASSEMBLY,
         ),
-        expand(
+        euk_expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter_euk.fasta"),
-            sample=ASSEMBLY,
         ),
-        expand(
+        euk_expand(
             os.path.join(
                 RESULTS_DIR,
                 "intermediate/BamFiles_euk/{sample}/{sample}_{sample_2}.bam",
             ),
-            sample=ASSEMBLY,
             sample_2=SAMPLES,
         ),
-        expand(
+        euk_expand(
             os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Metabat_euk/"),
-            sample=ASSEMBLY,
         ),
-        expand(
+        euk_expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/Rosella_euk/UMAP_projection_with_clusters_final.png",
             ),
-            sample=ASSEMBLY,
         ),
-        expand(
+        euk_expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/Vamb_euk/Vamb_Result/vaevae_clusters_unsplit.tsv",
             ),
-            sample=ASSEMBLY,
         ),
-        expand(
+        euk_expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/Concoct_euk/concoct_clustering_merged.csv",
             ),
-            sample=ASSEMBLY,
         ),
-        expand(
+        euk_expand(
             os.path.join(
                 RESULTS_DIR, "Bins/intermediate/{sample}/Semibin_euk/contig_bins.tsv"
             ),
-            sample=ASSEMBLY,
         ),
-        expand(
+        euk_expand(
             os.path.join(
                 RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_remag/bins.csv"
             ),
-            sample=ASSEMBLY,
         ),
     output:
         touch("status/euk_mags_generation.done"),
@@ -103,7 +114,7 @@ rule deepmicroclass:
         """
 
 
-rule deepmicroclass_list:
+checkpoint deepmicroclass_list:
     input:
         deep=os.path.join(
             RESULTS_DIR,
@@ -125,6 +136,9 @@ rule deepmicroclass_list:
         import pandas as pd
 
         df = pd.read_csv(input.deep, sep="\t", header=0)
+        # best_choice is 1-based: 1 Eukaryote, 2 EukaryoteVirus, 3 Plasmid,
+        # 4 Prokaryote, 5 ProkaryoteVirus. Eukaryotic viruses are kept with the
+        # eukaryotes on purpose.
         choice_labels = {
             1: "Eukaryote",
             2: "Eukaryote",
@@ -192,11 +206,10 @@ rule euk_check_reads_assembly_for_mapping:
             os.path.join(RESULTS_DIR, "TrimFinal/{sample}_2.fq.gz"),
             sample=SAMPLES,
         ),
-        expand(
+        euk_expand(
             os.path.join(
                 RESULTS_DIR, "Assembly/{sample}_filter_euk.fasta.r{number}.sti"
             ),
-            sample=ASSEMBLY,
             number=[100, 125, 150, 250, 400],
         ),
     output:
@@ -216,11 +229,10 @@ use rule prok_mapping as euk_mapping with:
             RESULTS_DIR, f"TrimFinal/{wildcards.sample_2}_2.fq.gz"
         ),
         fasta=rules.filter_euk.output,
-        index=expand(
+        index=euk_expand(
             os.path.join(
                 RESULTS_DIR, "Assembly/{sample}_filter_euk.fasta.r{number}.sti"
             ),
-            sample=ASSEMBLY,
             number=[100, 125, 150, 250, 400],
         ),
     output:
@@ -240,12 +252,11 @@ use rule prok_mapping as euk_mapping with:
 
 rule euk_check_bam_files_for_binning:
     input:
-        expand(
+        euk_expand(
             os.path.join(
                 RESULTS_DIR,
                 "intermediate/BamFiles_euk/{sample}/{sample}_{sample_2}.bam",
             ),
-            sample=ASSEMBLY,
             sample_2=SAMPLES,
         ),
     output:

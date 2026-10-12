@@ -114,6 +114,7 @@ rule rename_mags:
         date
         mkdir -p {output}
         for file in {input}/*fa; do
+            [ -e "$file" ] || continue
             base=$(basename "$file")
             mv "$file" "{output}/{params}_$base"
         done
@@ -144,27 +145,33 @@ rule get_length:
     shell:
         """
         date
-        pixi r -e seqkit seqkit stats -j {threads} {input}/*fa -T >{output.txt}
-        awk '$5>=2500000 && $7 >= 2500' {output.txt} | cut -f1 | tail -n +2 >{output.final}
+        shopt -s nullglob
+        files=({input}/*fa)
+        if [ ${{#files[@]}} -gt 0 ]; then
+            pixi r -e seqkit seqkit stats -j {threads} "${{files[@]}}" -T >{output.txt}
+            awk '$5>=2500000 && $7 >= 2500' {output.txt} | cut -f1 | tail -n +2 >{output.final}
+        else
+            echo "No eukaryotic MAGs found for {wildcards.sample}"
+            : >{output.txt}
+            : >{output.final}
+        fi
         date
         """
 
 
 checkpoint get_filtered_mags:
     input:
-        list=expand(
+        list=euk_expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/euk_potential_mags_length/{sample}_length_filtered_list.txt",
             ),
-            sample=ASSEMBLY,
         ),
-        dirs=expand(
+        dirs=euk_expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/euk_potential_mags_renamed/{sample}_renamed",
             ),
-            sample=ASSEMBLY,
         ),
     output:
         files=directory(
@@ -179,7 +186,8 @@ checkpoint get_filtered_mags:
         (
             date
             mkdir -p {output.files}
-            cat {input.list} | while read -r line; do
+            # /dev/null keeps cat off stdin when no assembly has eukaryotic contigs
+            cat /dev/null {input.list} | while read -r line; do
                 base=$(basename "$line")
                 cp $line {output.files}/$base
             done

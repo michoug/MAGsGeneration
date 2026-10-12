@@ -28,7 +28,7 @@ from MAGsGeneration import (
 def minimal_config():
     return {
         "results_dir": "/tmp/results",
-        "steps": ["trim_reads", "assembly_all", "mags_generation"],
+        "steps": ["trim_reads", "assembly_all", "prok_mags_generation"],
         "work_dir": "/tmp/work",
         "assembly_dir": "/tmp/assembly",
         "reads_dir": "/tmp/reads",
@@ -222,7 +222,7 @@ class TestResolveOptionalSteps:
         assert "trim_reads" not in result
 
     def test_no_optional_steps_in_config(self):
-        mandatory_only = ["trim_reads", "assembly_all", "mags_generation"]
+        mandatory_only = ["trim_reads", "assembly_all", "prok_mags_generation"]
         result = resolve_optional_steps(None, mandatory_only)
         assert result == []
 
@@ -249,7 +249,8 @@ class TestConstants:
             "singlem_all",
             "eggnog",
             "mgthermometer",
-            "eukaryotes_filter",
+            "euk_mags_generation",
+            "eukaryotes_quality",
         }
         assert expected.issubset(OPTIONAL_STEPS)
 
@@ -316,7 +317,7 @@ class TestResolveOptionalStepsEdgeCases:
 
     def test_resolve_with_only_mandatory_steps(self):
         """Test resolution when only mandatory steps are provided."""
-        all_steps = ["trim_reads", "assembly_all", "mags_generation"]
+        all_steps = ["trim_reads", "assembly_all", "prok_mags_generation"]
         result = resolve_optional_steps(["trim_reads"], all_steps)
         assert result == []
 

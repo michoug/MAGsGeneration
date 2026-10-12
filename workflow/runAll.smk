@@ -59,17 +59,27 @@ if "check_assembly" in STEPS:
     TARGETS += ["status/checkAssembly.done"]
 
 
-if "prok_mags_generation" in STEPS:
+# euk_mags_generation.smk reuses the prok rules ("use rule ... with:") and
+# eukaryotes_quality.smk reuses the euk rules, so include the dependencies too
+if (
+    "prok_mags_generation" in STEPS
+    or "euk_mags_generation" in STEPS
+    or "eukaryotes_quality" in STEPS
+):
 
     include: "rules/prok_mags_generation.smk"
 
+
+if "euk_mags_generation" in STEPS or "eukaryotes_quality" in STEPS:
+
+    include: "rules/euk_mags_generation.smk"
+
+
+if "prok_mags_generation" in STEPS:
     TARGETS += ["status/prok_mags_generation.done"]
 
 
 if "euk_mags_generation" in STEPS:
-
-    include: "rules/euk_mags_generation.smk"
-
     TARGETS += ["status/euk_mags_generation.done"]
 
 

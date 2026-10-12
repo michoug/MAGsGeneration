@@ -129,7 +129,8 @@ pixi r python MAGsGeneration.py -c <results_path>/config_run.yaml --continue --c
 By default, all steps are included. The following **optional steps** can be toggled via `--steps`:
 
 * `eggnog`
-* `eukaryotes_filter`
+* `euk_mags_generation`
+* `eukaryotes_quality`
 * `mgthermometer`
 * `singlem_all`
 * `syntracker`

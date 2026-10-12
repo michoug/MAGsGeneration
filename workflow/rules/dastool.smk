@@ -21,12 +21,12 @@ rule binning_refinement:
 
 rule prepare_dasTool:
     input:
-        metabat=rules.metabat2.output,
-        rosella=rules.rosella.output,
-        taxvamb=rules.taxvamb.output,
-        concoct=rules.concoct.output,
+        metabat=rules.prok_metabat2.output,
+        rosella=rules.prok_rosella.output,
+        taxvamb=rules.prok_taxvamb.output,
+        concoct=rules.prok_concoct.output,
         comebin=rules.comebin.output,
-        semibin=rules.semibin.output,
+        semibin=rules.prok_semibin.output,
         metacat=rules.metacat_cluster.output.folder,
         metacat_done=rules.metacat_cluster.output.done,
     output:

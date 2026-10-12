@@ -52,11 +52,28 @@ if "check_assembly" in STEPS:
     TARGETS += ["status/checkAssembly.done"]
 
 
-if "mags_generation" in STEPS:
+# euk_mags_generation.smk reuses the prok rules ("use rule ... with:") and
+# eukaryotes_quality.smk reuses the euk rules, so include the dependencies too
+if (
+    "prok_mags_generation" in STEPS
+    or "euk_mags_generation" in STEPS
+    or "eukaryotes_quality" in STEPS
+):
 
-    include: "rules/mags_generation.smk"
+    include: "rules/prok_mags_generation.smk"
 
-    TARGETS += ["status/mags_generation.done"]
+
+if "euk_mags_generation" in STEPS or "eukaryotes_quality" in STEPS:
+
+    include: "rules/euk_mags_generation.smk"
+
+
+if "prok_mags_generation" in STEPS:
+    TARGETS += ["status/prok_mags_generation.done"]
+
+
+if "euk_mags_generation" in STEPS:
+    TARGETS += ["status/euk_mags_generation.done"]
 
 
 if "binner_selection" in STEPS:
@@ -73,11 +90,11 @@ if "binning_refinement" in STEPS:
     TARGETS += ["status/binning_refinement.done"]
 
 
-if "eukaryotes_filter" in STEPS:
+if "eukaryotes_quality" in STEPS:
 
-    include: "rules/eukaryotes_filter.smk"
+    include: "rules/eukaryotes_quality.smk"
 
-    TARGETS += ["status/eukaryotes_filter.done"]
+    TARGETS += ["status/eukaryotes_quality.done"]
 
 
 # CheckM

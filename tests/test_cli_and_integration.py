@@ -27,7 +27,7 @@ def tmp_config_file(tmp_path):
     """Create a temporary config file for testing."""
     config = {
         "results_dir": str(tmp_path / "results"),
-        "steps": ["trim_reads", "assembly_all", "mags_generation"],
+        "steps": ["trim_reads", "assembly_all", "prok_mags_generation"],
         "work_dir": str(tmp_path / "work"),
         "assembly_dir": str(tmp_path / "assembly"),
         "reads_dir": str(tmp_path / "reads"),
