@@ -94,7 +94,7 @@ channels = ["conda-forge", "bioconda"]
 
 [feature.eggnog.dependencies]
 eggnog-mapper = ">2,<3"
-setuptools = "*"
+setuptools = ">=83.0.0"
 
 [feature.fastp]
 channels = ["conda-forge", "bioconda"]
