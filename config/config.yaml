@@ -12,34 +12,35 @@ steps: [
   "contigs_taxonomy",
   "check_assembly",
   "mags_generation",
+  "binner_selection",
   "binning_refinement",
-  "eukaryotes_filter",
+#  "eukaryotes_filter",
   "checkm",
   "refine_all",
   "dereplicate",
-  "syntracker",
+#  "syntracker",
   "coverage",
-  "annotations",
+#  "annotations",
   "quality",
-  "mgthermometer",
-  "eggnog",
+#  "mgthermometer",
+#  "eggnog",
   "singlem_all",
-  "report"
+#  "report"
  ]  ###USER INPUT REQUIRED###
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
 # Directory where the workflow exists
-work_dir: "/scratch/gmichoud/GlacierIce/MAGsGeneration/"
+work_dir: "/scratch/gmichoud/test/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/gmichoud/GlacierIce/p25/contigs"
+assembly_dir: "/scratch/gmichoud/test/assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/GlacierIce/p25_results"  
+results_dir: "/scratch/gmichoud/test/output"  
 
 # Directory for raw reads
-reads_dir: "/scratch/gmichoud/GlacierIce/reads"
+reads_dir: "/scratch/gmichoud/test/reads/"
 
 ### Memory per cpus for your cluster
 
@@ -55,3 +56,28 @@ gtdbtk:
 
 eggnog:
   db: "/work/river/Databases/eggnog-mapper-2.1.12/"  ###USER INPUT REQUIRED###
+
+################
+# Binner selection
+# After the 7 binners run, score each one with CheckM2 and keep only the
+# best `n` (default 3, at most one per technology family) to feed DAS Tool.
+# Families follow Han, Wang & Zhu, Nat Commun 16:2865 (2025),
+# https://doi.org/10.1038/s41467-025-57957-6
+binners:
+  catalogue:
+    metabat:  { family: "classical",           label: "TNF + coverage, similarity graph + label propagation" }
+    concoct:  { family: "classical",           label: "k-mer + coverage, PCA + GMM" }
+    rosella:  { family: "ml_clustering",       label: "TNF + coverage, UMAP + HDBSCAN" }
+    metacat:  { family: "ml_clustering",       label: "composition + coverage, single-copy-gene seeded" }
+    comebin:  { family: "deep_representation", label: "multi-view contrastive embedding" }
+    semibin:  { family: "deep_representation", label: "semi-supervised contrastive, must-link/cannot-link" }
+    taxvamb:  { family: "deep_representation", label: "VAE + taxonomy-guided (VAEVAE)" }
+  selection:
+    enabled: true          # false -> DAS Tool keeps all seven binners, no scoring run
+    n: 3
+    one_per_family: true   # at most one binner per family, then top-n by score
+    min_bin_size: 200000   # bp; applied identically to every binner before scoring
+    tiers:                 # CheckM2-only approximation of the MQ / NC / HQ tiers in the paper above
+      mq: { completeness: 50, contamination: 10 }
+      nc: { completeness: 90, contamination: 5 }
+      nc_strict: { completeness: 95, contamination: 5 }

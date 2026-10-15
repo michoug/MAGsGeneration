@@ -36,7 +36,7 @@ rule rosella_ref:
             sample_2=SAMPLES,
         ),
         check=rules.checkm2.output,
-        bins=rules.dasTool_run.output,
+        bins=rules.filter_dastool_bins.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine/rosella.done"),
     log:
@@ -52,10 +52,13 @@ rule rosella_ref:
         "Refine bins with Rosella"
     shell:
         """
-        (date && 
-        rm -rf $(dirname {output})/* && pixi r -e rosella rosella refine --min-bin-size 200000 --checkm-results {input.check} -d $(dirname {input.bins})/das_DASTool_bins --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) && 
-        touch {output} &&
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf $(dirname {output})/*
+            pixi r -e rosella rosella refine --min-bin-size 200000 --checkm-results {input.check} -d {input.bins} --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output})
+            touch {output}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -83,16 +86,33 @@ rule rename_refine:
         sample="{sample}",
     shell:
         """
-        (date 
-        rm -f $(dirname {output.list})/*
-        for f in $(dirname {input.ref})/*bins/*fa; 
-        do name=$(basename $f);
-        echo cp $f $(dirname {output.list})/{params.sample}_$name >> {output.list_temp};
-        done && 
-        perl -pe 's/{params.sample}_{params.sample}/{params.sample}/g' {output.list_temp} | perl -pe 's/.*rosella_unbinned.*//g'> {output.bash_temp}
-        bash {output.bash_temp}
-        ls $(dirname {output.list})/*fa >> {output.list}; 
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -f $(dirname {output.list})/*
+            : >{output.list_temp}
+
+            shopt -s nullglob
+            for f in $(dirname {input.ref})/*bins/*fa; do
+                name=$(basename $f)
+                echo cp $f $(dirname {output.list})/{params.sample}_$name >>{output.list_temp}
+            done
+            shopt -u nullglob
+
+            if [ -s {output.list_temp} ]; then
+                perl -pe 's/{params.sample}_{params.sample}/{params.sample}/g' {output.list_temp} \
+                    | perl -pe 's/.*rosella_unbinned.*//g' >{output.bash_temp}
+                bash {output.bash_temp}
+            else
+                echo "WARNING: no bins found for sample {params.sample}" >&2
+                : >{output.bash_temp}
+            fi
+
+            ls $(dirname {output.list})/*fa >>{output.list} 2>/dev/null \
+                || echo "WARNING: sample {params.sample} produced 0 bins, writing empty list" >&2
+
+            touch {output.list}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -111,7 +131,14 @@ rule cp_mags:
     message:
         "Copy MAGs to another folder"
     shell:
-        "(date && mkdir {output} && for file in $(dirname {input}); do cp $file/*fa {output}; done && date)"
+        """
+        (
+            date
+            shopt -s nullglob
+            mkdir -p {output} && for file in $(dirname {input}); do cp $file/*fa {output}; done
+            date
+        )
+        """
 
 
 # Checking bin quality
@@ -135,7 +162,11 @@ rule checkm2_refine:
     message:
         "Running CheckM2 for directory renamed bins"
     shell:
-        "(date && "
-        "export CHECKM2DB={params.db} && "
-        "pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input {input} --output-directory $(dirname {output.tsv}) --force && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            export CHECKM2DB={params.db}
+            pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input {input} --output-directory $(dirname {output.tsv}) --force
+            date
+        ) 2>{log.err} >{log.out}
+        """

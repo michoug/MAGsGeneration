@@ -8,7 +8,7 @@ rule syntracker:
 
 rule cp_assemblies:
     input:
-        expand(rules.filter_length.output.out, sample=SAMPLES),
+        expand(rules.filter_length.output.out, sample=ASSEMBLY),
     output:
         dir=temp(
             directory(os.path.join(RESULTS_DIR, "SynTracker/intermediate/assemblies"))
@@ -19,11 +19,12 @@ rule cp_assemblies:
     localrule: True
     shell:
         """
-        (date
-        mkdir -p {output.dir}
-        cp {input} {output.dir}/
+        (
+            date
+            mkdir -p {output.dir}
+            cp {input} {output.dir}/
         )
-        2> {log.err} > {log.out}
+        2>{log.err} >{log.out}
         """
 
 
@@ -43,11 +44,13 @@ rule syntracker_blast:
         runtime=4 * 60,
     shell:
         """
-        (date
-        rm -rf {output.dir}
-        pixi r -e syntracker python {input.syntracker}/syntracker_makeDB.py -target {input.assembly} -out {output.dir}
-        touch {output.done}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf {output.dir}
+            pixi r -e syntracker python {input.syntracker}/syntracker_makeDB.py -target {input.assembly} -out {output.dir}
+            touch {output.done}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -89,12 +92,14 @@ rule syntracker_run:
         runtime=60,
     shell:
         """
-        (date
-        mkdir -p {output.folder}_mag
-        cp {input.mags} {output.folder}_mag/
-        pixi r -e syntracker python {input.syntracker}/syntracker.py -ref {output.folder}_mag -mode new -blastDB {input.blastdb} -out {output.folder} -cores {threads} -length 2500
-        rm -r {output.folder}_mag
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            mkdir -p {output.folder}_mag
+            cp {input.mags} {output.folder}_mag/
+            pixi r -e syntracker python {input.syntracker}/syntracker.py -ref {output.folder}_mag -mode new -blastDB {input.blastdb} -out {output.folder} -cores {threads} -length 2500
+            rm -r {output.folder}_mag
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -131,38 +136,37 @@ rule syntracker_finalize:
     shell:
         """
         (
-        date
+            date
 
-        out_dir=$(dirname "{output.score_all}")
+            out_dir=$(dirname "{output.score_all}")
 
-        for csv in avg_synteny_scores_100_regions.csv \
-                   avg_synteny_scores_40_regions.csv \
-                   avg_synteny_scores_60_regions.csv \
-                   avg_synteny_scores_80_regions.csv \
-                   avg_synteny_scores_200_regions.csv \
-                   avg_synteny_scores_all_regions.csv \
-                   synteny_scores_per_region.csv;
-        do
-            first=1
-            dest_file="${{out_dir}}/${{csv}}"
+            for csv in avg_synteny_scores_100_regions.csv \
+                avg_synteny_scores_40_regions.csv \
+                avg_synteny_scores_60_regions.csv \
+                avg_synteny_scores_80_regions.csv \
+                avg_synteny_scores_200_regions.csv \
+                avg_synteny_scores_all_regions.csv \
+                synteny_scores_per_region.csv; do
+                first=1
+                dest_file="${{out_dir}}/${{csv}}"
 
-            # Ensure destination directory exists
-            mkdir -p "${{out_dir}}"
+                # Ensure destination directory exists
+                mkdir -p "${{out_dir}}"
 
-            for file in {input}; do
-                src_file="$(dirname "$file")/${{csv}}"
-                if [ -f "$src_file" ]; then
-                    if [ $first -eq 1 ]; then
-                        cat "$src_file" > "$dest_file"
-                        first=0
-                    else
-                        tail -n +2 "$src_file" >> "$dest_file"
+                for file in {input}; do
+                    src_file="$(dirname "$file")/${{csv}}"
+                    if [ -f "$src_file" ]; then
+                        if [ $first -eq 1 ]; then
+                            cat "$src_file" >"$dest_file"
+                            first=0
+                        else
+                            tail -n +2 "$src_file" >>"$dest_file"
+                        fi
                     fi
-                fi
+                done
             done
-        done
 
-        touch {output.done}
-        date
-        ) > {log.out} 2> {log.err}
+            touch {output.done}
+            date
+        ) >{log.out} 2>{log.err}
         """

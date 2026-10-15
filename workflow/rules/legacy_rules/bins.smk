@@ -113,9 +113,9 @@ rule metabinner_coverage:
         "Running the first part of metabinner to estimate the coverage"
     shell:
         """
-        (date && jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input} && 
-        cat {output.temp} | awk '{{if ($2>{config[metabinner][length]}) print $0 }}' | cut -f -1,4- > {output.final} && 
-        date) 2> {log.err} > {log.out}
+        (date && jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input} \
+            && cat {output.temp} | awk '{{if ($2>{config[metabinner][length]}) print $0 }}' | cut -f -1,4- >{output.final} \
+            && date) 2>{log.err} >{log.out}
         """
 
 

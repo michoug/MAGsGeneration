@@ -5,7 +5,7 @@ rule contigs_taxonomy:
                 RESULTS_DIR,
                 "Assembly/intermediate/{sample}_taxonomy/{sample}_tax_good.tsv",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
     output:
         touch("status/taxonomy.done"),
@@ -32,10 +32,12 @@ rule taxonomy:
         mem_mb=get_mem_mb,
     shell:
         """
-        (date
-        name=$(echo $(basename {output.tax_report}) | sed "s/_report.tsv//g")
-        pixi r -e metabuli metabuli classify {input.fasta} $(dirname {input.file}) $(dirname {output.tax_report}) $name --threads {threads} --max-ram 130 --seq-mode 1
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            name=$(echo $(basename {output.tax_report}) | sed "s/_report.tsv//g")
+            pixi r -e metabuli metabuli classify {input.fasta} $(dirname {input.file}) $(dirname {output.tax_report}) $name --threads {threads} --max-ram 130 --seq-mode 1
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -78,14 +80,10 @@ rule tax_add_missing:
             for line in f:
                 if line.startswith(">"):
                     contigs.append(line[1:].strip().split()[0])
-
         tax_df = pd.read_csv(
             input[1], sep="\t", header=None, names=["contigs", "predictions"]
         )
-
         all_df = pd.DataFrame({"contigs": contigs})
-
         merged = all_df.merge(tax_df, on="contigs", how="left")
         merged["predictions"].fillna("unknown", inplace=True)
-
         merged.to_csv(output[0], sep="\t", index=False, header=True)

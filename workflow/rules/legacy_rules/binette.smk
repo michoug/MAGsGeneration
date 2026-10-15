@@ -36,16 +36,18 @@ rule prepare_binning_refinement:
         "Preparing files for BinRef"
     shell:
         r"""
-        (date && bash {params.script} -e fa -i {input.metabat} > {output.metabatout}
-        perl -pe 's/metabat./{params.value}_metabat_/g' {output.metabatout} > $(dirname {output.metabatout})/t.txt && mv $(dirname {output.metabatout})/t.txt {output.metabatout} 
-        bash {params.script} -e fna -i $(dirname {input.rosella}) >  {output.rosellaout}
-        perl -pe 's/rosella_(bin|refined)_/{params.value}_rosella_/g' {output.rosellaout} > $(dirname {output.metabatout})/t2.txt && mv $(dirname {output.metabatout})/t2.txt {output.rosellaout}
-        bash {params.script} -e fna -i $(dirname {input.taxvamb})/bins > {output.taxvambout}
-        perl -pe 's/\t/\t{params.value}_taxvamb_/g' {output.taxvambout} > $(dirname {output.metabatout})/t3.txt && mv $(dirname {output.metabatout})/t3.txt {output.taxvambout} 
-        perl -pe 's/,/\t{params.value}_concoct_/g' {input.concoct} | tail -n +2 > {output.concoctout}
-        perl -pe 's/\tgroup/\t{params.value}_comebin_/g' {input.comebin} > {output.comebinout}
-        perl -pe 's/\t/\t{params.value}_semibin_/g' {input.semibin} | tail -n +2 > {output.semibinout}
-        date) 2> {log.err} > {log.out}
+        (
+            date && bash {params.script} -e fa -i {input.metabat} >{output.metabatout}
+            perl -pe 's/metabat./{params.value}_metabat_/g' {output.metabatout} >$(dirname {output.metabatout})/t.txt && mv $(dirname {output.metabatout})/t.txt {output.metabatout}
+            bash {params.script} -e fna -i $(dirname {input.rosella}) >{output.rosellaout}
+            perl -pe 's/rosella_(bin|refined)_/{params.value}_rosella_/g' {output.rosellaout} >$(dirname {output.metabatout})/t2.txt && mv $(dirname {output.metabatout})/t2.txt {output.rosellaout}
+            bash {params.script} -e fna -i $(dirname {input.taxvamb})/bins >{output.taxvambout}
+            perl -pe 's/\t/\t{params.value}_taxvamb_/g' {output.taxvambout} >$(dirname {output.metabatout})/t3.txt && mv $(dirname {output.metabatout})/t3.txt {output.taxvambout}
+            perl -pe 's/,/\t{params.value}_concoct_/g' {input.concoct} | tail -n +2 >{output.concoctout}
+            perl -pe 's/\tgroup/\t{params.value}_comebin_/g' {input.comebin} >{output.comebinout}
+            perl -pe 's/\t/\t{params.value}_semibin_/g' {input.semibin} | tail -n +2 >{output.semibinout}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -73,7 +75,9 @@ rule binref:
         "Running BinRef"
     shell:
         """
-        (date
-        pixi r -e binette binette -b {input.metabat} {input.taxvamb} {input.rosella} {input.concoct} {input.comebin} {input.semibin} -c {input.cont} -o $(dirname {output}) -t {threads} --checkm2_db {params.db} --min_completeness 50 --max_length 20000000 --verbose
-        date) 2> {log.err} > {log.out}        
+        (
+            date
+            pixi r -e binette binette -b {input.metabat} {input.taxvamb} {input.rosella} {input.concoct} {input.comebin} {input.semibin} -c {input.cont} -o $(dirname {output}) -t {threads} --checkm2_db {params.db} --min_completeness 50 --max_length 20000000 --verbose
+            date
+        ) 2>{log.err} >{log.out}
         """

@@ -7,57 +7,74 @@ version = "0.1.0"
 
 [tasks]
 
+snake_format = "snakefmt ."
+ruff_format = "ruff check scripts/"
+air_format = "air format scripts/"
+jarl_format = "jarl check scripts/"
+test = "pytest tests/ -v"
+
+check = { depends-on = ["snake_format", "ruff_format", "air_format", "jarl_format", "test"] }
+
 [dependencies]
 
 snakemake= ">=9.0,<10"
 snakemake-executor-plugin-slurm= ">=2.0,<3"
-snakefmt = ">=1.0.0,<2"
+snakefmt = ">=2.0.0,<3"
 pathspec = ">=1.0.4,<2"
+ruff = ">=0.14,<0.20"
+air = ">=0.10,<0.20"
+pytest-mock = ">=3.15,<4"
+polars = ">=1.40,<1.50"
+
+[pypi-dependencies]
+jarl-linter = ">=0.5, <1"
+
 
 [feature.annotations]
 channels = ["conda-forge", "bioconda"]
 
 [feature.annotations.dependencies]
 prodigal = "2.6.3.*"
-pyrodigal = "3.5.*"
+pyrodigal = ">=3.5,<4"
 
 [feature.dastool]
 channels = ["conda-forge", "bioconda"]
 
 [feature.dastool.dependencies]
-das_tool = "1.1.7.*"
+das_tool = ">=1.1.7,<2"
 
 [feature.busco]
 channels = ["conda-forge", "bioconda"]
 
 [feature.busco.dependencies]
-busco = "6.*"
+busco = ">=6,<7"
+sepp = "4.5.5.*"
 
 [feature.checkm2]
 channels = ["conda-forge", "bioconda"]
 
 [feature.checkm2.dependencies]
-checkm2 = "1.1.*"
+checkm2 = ">=1.1,<1.5"
 
 [feature.comebin]
 channels = ["conda-forge", "bioconda"]
 
 [feature.comebin.dependencies]
-comebin = "1.0.3.*"
+comebin = ">=1.0.3, <1.1"
 
 [feature.concoct]
 channels = ["conda-forge", "bioconda"]
 
 [feature.concoct.dependencies]
-concoct = "1.1.0.*"
+concoct = ">=1.1.0, <1.2"
 
 [feature.coverm]
 channels = ["conda-forge", "bioconda"]
 
 [feature.coverm.dependencies]
-coverm = "0.7.0.*"
+coverm = ">=0.7.0,<1"
 samtools = "1.*"
-strobealign = "0.17.*"
+strobealign = ">=0.17,<0.20"
 
 [feature.deepmicroclass]
 channels = ["conda-forge", "bioconda"]
@@ -81,14 +98,14 @@ pysam = ">=0.21.0"
 channels = ["conda-forge", "bioconda"]
 
 [feature.eggnog.dependencies]
-eggnog-mapper = "2.1.9.*"
-setuptools = "*"
+eggnog-mapper = ">2,<3"
+setuptools = ">=83.0.0"
 
 [feature.fastp]
 channels = ["conda-forge", "bioconda"]
 
 [feature.fastp.dependencies]
-fastp = "1.0.*"
+fastp = "1.*"
 
 [feature.galah]
 channels = ["conda-forge", "bioconda"]
@@ -103,32 +120,26 @@ dashing = "0.4.*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.gtdbtk.dependencies]
-gtdbtk = "2.7.*"
-mash = "2.2.2.*"
+gtdbtk = ">=2.7,<3"
 
 [feature.megahit]
 channels = ["conda-forge", "bioconda"]
 
 [feature.megahit.dependencies]
-megahit = "1.2.9.*"
+megahit = ">=1.2.9,<1.5"
 
 [feature.metabat]
 channels = ["conda-forge", "bioconda"]
 
 [feature.metabat.dependencies]
-metabat2 = "2.15.*"
+metabat2 = ">=2.18,<2.30"
+libboost = "*"
 
-[feature.metabinner]
-channels = ["conda-forge", "bioconda"]
+#[feature.metabuli]
+#channels = ["conda-forge", "bioconda"]
 
-[feature.metabinner.dependencies]
-metabinner = "1.4.3.*"
-
-[feature.metabuli]
-channels = ["conda-forge", "bioconda"]
-
-[feature.metabuli.dependencies]
-metabuli = "1.1.*"
+#[feature.metabuli.dependencies]
+#metabuli = ">=1.1,<1.5"
 
 [feature.mgthermometer]
 channels = ["conda-forge", "bioconda"]
@@ -171,14 +182,15 @@ r-vegan = "*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.multiqc.dependencies]
-multiqc = "1.35.*"
+multiqc = ">=1.35,<2"
 
 [feature.rosella]
 channels = ["conda-forge", "numba", "bioconda"]
 
 [feature.rosella.dependencies]
-rosella = "==0.5.5"
+rosella = ">=0.5.7,<1"
 umap-learn = "0.5.3.*"
+setuptools = "<82"
 
 [feature.r]
 channels = ["conda-forge", "bioconda"]
@@ -194,20 +206,21 @@ r-ggrepel = "*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.semibin.dependencies]
-semibin = "2.1.*"
+semibin = ">=2.3,<2.5"
 
 [feature.seqkit]
 channels = ["conda-forge", "bioconda"]
 
 [feature.seqkit.dependencies]
-seqkit = "2.8.*"
+seqkit = ">=2.13,<3"
 
 [feature.singlem]
 channels = ["conda-forge", "bioconda"]
 
 [feature.singlem.dependencies]
-singlem = "0.21.*"
+singlem = ">=0.21,<1"
 expressbetadiversity = "1.0.10.*"
+diamond = "2.2.1.*"
 
 [feature.syntracker]
 channels = ["conda-forge", "bioconda"]
@@ -227,7 +240,7 @@ pip = "25.1.1.*"
 python = "3.10.17.*"
 
 [feature.taxconverter.pypi-dependencies]
-taxconverter = "==1.1.0"
+taxconverter = ">=1.1.0"
 
 [feature.vamb]
 channels = ["conda-forge", "bioconda"]
@@ -242,7 +255,7 @@ vamb = ">=5.0.4"
 channels = ["conda-forge", "bioconda"]
 
 [feature.trimgalore.dependencies]
-trim-galore = "2.2*"
+trim-galore = ">=2.2,<2.5"
 
 [feature.report]
 channels = ["conda-forge", "bioconda"]
@@ -261,8 +274,16 @@ channels = ["conda-forge", "bioconda"]
 [feature.metacat.dependencies]
 python = ">=3.12.13,<3.13"
 hmmer = ">=3.4,<4"
-pip = ">=26.0.1,<27"
 fraggenescan = ">=1.32,<2"
+
+[feature.metacat.pypi-dependencies]
+metacat = { url = "https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.5/metacat-1.0.5-py3-none-any.whl" }
+
+[feature.remag]
+channels = ["conda-forge", "bioconda"]
+
+[feature.remag.dependencies]
+remag = ">=0.4.0,<1.0.0"
 
 [feature.mmseqs]
 channels = ["conda-forge", "bioconda"]
@@ -285,8 +306,7 @@ galah = { features = ["galah"], no-default-feature = true }
 gtdbtk = { features = ["gtdbtk"], no-default-feature = true }
 megahit = { features = ["megahit"], no-default-feature = true }
 metabat = { features = ["metabat"], no-default-feature = true }
-metabinner = { features = ["metabinner"], no-default-feature = true }
-metabuli = { features = ["metabuli"], no-default-feature = true }
+# metabuli = { features = ["metabuli"], no-default-feature = true }
 metacat = { features = ["metacat"], no-default-feature = true }
 mgthermometer = { features = ["mgthermometer"], no-default-feature = true }
 microtrait = { features = ["microtrait"], no-default-feature = true }
@@ -295,6 +315,7 @@ multiqc = { features = ["multiqc"], no-default-feature = true }
 rosella = { features = ["rosella"], no-default-feature = true }
 r = { features = ["r"], no-default-feature = true }
 report     = { features = ["report"],     no-default-feature = true }
+remag = { features = ["remag"], no-default-feature = true }
 semibin = { features = ["semibin"], no-default-feature = true }
 seqkit = { features = ["seqkit"], no-default-feature = true }
 singlem = { features = ["singlem"], no-default-feature = true }

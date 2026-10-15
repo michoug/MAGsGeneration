@@ -65,7 +65,9 @@ rule cat_checkm:
     message:
         "Concatenating CheckM outputs and remove duplicate extra lines"
     shell:
-        """(date && cat {input} | sed '/^--/d' | perl -pe "s/Bin.*\\n//g" > {output} && date) 2> {log.err} > {log.out}"""
+        """
+        (date && cat {input} | sed '/^--/d' | perl -pe "s/Bin.*\\n//g" >{output} && date) 2>{log.err} >{log.out}
+        """
 
 
 rule dRep_prepare:
@@ -78,6 +80,6 @@ rule dRep_prepare:
         "Adjusting CheckM output for input to dRep"
     shell:
         """
-        awk '{{print $1".fa,"$13","$14}}' {input.check} | perl -pe "s/Bin.*\\n//g" > {output.temp} && 
-        (echo "genome,completeness,contamination" && cat {output.temp}) > {output.final}
+        awk '{{print $1".fa,"$13","$14}}' {input.check} | perl -pe "s/Bin.*\\n//g" >{output.temp} \
+            && (echo "genome,completeness,contamination" && cat {output.temp}) >{output.final}
         """

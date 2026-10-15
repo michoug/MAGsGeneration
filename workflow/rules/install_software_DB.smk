@@ -2,7 +2,6 @@ rule install_software:
     input:
         os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
         # os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
-        os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
         os.path.join(
             RESULTS_DIR,
@@ -29,15 +28,18 @@ rule downloadHuman:
         url="https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.fna.gz",
     shell:
         """
-        (date
-        wget \
-            --tries=3 \
-            --waitretry=30 \
-            --timeout=120 \
-            -O {output.file} \
-            {params.url}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            wget \
+                --tries=3 \
+                --waitretry=30 \
+                --timeout=120 \
+                -O {output.file} \
+                {params.url}
+            date
+        ) 2>{log.err} >{log.out}
         """
+
 
 # rule download_tax_db:
 #     output:
@@ -60,6 +62,7 @@ rule downloadHuman:
 #         date) 2> {log.err} > {log.out}
 #         """
 
+
 rule download_tax_db:
     output:
         file=os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
@@ -68,36 +71,26 @@ rule download_tax_db:
     log:
         out=os.path.join(RESULTS_DIR, "logs/download_tax_db.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/download_tax_db.err.log"),
+    threads: 20
     resources:
         mem_mb=get_mem_mb,
         runtime=6 * 60,
-    threads: 20
     shell:
-        '(date && name=$(echo $(basename {output.file}) | sed "s/_mapping//g") && '
-        "rm -f $(dirname {output.file})/$name* && "
-        "pixi r -e mmseqs mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads} && date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            name=$(echo $(basename {output.file}) | sed 's/_mapping//g')
+            rm -f $(dirname {output.file})/$name*
+            pixi r -e mmseqs mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
-rule metabinner_install:
-    output:
-        dbs=directory(os.path.join(RESULTS_DIR, "DB/MetaBinner")),
-        file=os.path.join(RESULTS_DIR, "DB/MetaBinner/metabinner.done"),
-    log:
-        out=os.path.join(RESULTS_DIR, "logs/metabinner_install.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabinner_install.err.log"),
-    priority: 20
-    localrule: True
-    shell:
-        """
-        (date &&  rm -rf MetaBinner
-        git clone https://github.com/ziyewang/MetaBinner.git &> /dev/null
-        mv MetaBinner $(dirname {output.dbs})
-        touch {output.file} ) 2> {log.err} > {log.out}
-        """
 
 rule deepmicroclass_install:
     output:
         folder=directory(os.path.join(RESULTS_DIR, "DB/DeepMicroClass2")),
-        file = os.path.join(RESULTS_DIR, "DB/DeepMicroClass2/deepmicroclass.done"),
+        file=os.path.join(RESULTS_DIR, "DB/DeepMicroClass2/deepmicroclass.done"),
     log:
         out=os.path.join(RESULTS_DIR, "logs/deepmicroclass_install.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/deepmicroclass_install.err.log"),
@@ -105,11 +98,14 @@ rule deepmicroclass_install:
     localrule: True
     shell:
         """
-        (date &&  rm -rf DeepMicroClass2
-        git clone https://github.com/aiguo-11/DeepMicroClass2.git &> /dev/null
-        mv DeepMicroClass2 $(dirname {output.folder})
-        touch {output.file} ) 2> {log.err} > {log.out}
+        (
+            date && rm -rf DeepMicroClass2
+            git clone https://github.com/aiguo-11/DeepMicroClass2.git &>/dev/null
+            mv DeepMicroClass2 $(dirname {output.folder})
+            touch {output.file}
+        ) 2>{log.err} >{log.out}
         """
+
 
 rule metacat_install:
     output:
@@ -121,10 +117,12 @@ rule metacat_install:
     localrule: True
     shell:
         """
-        (date
-        pixi r -e metacat pip install https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.4/metacat-1.0.4-py3-none-any.whl
-        touch {output.file}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e metacat pip install https://github.com/liu-congcong/MetaCAT/releases/download/MetaCAT-1.0.7/metacat-1.0.7-py3-none-any.whl
+            touch {output.file}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -140,7 +138,12 @@ rule singlem_data:
                 "DB/SingleM/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb",
             )
         ),
-        filegz = temp(os.path.join(RESULTS_DIR, "DB/SingleM/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb.tar.gz")),
+        filegz=temp(
+            os.path.join(
+                RESULTS_DIR,
+                "DB/SingleM/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb.tar.gz",
+            )
+        ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/singlem_data.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/singlem_data.err.log"),
@@ -148,11 +151,13 @@ rule singlem_data:
     localrule: True
     shell:
         """
-        (date
-        mkdir -p $(dirname {output.filegz})
-        wget https://zenodo.org/records/20150069/files/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb.tar.gz -O {output.filegz}
-        tar -xzf {output.filegz} -C $(dirname {output.filegz})
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            mkdir -p $(dirname {output.filegz})
+            wget https://zenodo.org/records/20150069/files/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb.tar.gz -O {output.filegz}
+            tar -xzf {output.filegz} -C $(dirname {output.filegz})
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -170,11 +175,13 @@ rule busco_db_euk:
         runtime=10 * 60,
     shell:
         """
-        (date
-        rm -rf {output.dir}
-        pixi r -e busco busco --download all --download_path {output.dir}
-        touch {output.done}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf {output.dir}
+            pixi r -e busco busco --download all --download_path {output.dir}
+            touch {output.done}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -189,8 +196,11 @@ rule syntracker_install:
     localrule: True
     shell:
         """
-        (date &&  rm -rf SynTracker
-        git clone https://github.com/leylabmpi/SynTracker.git &> /dev/null
-        mv SynTracker $(dirname {output.dbs})
-        touch {output.file} ) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf SynTracker
+            git clone https://github.com/leylabmpi/SynTracker.git &>/dev/null
+            mv SynTracker $(dirname {output.dbs})
+            touch {output.file}
+        ) 2>{log.err} >{log.out}
         """

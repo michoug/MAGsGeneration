@@ -176,3 +176,7 @@ pkgs/
 uv-cache/
 repodata/
 conda-pypi-mapping
+
+diamond-*
+diff.md
+.gitignore

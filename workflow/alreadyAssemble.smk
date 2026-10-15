@@ -1,4 +1,4 @@
-# Pipeline for analysing the NOMIS MAGs
+# Pipeline for analysing MAGs
 # Example call: snakemake -s workflow/Snakefile --configfile config/config.yaml --use-conda --conda-prefix ${CONDA_PREFIX}/pipeline --cores 1 -rpn
 
 ##############################
@@ -40,7 +40,7 @@ if "trim_reads" in STEPS:
 
 if "contigs_taxonomy" in STEPS:
 
-    include: "rules/contigs_taxonomy_assembly.smk"
+    include: "rules/contigs_taxonomy_assembly_mmseqs.smk"
 
     TARGETS += ["status/taxonomy.done"]
 
@@ -57,6 +57,13 @@ if "mags_generation" in STEPS:
     include: "rules/mags_generation.smk"
 
     TARGETS += ["status/mags_generation.done"]
+
+
+if "binner_selection" in STEPS:
+
+    include: "rules/binner_selection.smk"
+
+    TARGETS += ["status/binner_selection.done"]
 
 
 if "binning_refinement" in STEPS:
@@ -163,6 +170,6 @@ if len(TARGETS) == 0:
     raise Exception("You are not serious. Nothing to be done? Really?")
 
 
-rule NOMIS_MAGS:
+rule MAGS_Generation:
     input:
         TARGETS,

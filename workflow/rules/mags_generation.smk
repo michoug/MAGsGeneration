@@ -3,59 +3,59 @@ rule mags_generation:
     input:
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR, "intermediate/BamFiles/{sample}/{sample}_{sample_2}.bam"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
             sample_2=SAMPLES,
         ),
         expand(
             os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Metabat"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/Rosella/UMAP_projection_with_clusters_final.png",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/Vamb/Vamb_Results/vaevae_clusters_unsplit.tsv",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/Concoct/concoct_clustering_merged.csv",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/Comebin/comebin_res/comebin_res.tsv",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR, "Bins/intermediate/{sample}/Semibin/contig_bins.tsv"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
         expand(
             os.path.join(
                 RESULTS_DIR,
                 "Bins/intermediate/{sample}/MetaCAT/{sample}_metacat.done",
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
     output:
         touch("status/mags_generation.done"),
@@ -81,9 +81,11 @@ rule indexAssembly:
         numb="{number}",
     shell:
         """
-        (date 
-        pixi r -e coverm strobealign --create-index -t {threads} {input.fa} -r {params.numb}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e coverm strobealign --create-index -t {threads} {input.fa} -r {params.numb}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -99,7 +101,7 @@ rule check_reads_assembly_for_mapping:
         ),
         expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
             number=[100, 125, 150, 250, 400],
         ),
     output:
@@ -112,12 +114,16 @@ rule check_reads_assembly_for_mapping:
 rule mapping:
     input:
         check_reads=rules.check_reads_assembly_for_mapping.output,
-        read1=rules.getdedupreads.output.read1,
-        read2=rules.getdedupreads.output.read2,
+        read1=lambda wildcards: os.path.join(
+            RESULTS_DIR, f"TrimFinal/{wildcards.sample_2}_1.fq.gz"
+        ),
+        read2=lambda wildcards: os.path.join(
+            RESULTS_DIR, f"TrimFinal/{wildcards.sample_2}_2.fq.gz"
+        ),
         fasta=rules.filter_length.output.out,
         index=expand(
             os.path.join(RESULTS_DIR, "Assembly/{sample}_filter.fasta.r{number}.sti"),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
             number=[100, 125, 150, 250, 400],
         ),
     output:
@@ -138,13 +144,15 @@ rule mapping:
         mem_mb=get_mem_mb,
     shell:
         """
-        (date
-        rm -f {output.bam}.tmp*
-        pixi r -e coverm strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} | 
-        pixi r -e coverm samtools sort -@ {threads} -o {output.bam}
-        pixi r -e coverm samtools index {output.bam}
-        touch -r {output.bam} -d '+1 second' {output.bai}
-        date ) 2> {log.err} > {log.out}
+        (
+            date
+            rm -f {output.bam}.tmp*
+            pixi r -e coverm strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} \
+                | pixi r -e coverm samtools sort -@ {threads} -o {output.bam}
+            pixi r -e coverm samtools index {output.bam}
+            touch -r {output.bam} -d '+1 second' {output.bai}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -154,7 +162,7 @@ rule check_bam_files_for_binning:
             os.path.join(
                 RESULTS_DIR, "intermediate/BamFiles/{sample}/{sample}_{sample_2}.bam"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
             sample_2=SAMPLES,
         ),
     output:
@@ -188,8 +196,13 @@ rule metabat2_mapping:
     message:
         "Running the first part of metabat2 to estimate the coverage"
     shell:
-        "(date && pixi r -e metabat jgi_summarize_bam_contig_depths --outputDepth {output} {input.bam} && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            pixi r -e metabat jgi_summarize_bam_contig_depths --outputDepth {output} {input.bam}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule metabat2:
@@ -209,11 +222,16 @@ rule metabat2:
     message:
         "Running metabat2 to obtain bins"
     shell:
-        "(date && pixi r -e metabat metabat2 -i {input.contig} -a {input.cov} -o {output}/metabat -t {threads} && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            pixi r -e metabat metabat2 -i {input.contig} -a {input.cov} -o {output}/metabat -t {threads}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
-rule metabinner_coverage:
+rule clean_coverage:
     input:
         bam=expand(
             os.path.join(
@@ -226,15 +244,16 @@ rule metabinner_coverage:
     output:
         temp=temp(
             os.path.join(
-                RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_metabinner_temp.txt"
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/{sample}_clean_coverage_temp.txt",
             )
         ),
         final=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_metabinner_cov.txt"
+            RESULTS_DIR, "Bins/intermediate/{sample}/{sample}_clean_coverage_cov.txt"
         ),
     log:
-        out=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/metabinner_mapping/{sample}.err.log"),
+        out=os.path.join(RESULTS_DIR, "logs/clean_coverage_mapping/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/clean_coverage_mapping/{sample}.err.log"),
     threads: 14
     resources:
         runtime=60,
@@ -242,12 +261,15 @@ rule metabinner_coverage:
     params:
         length=1500,
     message:
-        "Running the first part of metabinner to estimate the coverage"
+        "Get clean coverage"
     shell:
         """
-        (date && pixi r -e metabat jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input.bam} && 
-        cat {output.temp} | awk '{{if ($2>{params.length}) print $0 }}' | cut -f -1,4- > {output.final} && 
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            pixi r -e metabat jgi_summarize_bam_contig_depths --noIntraDepthVariance --outputDepth {output.temp} {input.bam}
+            cat {output.temp} | awk '{{if ($2>{params.length}) print $0 }}' | cut -f -1,4- >{output.final}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -277,14 +299,19 @@ rule rosella:
     message:
         "Running Rosella"
     shell:
-        "(date && rm -r $(dirname {output}) && "
-        "pixi r -e rosella rosella recover -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output}) "
-        "&& date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            rm -r $(dirname {output})
+            pixi r -e rosella rosella recover -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output})
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule vamb_coverage:
     input:
-        rules.metabinner_coverage.output.final,
+        rules.clean_coverage.output.final,
         rules.check_bam_files_for_binning.output,
     output:
         os.path.join(
@@ -298,6 +325,7 @@ rule vamb_coverage:
 
         df = pd.read_csv(input[0], sep="\t")
         df.rename(columns={"contigName": "contigname"}, inplace=True)
+        df = df.loc[:, (df != 0).any(axis=0)]
         df.to_csv(output[0], sep="\t", index=False, header=True)
 
 
@@ -359,10 +387,14 @@ rule taxvamb:
         runtime=60 * 24,
         mem_mb=get_mem_mb,
     shell:
-        "(date && "
-        "rm -r $(dirname {output}) && "
-        "pixi r -e vamb vamb bin taxvamb --outdir $(dirname {output}) -m 1501 --fasta {input.contig} --taxonomy {input.tax} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} -o && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            rm -rf $(dirname {output})
+            pixi r -e vamb vamb bin taxvamb --outdir $(dirname {output}) -m 1501 --fasta {input.contig} --taxonomy {input.tax} --minfasta 500000 --abundance_tsv {input.cov} -p {threads} -o
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule concoct_prepare:
@@ -394,9 +426,16 @@ rule concoct_prepare:
     message:
         "Preparing files for Concoct"
     shell:
-        "(date && rm -f {output.bed} {output.cont} {output.cov} && pixi r -e concoct cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} > {output.cont} && "
-        "pixi r -e concoct {params.script} {output.bed} {input.bam} --threads {threads} > {output.cov} && [[ -s {output.cov} ]] && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            rm -f {output.bed} {output.cont} {output.cov}
+            pixi r -e concoct cut_up_fasta.py {input.contig} -c 10000 -o 0 --merge_last -b {output.bed} >{output.cont}
+            pixi r -e concoct python {params.script} {output.bed} {input.bam} --threads {threads} >{output.cov}
+            [[ -s {output.cov} ]]
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule concoct:
@@ -418,9 +457,14 @@ rule concoct:
     message:
         "Running concoct to obtain bins"
     shell:
-        "(date && pixi r -e concoct concoct --composition_file {input.contig} --coverage_file {input.cov} -b $(dirname {output})/concoct -t {threads} && "
-        "pixi r -e concoct merge_cutup_clustering.py $(dirname {output})/concoct_clustering_gt1000.csv > {output} && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            pixi r -e concoct concoct --composition_file {input.contig} --coverage_file {input.cov} -b $(dirname {output})/concoct -t {threads}
+            pixi r -e concoct merge_cutup_clustering.py $(dirname {output})/concoct_clustering_gt1000.csv >{output}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule comebin:
@@ -445,10 +489,26 @@ rule comebin:
     message:
         "Running Comebin"
     shell:
-        "(date && "
-        "rm -r {params.folder} && "
-        "pixi r -e comebin run_comebin.sh -a {input.cont} -o {params.folder} -t {threads} -p {params.bam}"
-        "&& date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            rm -rf {params.folder}
+            set +e
+            pixi r -e comebin run_comebin.sh -a {input.cont} -o {params.folder} -t {threads} -p {params.bam}
+            status=$?
+            set -e
+            if [[ ! -s {output} ]]; then
+                mkdir -p $(dirname {output})
+                : >{output}
+                if [[ $status -ne 0 ]]; then
+                    echo "Comebin produced no bins; created empty output file {output}"
+                fi
+            elif [[ $status -ne 0 ]]; then
+                exit $status
+            fi
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule semibin:
@@ -475,11 +535,29 @@ rule semibin:
         "Running Semibin"
     shell:
         """
-        (date
-        rm -rf $(dirname {output})
-        pixi r -e semibin SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster --minfasta 200000
-        touch {output}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf $(dirname {output})
+            pixi r -e semibin SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster --minfasta 200000
+            bins_dir=$(dirname {output})/output_bins
+            : >{output}
+            if compgen -G "$bins_dir/*.fa.gz" >/dev/null 2>&1; then
+                echo -e "contig_id\tbin_id" >{output}
+                for f in "$bins_dir"/*.fa.gz; do
+                    bin=$(basename "$f" .fa.gz)
+                    zgrep '^>' "$f" | sed 's/^>//' | awk -v b="$bin" '{{print $1"\t"b}}' >>{output}
+                done
+            elif compgen -G "$bins_dir/*.fa" >/dev/null 2>&1; then
+                echo -e "contig_id\tbin_id" >{output}
+                for f in "$bins_dir"/*.fa; do
+                    bin=$(basename "$f" .fa)
+                    grep '^>' "$f" | sed 's/^>//' | awk -v b="$bin" '{{print $1"\t"b}}' >>{output}
+                done
+            else
+                echo "SemiBin2 produced no bins; created empty output file {output}" >&2
+            fi
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -509,10 +587,12 @@ rule metacat_cov:
         "Running MetaCAT coverage"
     shell:
         """
-        (date
-        rm -rf {output}
-        pixi r -e metacat MetaCAT coverage -b {input.bam} -ti 20 -tc 20 -o {output}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf {output}
+            pixi r -e metacat MetaCAT coverage -b {input.bam} -ti 20 -tc 20 -o {output}
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -535,10 +615,12 @@ rule metacat_seed:
         "Running MetaCAT seed"
     shell:
         """
-        (date
-        rm -rf {output}
-        pixi r -e metacat MetaCAT seed -f {input.cont} -o {output} -t 20
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf {output}
+            pixi r -e metacat MetaCAT seed -f {input.cont} -o {output} -t 20
+            date
+        ) 2>{log.err} >{log.out}
         """
 
 
@@ -572,10 +654,12 @@ rule metacat_cluster:
         "Running MetaCAT"
     shell:
         """
-        (date
-        rm -rf {output.folder}
-        mkdir -p {output.folder}
-        pixi r -e metacat MetaCAT cluster -t {threads} -f {input.cont} -s {input.seed} -c {input.cov} -o {output.folder}/{params.name}_metacat
-        touch {output.done}
-        date) 2> {log.err} > {log.out}
+        (
+            date
+            rm -rf {output.folder}
+            mkdir -p {output.folder}
+            pixi r -e metacat MetaCAT cluster -t {threads} -f {input.cont} -s {input.seed} -c {input.cov} -o {output.folder}/{params.name}_metacat
+            touch {output.done}
+            date
+        ) 2>{log.err} >{log.out}
         """

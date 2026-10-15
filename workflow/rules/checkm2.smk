@@ -7,7 +7,7 @@ rule checkm_all:
             os.path.join(
                 RESULTS_DIR, "Bins/intermediate/{sample}/checkm2/quality_report.tsv"
             ),
-            sample=SAMPLES,
+            sample=ASSEMBLY,
         ),
     output:
         touch("status/checkm2.done"),
@@ -16,7 +16,7 @@ rule checkm_all:
 # Checking bin quality
 rule checkm2:
     input:
-        rules.dasTool_run.output,
+        bins=rules.filter_dastool_bins.output,
     output:
         tsv=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/checkm2/quality_report.tsv"
@@ -34,7 +34,11 @@ rule checkm2:
     message:
         "Running CheckM2 for directory renamed bins"
     shell:
-        "(date && touch {input} && "
-        "export CHECKM2DB={params.db} && "
-        "pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input $(dirname {input})/das_DASTool_bins --output-directory $(dirname {output.tsv}) --force && "
-        "date) 2> {log.err} > {log.out}"
+        """
+        (
+            date
+            export CHECKM2DB={params.db}
+            pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input {input.bins} --output-directory $(dirname {output.tsv}) --force
+            date
+        ) 2>{log.err} >{log.out}
+        """
