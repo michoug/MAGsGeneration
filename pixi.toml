@@ -106,10 +106,8 @@ fastp = "1.*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.galah.dependencies]
-python = "3.8.*"
-galah = "0.4.*"
-gsl = { version = "==2.7", build = "he838d99_0" }
-dashing = "0.4.*"
+python = ">=3.10,<3.12"
+galah = ">=0.6.0,<1"
 
 [feature.gtdbtk]
 channels = ["conda-forge", "bioconda"]
