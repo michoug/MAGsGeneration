@@ -84,8 +84,9 @@ rule mappingHuman:
     # Without this, {sample} (default regex .+) can absorb "<real_sample>.noHuman"
     # and produce the exact same output path as removeHuman's
     # {sample}.noHuman.bam, which Snakemake then reports as an ambiguous rule.
+    # Matching the configured samples keeps sample names containing dots valid.
     wildcard_constraints:
-        sample="[^/.]+",
+        sample="|".join(re.escape(s) for s in SAMPLES),
     priority: 20
     threads: 10
     resources:

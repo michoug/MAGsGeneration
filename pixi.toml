@@ -272,7 +272,7 @@ hmmer = ">=3.4,<4"
 fraggenescan = ">=1.32,<2"
 
 [feature.metacat.pypi-dependencies]
-metacat = { url = "https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.5/metacat-1.0.5-py3-none-any.whl" }
+metacat = { url = "https://github.com/liu-congcong/MetaCAT/releases/download/MetaCAT-1.0.7/metacat-1.0.7-py3-none-any.whl" }
 
 [feature.remag]
 channels = ["conda-forge", "bioconda"]

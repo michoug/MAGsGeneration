@@ -98,7 +98,8 @@ rule metacat_install:
         """
         (
             date
-            pixi r -e metacat pip install https://github.com/liu-congcong/MetaCAT/releases/download/MetaCAT-1.0.7/metacat-1.0.7-py3-none-any.whl
+            # MetaCAT is declared in pixi.toml; only check the installed version
+            pixi r -e metacat python -c "import importlib.metadata as m; v = m.version('metacat'); assert v == '1.0.7', f'metacat {{v}} installed, expected 1.0.7'"
             touch {output.file}
             date
         ) 2>{log.err} >{log.out}

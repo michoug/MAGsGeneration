@@ -1427,7 +1427,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_7.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/ca-certificates-2026.7.22-hbd8a1cb_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2026c-h151e31d_0.conda
-      - pypi: direct+https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.5/metacat-1.0.5-py3-none-any.whl
+      - pypi: direct+https://github.com/liu-congcong/MetaCAT/releases/download/MetaCAT-1.0.7/metacat-1.0.7-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/11/0e/3ce67af67525c0068680637c0eba823ce2f0fc6eff2d1779cab656fb8c3d/wrapt-2.5.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/18/53/84099323c2ec4be98d935f63c033ac4151ee83836ca1050ede3b3aadf155/joblib-1.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/20/70/cd3cf5cff538323076a879edef02cce6f13f7d75e03d12f211b0a0dbd178/patsy-1.0.3-py2.py3-none-any.whl
@@ -24703,9 +24703,9 @@ packages:
   run_exports: {}
   size: 24839
   timestamp: 1791091060207
-- pypi: direct+https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.5/metacat-1.0.5-py3-none-any.whl
+- pypi: direct+https://github.com/liu-congcong/MetaCAT/releases/download/MetaCAT-1.0.7/metacat-1.0.7-py3-none-any.whl
   name: metacat
-  version: 1.0.5
+  version: 1.0.7
   requires_dist:
   - matplotlib>=3.10.0
   - numpy
