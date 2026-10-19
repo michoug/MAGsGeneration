@@ -77,16 +77,10 @@ rule mappingHuman:
         fasta=rules.downloadHuman.output,
         index=rules.checkIndexDone.output,
     output:
-        temp(os.path.join(RESULTS_DIR, "intermediate/TrimHuman/{sample}.bam")),
+        temp(os.path.join(RESULTS_DIR, "intermediate/MappedHuman/{sample}.bam")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.err.log"),
-    # Without this, {sample} (default regex .+) can absorb "<real_sample>.noHuman"
-    # and produce the exact same output path as removeHuman's
-    # {sample}.noHuman.bam, which Snakemake then reports as an ambiguous rule.
-    # Matching the configured samples keeps sample names containing dots valid.
-    wildcard_constraints:
-        sample="|".join(re.escape(s) for s in SAMPLES),
     priority: 20
     threads: 10
     resources:
