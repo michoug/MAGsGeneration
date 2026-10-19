@@ -113,6 +113,11 @@ class TestConfigFileHandling:
 
 
 class TestCLIArgumentParsing:
+    @pytest.fixture(autouse=True)
+    def mock_unlock_snakemake(self, mocker):
+        """main() always unlocks before running; keep it from calling Snakemake."""
+        return mocker.patch("MAGsGeneration.unlock_snakemake")
+
     def test_main_with_config_argument(self, mocker, tmp_config_file):
         """Test that main() accepts config argument."""
         mock_run_snakemake = mocker.patch("MAGsGeneration.run_snakemake")
@@ -159,13 +164,12 @@ class TestCLIArgumentParsing:
         mock_run_snakemake = mocker.patch("MAGsGeneration.run_snakemake")
         mock_ensure_pixi = mocker.patch("MAGsGeneration.ensure_and_install_pixi_envs")
         
-        test_args = ["MAGsGeneration.py", "-c", tmp_config_file, "-p", "runAll", "-j", "8"]
+        test_args = ["MAGsGeneration.py", "-c", tmp_config_file, "-p", "runAll", "--cores", "8"]
         mocker.patch.object(sys, "argv", test_args)
-        
-        try:
-            main()
-        except SystemExit:
-            pass
+
+        main()
+
+        assert mock_run_snakemake.call_args.kwargs["cores"] == 8
 
     def test_main_with_optional_steps(self, mocker, tmp_config_file):
         """Test that main() handles optional steps."""
@@ -178,16 +182,19 @@ class TestCLIArgumentParsing:
             tmp_config_file,
             "-p",
             "runAll",
-            "--optional-steps",
+            "--steps",
             "syntracker",
             "singlem_all",
         ]
         mocker.patch.object(sys, "argv", test_args)
-        
-        try:
-            main()
-        except SystemExit:
-            pass
+
+        main()
+
+        run_config = mock_run_snakemake.call_args.kwargs["configfile"]
+        with open(run_config) as f:
+            steps = yaml.safe_load(f)["steps"]
+        assert "syntracker" in steps
+        assert "singlem_all" in steps
 
     def test_main_calls_ensure_pixi(self, mocker, tmp_config_file):
         """Test that main() calls ensure_and_install_pixi_envs."""

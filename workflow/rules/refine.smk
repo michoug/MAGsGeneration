@@ -135,7 +135,12 @@ rule cp_mags:
         (
             date
             shopt -s nullglob
-            mkdir -p {output} && for file in $(dirname {input}); do cp $file/*fa {output}; done
+            mkdir -p {output}
+            for dir in $(dirname {input}); do
+                for fa in "$dir"/*fa; do
+                    cp "$fa" {output}
+                done
+            done
             date
         )
         """

@@ -501,8 +501,12 @@ rule comebin:
                 mkdir -p $(dirname {output})
                 : >{output}
                 if [[ $status -ne 0 ]]; then
-                    echo "Comebin produced no bins; created empty output file {output}"
+                    msg="WARNING: COMEBin exited with status $status and produced no output; treating {wildcards.sample} as 0 bins"
+                else
+                    msg="COMEBin produced no bins for {wildcards.sample}; created empty output file {output}"
                 fi
+                echo "$msg"
+                echo "$msg" >&2
             elif [[ $status -ne 0 ]]; then
                 exit $status
             fi

@@ -148,6 +148,20 @@ class TestSelect:
         report = result["report"].set_index("binner")
         assert report.loc["ml_a", "selected"] == False  # noqa: E712
 
+    def test_dropped_binner_reports_actual_bin_count(self):
+        # A binner with no MQ bins is dropped, but the report must still show
+        # how many (lower-quality) bins it produced.
+        counts_df = pd.DataFrame(
+            [
+                counts_row("s1", "classical_a", mq=20, nc=10),
+                counts_row("s1", "ml_a", mq=0, n_bins=7),
+                counts_row("s2", "ml_a", mq=0, n_bins=5),
+            ]
+        )
+        result = select(counts_df, self.CATALOGUE, n=3, one_per_family=True)
+        report = result["report"].set_index("binner")
+        assert report.loc["ml_a", "n_bins"] == 12
+
     def test_backfill_when_fewer_families_than_n(self):
         # Only two families survive (one dropped for zero MQ); n=3 should
         # still return 3 binners by backfilling from the remaining pool.

@@ -83,7 +83,7 @@ if (dir.exists(final_bins_dir)) {
 }
 
 # ── eukaryotic MAGs ───────────────────────────────────────────────────────────
-euk_dir <- file.path(results_dir, "Eukaryotic_mags")
+euk_dir <- file.path(results_dir, "Bins", "Eukaryotic_mags_dereplicated")
 n_euk   <- NA_integer_
 if (dir.exists(euk_dir)) {
   n_euk <- length(list.files(euk_dir, pattern = "\\.fa$"))
@@ -359,7 +359,7 @@ if (exists("cov_long")) {
 # 7. Eukaryotic MAGs (BUSCO)
 
 ```{r eukaryotes}
-euk_dir  <- file.path(results_dir, "Eukaryotic_mags")
+euk_dir  <- file.path(results_dir, "Bins", "Eukaryotic_mags_dereplicated")
 busco_qc <- file.path(results_dir, "qc", "busco", "multiqc_report.html")
 
 if (dir.exists(euk_dir)) {
