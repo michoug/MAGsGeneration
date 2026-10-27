@@ -14,7 +14,7 @@ steps: [
   "mags_generation",
   "binner_selection",
   "binning_refinement",
-#  "eukaryotes_filter",
+  "eukaryotes_filter",
   "checkm",
   "refine_all",
   "dereplicate",
@@ -24,23 +24,23 @@ steps: [
   "quality",
 #  "mgthermometer",
 #  "eggnog",
-  "singlem_all",
+#  "singlem_all",
 #  "report"
  ]  ###USER INPUT REQUIRED###
 
 ############################################################
 # INPUT         ###USER INPUT REQUIRED###
 # Directory where the workflow exists
-work_dir: "/scratch/gmichoud/test/MAGsGeneration/"
+work_dir: "/scratch/gmichoud/Nant/MAGsGeneration/"
 
 # Directory where assembly files are
-assembly_dir: "/scratch/gmichoud/test/assembly"
+assembly_dir: "/scratch/gmichoud/Nant/assembly"
 
 # Directory to save the output to
-results_dir: "/scratch/gmichoud/test/output"  
+results_dir: "/scratch/gmichoud/Nant/output"  
 
 # Directory for raw reads
-reads_dir: "/scratch/gmichoud/test/reads/"
+reads_dir: "/scratch/gmichoud/Nant/reads/"
 
 ### Memory per cpus for your cluster
 
