@@ -47,6 +47,13 @@ reads_dir: "/scratch/gmichoud/Nant/reads/"
 memory_per_thread : 7000
 
 ################
+# Remove duplicate read pairs with fastp --dedup after human removal.
+# Off by default: fastp cannot tell PCR duplicates from natural duplicates of
+# abundant genomes, and dropping those distorts binning coverage and MAG
+# abundance. Turn on only for low-input, PCR-amplified libraries.
+dedup: false
+
+################
 # Human read removal: a pair is removed only if a mate aligns to hg38 over
 # at least min_aligned_fraction of its length, with at most max_mismatch_rate
 # mismatches per aligned base (short soft-clipped strobealign hits are ignored)

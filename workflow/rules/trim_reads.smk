@@ -157,6 +157,9 @@ rule getcleanreads:
 
 
 rule getdedupreads:
+    # fastp --dedup is optional (config `dedup`, default off): it cannot tell
+    # PCR duplicates from natural ones in abundant genomes, and removing the
+    # latter compresses the coverage used by binning and MAG abundance.
     input:
         read1=rules.getcleanreads.output.read1,
         read2=rules.getcleanreads.output.read2,
@@ -173,11 +176,13 @@ rule getdedupreads:
     resources:
         runtime=60,
         mem_mb=get_mem_mb,
+    params:
+        dedup="--dedup" if config.get("dedup", False) else "",
     shell:
         """
         (
             date
-            pixi r -e fastp fastp -i {input.read1} -I {input.read2} -h {output.report_html} -j {output.report_json} -o {output.read1} -O {output.read2} --dedup --thread {threads}
+            pixi r -e fastp fastp -i {input.read1} -I {input.read2} -h {output.report_html} -j {output.report_json} -o {output.read1} -O {output.read2} {params.dedup} --thread {threads}
             date
         ) 2>{log.err} >{log.out}
         """
