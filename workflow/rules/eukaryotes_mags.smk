@@ -1,4 +1,4 @@
-rule eukaryotes_filter:
+rule eukaryotes_mags:
     input:
         os.path.join(RESULTS_DIR, "Bins/intermediate/remag_all_bins/done"),
         expand(
@@ -15,7 +15,7 @@ rule eukaryotes_filter:
         os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco_done.txt"),
         os.path.join(RESULTS_DIR, "Bins/Eukaryotic_mags_dereplicated/done.txt"),
     output:
-        touch("status/eukaryotes_filter.done"),
+        touch("status/eukaryotes_mags.done"),
 
 
 rule get_all_mags:

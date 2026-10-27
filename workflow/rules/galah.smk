@@ -29,7 +29,9 @@ checkpoint galah:
     input:
         bins=rules.cp_mags.output,
         check=rules.galah_prepare.output.final,
+        isiteuk=rules.isiteuk_db.output,
     output:
+        mimags=os.path.join(RESULTS_DIR, "Bins/intermediate/mimags_galah.txt"),
         final=directory(os.path.join(RESULTS_DIR, "Bins/finalBins")),
         cluster=os.path.join(RESULTS_DIR, "Bins/intermediate/cluster_galah.txt"),
     log:
@@ -48,7 +50,7 @@ checkpoint galah:
         """
         (
             date
-            pixi r -e galah galah cluster --genome-fasta-directory {input.bins} -x fa --genome-info {input.check} --min-completeness {params.comp} --max-contamination {params.cont} --output-representative-fasta-directory-copy {output.final} --output-cluster-definition {output.cluster} -t {threads}
+            pixi r -e galah galah process --domain-choice isiteuk --isiteuk-metapackage $(dirname {input.isiteuk}) --output-mimag-summary {output.mimags} --genome-fasta-directory {input.bins} -x fa --genome-info {input.check} --min-completeness {params.comp} --max-contamination {params.cont} --output-representative-fasta-directory-copy {output.final} --output-cluster-definition {output.cluster} -t {threads}
             date
         ) 2>{log.err} >{log.out}
         """

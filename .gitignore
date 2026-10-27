@@ -157,11 +157,11 @@ dmypy.json
 .pyre/
 
 # pixi environments
-.pixi
+# .pixi
 *.egg-info
 # pixi environments
-.pixi/*
-!.pixi/config.toml
+# .pixi/*
+# !.pixi/config.toml
 
 #fastp reports
 fastp.html

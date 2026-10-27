@@ -7,6 +7,10 @@ rule install_software:
             RESULTS_DIR,
             "DB/SingleM/S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb/CONTENTS.json",
         ),
+        os.path.join(
+            RESULTS_DIR,
+            "DB/isiteuk/isiteuk-backpack-0.0.1/CONTENTS.json",
+        ),
         os.path.join(RESULTS_DIR, "DB/Busco_euk/busco_euk.done"),
         os.path.join(RESULTS_DIR, "DB/SynTracker/syntracker.done"),
     output:
@@ -182,5 +186,33 @@ rule syntracker_install:
             git clone https://github.com/leylabmpi/SynTracker.git &>/dev/null
             mv SynTracker $(dirname {output.dbs})
             touch {output.file}
+        ) 2>{log.err} >{log.out}
+        """
+
+rule isiteuk_db:
+    output:
+        file=os.path.join(
+            RESULTS_DIR,
+            "DB/isiteuk/isiteuk-backpack-0.0.1/CONTENTS.json",
+        ),
+        filegz=temp(
+            os.path.join(
+                RESULTS_DIR,
+                "DB/isiteuk/isiteuk-0.0.1.smpkg.zb.tar.gz",
+            )
+        ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/isiteuk_data.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/isiteuk_data.err.log"),
+    priority: 20
+    localrule: True
+    shell:
+        """
+        (
+            date
+            mkdir -p $(dirname {output.filegz})
+            wget https://zenodo.org/records/20755875/files/isiteuk-0.0.1.smpkg.zb.tar.gz -O {output.filegz}
+            tar -xzf {output.filegz} -C $(dirname {output.filegz})
+            date
         ) 2>{log.err} >{log.out}
         """

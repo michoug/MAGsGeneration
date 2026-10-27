@@ -73,11 +73,11 @@ if "binning_refinement" in STEPS:
     TARGETS += ["status/binning_refinement.done"]
 
 
-if "eukaryotes_filter" in STEPS:
+if "eukaryotes_mags" in STEPS:
 
-    include: "rules/eukaryotes_filter.smk"
+    include: "rules/eukaryotes_mags.smk"
 
-    TARGETS += ["status/eukaryotes_filter.done"]
+    TARGETS += ["status/eukaryotes_mags.done"]
 
 
 # CheckM

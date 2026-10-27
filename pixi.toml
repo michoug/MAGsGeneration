@@ -106,14 +106,21 @@ fastp = "1.*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.galah.dependencies]
-python = ">=3.10,<3.12"
-galah = ">=0.6.0,<1"
+python = ">=3.10,<3.15"
+galah = ">=0.6.2,<1"
 
 [feature.gtdbtk]
 channels = ["conda-forge", "bioconda"]
 
 [feature.gtdbtk.dependencies]
 gtdbtk = ">=2.7,<3"
+
+[feature.isiteuk]
+channels = ["conda-forge", "bioconda"]
+
+[feature.isiteuk.dependencies]
+isiteuk = ">=0.0.3,<0.1"
+diamond = ">=2.2.1,<3"
 
 [feature.megahit]
 channels = ["conda-forge", "bioconda"]
@@ -128,12 +135,6 @@ channels = ["conda-forge", "bioconda"]
 metabat2 = ">=2.18,<2.30"
 libboost = "*"
 
-#[feature.metabuli]
-#channels = ["conda-forge", "bioconda"]
-
-#[feature.metabuli.dependencies]
-#metabuli = ">=1.1,<1.5"
-
 [feature.mgthermometer]
 channels = ["conda-forge", "bioconda"]
 
@@ -142,34 +143,34 @@ perl-bioperl = "1.7.8.*"
 perl-file-slurp = "*"
 perl-list-moreutils = "*"
 
-[feature.microtrait]
-channels = ["conda-forge", "bioconda"]
+#[feature.microtrait]
+#channels = ["conda-forge", "bioconda"]
 
-[feature.microtrait.dependencies]
-prodigal = "2.6.3.*"
-hmmer = "3.4.*"
-infernal = "1.1.5.*"
-trnascan-se = "2.*"
-bedtools = "2.31.*"
-bioconductor-cordon = "1.24.0.*"
-r-tidyverse = "*"
-r-ape = "*"
-r-base = "4.*"
-r-corrplot = "0.95.*"
-r-rcolorbrewer = "1.1_3.*"
-"r-r.utils" = "2.13.0.*"
-r-checkmate = "==2.3.2"
-r-doparallel = "==1.0.17"
-r-gtools = "*"
-r-lazyeval = "*"
-r-pheatmap = "1.0.*"
-r-tictoc = "1.2.*"
-"r-futile.logger" = "1.4.*"
-bioconductor-complexheatmap = "*"
-bioconductor-biostrings = "2.74.0.*"
-r-devtools = "2.4.5.*"
-r-seqinr = "*"
-r-vegan = "*"
+#[feature.microtrait.dependencies]
+#prodigal = "2.6.3.*"
+#hmmer = "3.4.*"
+#infernal = "1.1.5.*"
+#trnascan-se = "2.*"
+#bedtools = "2.31.*"
+#bioconductor-cordon = "1.24.0.*"
+#r-tidyverse = "*"
+#r-ape = "*"
+#r-base = "4.*"
+#r-corrplot = "0.95.*"
+#r-rcolorbrewer = "1.1_3.*"
+#"r-r.utils" = "2.13.0.*"
+#r-checkmate = "==2.3.2"
+#r-doparallel = "==1.0.17"
+#r-gtools = "*"
+#r-lazyeval = "*"
+#r-pheatmap = "1.0.*"
+#r-tictoc = "1.2.*"
+#"r-futile.logger" = "1.4.*"
+#bioconductor-complexheatmap = "*"
+#bioconductor-biostrings = "2.74.0.*"
+#r-devtools = "2.4.5.*"
+#r-seqinr = "*"
+#r-vegan = "*"
 
 [feature.multiqc]
 channels = ["conda-forge", "bioconda"]
@@ -297,12 +298,12 @@ eggnog = { features = ["eggnog"], no-default-feature = true }
 fastp = { features = ["fastp"], no-default-feature = true }
 galah = { features = ["galah"], no-default-feature = true }
 gtdbtk = { features = ["gtdbtk"], no-default-feature = true }
+isiteuk = { features = ["isiteuk"], no-default-feature = true }
 megahit = { features = ["megahit"], no-default-feature = true }
 metabat = { features = ["metabat"], no-default-feature = true }
-# metabuli = { features = ["metabuli"], no-default-feature = true }
 metacat = { features = ["metacat"], no-default-feature = true }
 mgthermometer = { features = ["mgthermometer"], no-default-feature = true }
-microtrait = { features = ["microtrait"], no-default-feature = true }
+# microtrait = { features = ["microtrait"], no-default-feature = true }
 mmseqs = { features = ["mmseqs"], no-default-feature = true }
 multiqc = { features = ["multiqc"], no-default-feature = true }
 rosella = { features = ["rosella"], no-default-feature = true }
