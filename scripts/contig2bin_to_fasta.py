@@ -2,7 +2,7 @@
 """Split a DAS-Tool-style contig2bin TSV into per-bin FASTA files.
 
 Used by the binner_selection step to re-materialize each binner's raw bins
-(from the contig2bin tables already produced by prepare_dasTool) so they can
+(from the contig2bin tables already produced by prepare_contig2bin) so they can
 be scored independently with CheckM2.
 """
 

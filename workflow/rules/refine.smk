@@ -36,7 +36,7 @@ rule rosella_ref:
             sample_2=SAMPLES,
         ),
         check=rules.checkm2.output,
-        bins=rules.filter_dastool_bins.output,
+        bins=rules.metawrap2_bins.output,
     output:
         os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine/rosella.done"),
     log:
@@ -55,7 +55,11 @@ rule rosella_ref:
         (
             date
             rm -rf $(dirname {output})/*
-            pixi r -e rosella rosella refine --min-bin-size 200000 --checkm-results {input.check} -d {input.bins} --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output})
+            if compgen -G "{input.bins}/*.{params.ext}" >/dev/null 2>&1; then
+                pixi r -e rosella rosella refine --min-bin-size 200000 --checkm-results {input.check} -d {input.bins} --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output})
+            else
+                echo "WARNING: no bins in {input.bins}, skipping Rosella refine" >&2
+            fi
             touch {output}
             date
         ) 2>{log.err} >{log.out}

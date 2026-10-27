@@ -74,7 +74,7 @@ channels = ["conda-forge", "bioconda"]
 [feature.coverm.dependencies]
 coverm = ">=0.7.0,<1"
 samtools = "1.*"
-strobealign = ">=0.17,<0.20"
+strobealign = ">=0.19,<0.20"
 
 [feature.deepmicroclass]
 channels = ["conda-forge", "bioconda"]
@@ -133,6 +133,18 @@ libboost = "*"
 
 #[feature.metabuli.dependencies]
 #metabuli = ">=1.1,<1.5"
+
+[feature.metawrap2]
+channels = ["conda-forge", "bioconda"]
+
+[feature.metawrap2.dependencies]
+
+python = ">=3.10"
+checkm2 = "*"
+pip = "*"
+
+[feature.metawrap2.pypi-dependencies]
+metawrap2 = { git = "https://github.com/ursky/MetaWrap2.git", branch = "main" }
 
 [feature.mgthermometer]
 channels = ["conda-forge", "bioconda"]
@@ -301,6 +313,7 @@ megahit = { features = ["megahit"], no-default-feature = true }
 metabat = { features = ["metabat"], no-default-feature = true }
 # metabuli = { features = ["metabuli"], no-default-feature = true }
 metacat = { features = ["metacat"], no-default-feature = true }
+metawrap2 = { features = ["metawrap2"], no-default-feature = true }
 mgthermometer = { features = ["mgthermometer"], no-default-feature = true }
 microtrait = { features = ["microtrait"], no-default-feature = true }
 mmseqs = { features = ["mmseqs"], no-default-feature = true }

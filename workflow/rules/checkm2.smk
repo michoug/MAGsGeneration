@@ -16,7 +16,7 @@ rule checkm_all:
 # Checking bin quality
 rule checkm2:
     input:
-        bins=rules.filter_dastool_bins.output,
+        bins=rules.metawrap2_bins.output,
     output:
         tsv=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/checkm2/quality_report.tsv"
@@ -37,8 +37,14 @@ rule checkm2:
         """
         (
             date
-            export CHECKM2DB={params.db}
-            pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input {input.bins} --output-directory $(dirname {output.tsv}) --force
+            if compgen -G "{input.bins}/*.{params.ext}" >/dev/null 2>&1; then
+                export CHECKM2DB={params.db}
+                pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input {input.bins} --output-directory $(dirname {output.tsv}) --force
+            else
+                echo "WARNING: no bins in {input.bins}, writing an empty CheckM2 report" >&2
+                mkdir -p $(dirname {output.tsv})
+                echo -e "Name\\tCompleteness\\tContamination" >{output.tsv}
+            fi
             date
         ) 2>{log.err} >{log.out}
         """

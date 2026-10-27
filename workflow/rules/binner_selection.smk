@@ -1,21 +1,13 @@
-# Score the 7 binners from mags_generation.smk with CheckM2 and keep only
-# the best `binners.selection.n` (default 3) to feed DAS Tool.
-#
-# BINNER_C2B mirrors the outputs of `prepare_dasTool` in dastool.smk as
-# literal paths rather than `rules.prepare_dasTool.output.*`: this step is
-# included before dastool.smk in the pipeline order, so the `rules.`
-# attribute is not yet available when this file is parsed. Keep the two in
-# sync if binner names or the DasTool output layout change.
+# Turn the 7 binners' outputs from mags_generation.smk into per-binner
+# contig2bin tables and FASTA folders under BinnerEval/{binner}/. Those
+# folders are scored with CheckM2 to keep only the best
+# `binners.selection.n` (default 3), and are the inputs of metawrap2_run
+# (metawrap2.smk) whether or not selection is enabled.
 
 BINNER_CATALOGUE = config["binners"]["catalogue"]
 BINNERS = list(BINNER_CATALOGUE)
 SELECTION_CFG = config["binners"]["selection"]
 SELECTION_ENABLED = SELECTION_CFG["enabled"]
-
-BINNER_C2B = {
-    b: os.path.join(RESULTS_DIR, f"Bins/intermediate/{{sample}}/DasTool/{b}_das.tsv")
-    for b in BINNERS
-}
 
 _binner_selection_targets = [
     os.path.join(RESULTS_DIR, "Bins/intermediate/selected_binners.txt")
@@ -33,46 +25,113 @@ rule binner_selection:
         touch("status/binner_selection.done"),
 
 
-if SELECTION_ENABLED:
+rule prepare_contig2bin:
+    # One contig<TAB>bin table per binner, bin names prefixed with the sample
+    # so they stay unique once bins from every sample are pooled.
+    input:
+        metabat=rules.metabat2.output,
+        rosella=rules.rosella.output,
+        taxvamb=rules.taxvamb.output,
+        concoct=rules.concoct.output,
+        comebin=rules.comebin.output,
+        semibin=rules.semibin.output,
+        metacat=rules.metacat_cluster.output.folder,
+        metacat_done=rules.metacat_cluster.output.done,
+    output:
+        metabat=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/BinnerEval/metabat/contig2bin.tsv"
+        ),
+        rosella=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/BinnerEval/rosella/contig2bin.tsv"
+        ),
+        taxvamb=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/BinnerEval/taxvamb/contig2bin.tsv"
+        ),
+        concoct=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/BinnerEval/concoct/contig2bin.tsv"
+        ),
+        comebin=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/BinnerEval/comebin/contig2bin.tsv"
+        ),
+        semibin=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/BinnerEval/semibin/contig2bin.tsv"
+        ),
+        metacat=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/BinnerEval/metacat/contig2bin.tsv"
+        ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/prepare_contig2bin/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/prepare_contig2bin/{sample}.err.log"),
+    localrule: True
+    params:
+        script=os.path.join(WORK_DIR, "scripts/Fasta_to_Scaffolds2Bin.sh"),
+    message:
+        "Preparing per-binner contig2bin tables for {wildcards.sample}"
+    shell:
+        r"""
+        (
+            date
+            bash {params.script} -e fa -i {input.metabat} \
+                | perl -pe 's/^(\S+)[^\t]*(\t.*)$/$1$2/' \
+                | perl -pe 's/metabat./{wildcards.sample}_metabat_/g' >{output.metabat}
+            bash {params.script} -e fna -i $(dirname {input.rosella}) \
+                | perl -pe 's/rosella_(bin|refined)_/{wildcards.sample}_rosella_/g' >{output.rosella}
+            bash {params.script} -e fna -i $(dirname {input.taxvamb})/bins \
+                | perl -pe 's/\t/\t{wildcards.sample}_taxvamb_/g' >{output.taxvamb}
+            perl -pe 's/,/\t{wildcards.sample}_concoct_/g' {input.concoct} | tail -n +2 >{output.concoct}
+            perl -pe 's/\tgroup/\t{wildcards.sample}_comebin_/g' {input.comebin} >{output.comebin}
+            perl -pe 's/\t/\t{wildcards.sample}_semibin_/g' {input.semibin} | tail -n +2 >{output.semibin}
+            bash {params.script} -e fasta -i {input.metacat} \
+                | perl -pe 's/_metacat\./_metacat_/g' >{output.metacat}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
-    rule explode_binner_bins:
-        input:
-            c2b=lambda wc: BINNER_C2B[wc.binner].format(sample=wc.sample),
-            assembly=rules.filter_length.output.out,
-        output:
-            directory(
-                os.path.join(
-                    RESULTS_DIR, "Bins/intermediate/{sample}/BinnerEval/{binner}/bins"
-                )
-            ),
-        log:
-            out=os.path.join(
-                RESULTS_DIR, "logs/explode_binner_bins/{sample}_{binner}.out.log"
-            ),
-            err=os.path.join(
-                RESULTS_DIR, "logs/explode_binner_bins/{sample}_{binner}.err.log"
-            ),
-        wildcard_constraints:
-            binner="|".join(BINNERS),
-        threads: 2
-        resources:
-            runtime=60,
-            mem_mb=get_mem_mb,
-        params:
-            script=os.path.join(WORK_DIR, "scripts/contig2bin_to_fasta.py"),
-            min_size=SELECTION_CFG["min_bin_size"],
-        message:
-            "Rebuilding {wildcards.binner} bins for {wildcards.sample} for independent scoring"
-        shell:
-            """
-            (
-                date
-                python3 {params.script} --contig2bin {input.c2b} --assembly {input.assembly} --outdir {output} --min-size {params.min_size}
-                status=$?
-                date
-                exit $status
-            ) 2>{log.err} >{log.out}
-            """
+
+# Always defined: these per-binner FASTA folders are scored here when
+# selection is enabled, and are the -A/-B/-C... inputs of metawrap2_run.
+rule explode_binner_bins:
+    input:
+        c2b=lambda wc: getattr(rules.prepare_contig2bin.output, wc.binner).format(
+            sample=wc.sample
+        ),
+        assembly=rules.filter_length.output.out,
+    output:
+        directory(
+            os.path.join(
+                RESULTS_DIR, "Bins/intermediate/{sample}/BinnerEval/{binner}/bins"
+            )
+        ),
+    log:
+        out=os.path.join(
+            RESULTS_DIR, "logs/explode_binner_bins/{sample}_{binner}.out.log"
+        ),
+        err=os.path.join(
+            RESULTS_DIR, "logs/explode_binner_bins/{sample}_{binner}.err.log"
+        ),
+    wildcard_constraints:
+        binner="|".join(BINNERS),
+    threads: 2
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
+    params:
+        script=os.path.join(WORK_DIR, "scripts/contig2bin_to_fasta.py"),
+    message:
+        "Rebuilding {wildcards.binner} bins for {wildcards.sample}"
+    shell:
+        """
+        (
+            date
+            pixi r -e coverm python {params.script} --contig2bin {input.c2b} --assembly {input.assembly} --outdir {output}
+            status=$?
+            date
+            exit $status
+        ) 2>{log.err} >{log.out}
+        """
+
+
+if SELECTION_ENABLED:
 
     rule checkm2_binner:
         input:

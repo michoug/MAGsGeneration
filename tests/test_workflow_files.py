@@ -47,7 +47,7 @@ class TestWorkflowFilesExist:
             "filter_assembly.smk",
             "mags_generation.smk",
             "binner_selection.smk",
-            "dastool.smk",
+            "metawrap2.smk",
             "checkm2.smk",
             "refine.smk",
             "galah.smk",
