@@ -16,7 +16,7 @@ rule checkm_all:
 # Checking bin quality
 rule checkm2:
     input:
-        bins=rules.metawrap2_bins.output,
+        bins=rules.metawrap2_bins.output.bins,
     output:
         tsv=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/checkm2/quality_report.tsv"

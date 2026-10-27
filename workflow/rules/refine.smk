@@ -36,7 +36,7 @@ rule rosella_ref:
             sample_2=SAMPLES,
         ),
         check=rules.checkm2.output,
-        bins=rules.metawrap2_bins.output,
+        bins=rules.metawrap2_bins.output.bins,
     output:
         os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine/rosella.done"),
     log:

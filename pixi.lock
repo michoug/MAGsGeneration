@@ -1696,9 +1696,10 @@ environments:
     - https://pypi.org/simple
     packages:
       linux-64:
-      - conda: https://conda.anaconda.org/bioconda/linux-64/diamond-2.2.8-he361c42_0.conda
+      - conda: https://conda.anaconda.org/bioconda/linux-64/diamond-2.1.24-hf93d47f_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/prodigal-2.6.3-h577a1d6_11.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/noarch/checkm2-1.1.0-pyhdfd78af_2.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/gunc-1.1.1-pyhdfd78af_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/aws-c-auth-1.0.0-h7648d90_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/aws-c-cal-1.0.0-hcf7459e_1.conda
@@ -1810,6 +1811,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/opt_einsum-3.4.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/packaging-26.3-pyhc364b38_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pip-26.2.2-pyh8b19718_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/plotly-7.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.21.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha55dd90_7.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python-dateutil-3.0.0-pyh5ded981_0.conda
@@ -4640,6 +4642,21 @@ packages:
     - diamond >=2.1.11,<3.0a0
   size: 3639975
   timestamp: 1744807978935
+- conda: https://conda.anaconda.org/bioconda/linux-64/diamond-2.1.24-hf93d47f_0.conda
+  sha256: 25d9401720a0c7fb50af9db540056532801b3e705ed7f7aa646ee4078d5ada96
+  md5: beb4055a79d66d1c9507d5f16189c57c
+  depends:
+  - libgcc >=14
+  - libsqlite >=3.52.0,<4.0a0
+  - libstdcxx >=14
+  - libzlib >=1.3.1,<2.0a0
+  license: GPL-3.0-or-later
+  license_family: GPL3
+  run_exports:
+    weak:
+    - diamond >=2.1.24,<3.0a0
+  size: 3183382
+  timestamp: 1772919097415
 - conda: https://conda.anaconda.org/bioconda/linux-64/diamond-2.2.1-he361c42_0.conda
   sha256: 95c5b79937b567c06ec7eb1a5d12cd4daf72a4c285422060edd1dd85c0ad5fad
   md5: 2dd1e9db11e9005b97db7dba55b51bcb
@@ -6620,6 +6637,27 @@ packages:
     - gtdbtk >=2.7.2,<3.0a0
   size: 1484517
   timestamp: 1783371214142
+- conda: https://conda.anaconda.org/bioconda/noarch/gunc-1.1.1-pyhdfd78af_0.conda
+  sha256: bdcae02be222ee7a15016deb23f894aeea2f0c6b12c2adae426cea30ebb2139a
+  md5: f269a2342afa079d2ffde5a60ba1ae8a
+  depends:
+  - diamond 2.1.24.*
+  - numpy
+  - pandas >=2.0.0
+  - plotly
+  - prodigal
+  - python >=3.6
+  - requests >=2.22.0
+  - scipy
+  license: GNU General Public v3 or later (GPLv3+)
+  license_family: GPL3
+  purls:
+  - pkg:pypi/gunc?source=hash-mapping
+  run_exports:
+    weak:
+    - gunc >=1.1.1,<1.2.0a0
+  size: 2636236
+  timestamp: 1778491334956
 - conda: https://conda.anaconda.org/bioconda/noarch/isiteuk-0.0.2-pyhdfd78af_0.conda
   sha256: 2d391943f91581ce2b11b5c72920c3ca035adc68f8e59633f1ef325fdf6c012d
   md5: f63c9fe3e5f5940753edb34db2bf05d6
@@ -23402,6 +23440,22 @@ packages:
   run_exports: {}
   size: 5239872
   timestamp: 1783625491771
+- conda: https://conda.anaconda.org/conda-forge/noarch/plotly-7.1.0-pyhd8ed1ab_0.conda
+  sha256: 156c3109d9fbe41b61b1b4001d59ebedbec17c803ee1dab878444bce0516bd44
+  md5: 7842399da4895e5c5174cf6b44ef1c36
+  depends:
+  - narwhals >=1.15.1
+  - packaging
+  - python >=3.11
+  constrains:
+  - ipywidgets >=7.6
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/plotly?source=compressed-mapping
+  run_exports: {}
+  size: 4790089
+  timestamp: 1790103412929
 - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.6.0-pyhf9edf01_1.conda
   sha256: e14aafa63efa0528ca99ba568eaf506eb55a0371d12e6250aaaa61718d2eb62e
   md5: d7585b6550ad04c8c5e21097ada2888e

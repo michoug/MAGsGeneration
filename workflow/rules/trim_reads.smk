@@ -98,10 +98,7 @@ rule mappingHuman:
 
 
 rule removeHuman:
-    # A pair is human only if a mate aligns over most of its length (see
-    # scripts/filter_host_reads.py); `samtools view -f 12` dropped ~50% of
-    # pairs on strobealign's short soft-clipped hits. The BAM stays in
-    # strobealign's read order so mates remain adjacent for samtools fastq.
+    # Removes pairs with a full-length hg38 alignment (scripts/filter_host_reads.py)
     input:
         rules.mappingHuman.output,
     output:
@@ -157,9 +154,7 @@ rule getcleanreads:
 
 
 rule getdedupreads:
-    # fastp --dedup is optional (config `dedup`, default off): it cannot tell
-    # PCR duplicates from natural ones in abundant genomes, and removing the
-    # latter compresses the coverage used by binning and MAG abundance.
+    # fastp --dedup only if config `dedup` is true (off by default)
     input:
         read1=rules.getcleanreads.output.read1,
         read2=rules.getcleanreads.output.read2,

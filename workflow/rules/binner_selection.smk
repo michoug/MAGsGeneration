@@ -27,7 +27,6 @@ rule binner_selection:
 
 rule prepare_contig2bin:
     # One contig<TAB>bin table per binner, bin names prefixed with the sample
-    # so they stay unique once bins from every sample are pooled.
     input:
         metabat=rules.metabat2.output,
         rosella=rules.rosella.output,

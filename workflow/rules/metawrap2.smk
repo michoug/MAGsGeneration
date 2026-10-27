@@ -28,15 +28,8 @@ rule binning_refinement:
 
 
 rule metawrap2_run:
-    # Feeds only the binners listed in selected_binners.txt to
-    # `metawrap2 bin_refinement`, as -A/-B/-C... (at most 6 bin sets).
-    # CheckM2's database is read from the [databases] table of the
-    # metawrap2 TOML, not from $CHECKM2DB, so a per-run copy of
-    # config/metawrap.toml is written with it, plus [limits] max_threads so
-    # metawrap2 uses every allocated core (its default budget is 50%).
-    # When no bin passes -c/-x, metawrap2 exits non-zero ("Consolidation
-    # produced no bins"); that is a valid result for a sample, so it is
-    # turned into an empty bin folder and a header-only stats table.
+    # metawrap2 bin_refinement on the selected binners (-A/-B/-C..., max 6);
+    # $CHECKM2DB is exported because metawrap2 ignores --config for CheckM2
     input:
         bins=expand(
             os.path.join(
@@ -45,6 +38,7 @@ rule metawrap2_run:
             binner=BINNERS,
         ),
         sel=os.path.join(RESULTS_DIR, "Bins/intermediate/selected_binners.txt"),
+        gunc_db=GUNC_DB if GUNC_ENABLED else [],
     output:
         bins=directory(
             os.path.join(
@@ -71,6 +65,8 @@ rule metawrap2_run:
         bins_dir=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/BinnerEval"),
         completeness=METAWRAP2_CFG["completeness"],
         contamination=METAWRAP2_CFG["contamination"],
+        gunc_db_line='GUNC_DB = "%s"\\n' % GUNC_DB if GUNC_ENABLED else "",
+        gunc_flag="" if GUNC_ENABLED else "--skip-gunc",
     message:
         "Running Metawrap2 bin_refinement on the binners selected by binner_selection"
     shell:
@@ -91,15 +87,16 @@ rule metawrap2_run:
             cfg=$outdir/metawrap2.toml
             cat {params.config} >$cfg
             printf '\n\n[databases]\nCHECKM2DB = "%s"\n' {params.db} >>$cfg
+            printf '{params.gunc_db_line}' >>$cfg
             printf '\n[limits]\nmax_threads = %s\n' {threads} >>$cfg
-            export METAWRAP2_CONFIG=$cfg
+            export CHECKM2DB={params.db}
             ARGS=()
             letters=(A B C D E F)
             for i in "${{!B[@]}}"; do
                 ARGS+=(-${{letters[$i]}} {params.bins_dir}/${{B[$i]}}/bins)
             done
             status=0
-            pixi run -e metawrap2 metawrap2 bin_refinement --force --config $cfg --skip-gunc -o $outdir -t {threads} -c {params.completeness} -x {params.contamination} "${{ARGS[@]}}" || status=$?
+            pixi run -e metawrap2 metawrap2 bin_refinement --force --config $cfg {params.gunc_flag} -o $outdir -t {threads} -c {params.completeness} -x {params.contamination} "${{ARGS[@]}}" || status=$?
             if [[ $status -ne 0 ]]; then
                 if grep -q "Consolidation produced no bins" $outdir/metawrap2.log 2>/dev/null; then
                     echo "WARNING: no bin of {wildcards.sample} passed -c {params.completeness} -x {params.contamination}, writing an empty bin set" >&2
@@ -115,36 +112,34 @@ rule metawrap2_run:
 
 
 rule metawrap2_bins:
-    # metawrap2 writes bin_NNN.fasta; downstream CheckM2 and Rosella refine
-    # read `-x fa`, so copy them under a stable path with that extension.
+    # Renames bins to {sample}_bin_NNN.fa and drops GUNC failures
     input:
-        rules.metawrap2_run.output.bins,
+        bins=rules.metawrap2_run.output.bins,
+        stats=rules.metawrap2_run.output.stats,
     output:
-        directory(
+        bins=directory(
             os.path.join(
                 RESULTS_DIR, "Bins/intermediate/{sample}/Metawrap2/final_bins"
             )
+        ),
+        table=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/Metawrap2/final_bins.tsv"
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/metawrap2_bins/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/metawrap2_bins/{sample}.err.log"),
     localrule: True
+    params:
+        script=os.path.join(WORK_DIR, "scripts/collect_metawrap2_bins.py"),
+        keep_chimeric="" if GUNC_CFG.get("remove_chimeric", True) else "--keep-chimeric",
     message:
         "Collecting Metawrap2 refined bins for {wildcards.sample}"
     shell:
         """
         (
             date
-            mkdir -p {output}
-            n=0
-            for f in {input}/*.fasta; do
-                [[ -e "$f" ]] || continue
-                cp "$f" {output}/$(basename "$f" .fasta).fa
-                n=$((n + 1))
-            done
-            if [[ $n -eq 0 ]]; then
-                echo "WARNING: no refined bins found in {input}" >&2
-            fi
+            pixi r -e metawrap2 python {params.script} --bins {input.bins} --stats {input.stats} \
+                --outdir {output.bins} --table {output.table} --sample {wildcards.sample} {params.keep_chimeric}
             date
         ) 2>{log.err} >{log.out}
         """

@@ -83,6 +83,17 @@ metawrap2:
   completeness: 70
   contamination: 10
 
+# GUNC chimerism check on metawrap2's final bins (metawrap2 annotates
+# gunc_css / gunc_pass; remove_chimeric drops bins with gunc_pass "no").
+# database: progenomes_3 (GUNC default), progenomes_2.1, gtdb_95 or gtdb_214;
+# downloaded from Zenodo into db_dir by the install_software step (an
+# existing gunc_db_*.dmnd.gz there is reused), then decompressed.
+gunc:
+  enabled: true
+  database: "progenomes_3"
+  db_dir: "/scratch/gmichoud/Nant/gunc_db"  ###USER INPUT REQUIRED###
+  remove_chimeric: true
+
 eggnog:
   db: "/work/river/Databases/eggnog-mapper-2.1.12/"  ###USER INPUT REQUIRED###
 

@@ -142,6 +142,7 @@ channels = ["conda-forge", "bioconda"]
 python = ">=3.10"
 checkm2 = "*"
 pip = "*"
+gunc = ">=1.1.1,<2"
 
 [feature.metawrap2.pypi-dependencies]
 metawrap2 = { git = "https://github.com/ursky/MetaWrap2.git", branch = "main" }
