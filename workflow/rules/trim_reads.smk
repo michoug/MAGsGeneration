@@ -98,6 +98,10 @@ rule mappingHuman:
 
 
 rule removeHuman:
+    # A pair is human only if a mate aligns over most of its length (see
+    # scripts/filter_host_reads.py); `samtools view -f 12` dropped ~50% of
+    # pairs on strobealign's short soft-clipped hits. The BAM stays in
+    # strobealign's read order so mates remain adjacent for samtools fastq.
     input:
         rules.mappingHuman.output,
     output:
@@ -110,12 +114,19 @@ rule removeHuman:
     resources:
         runtime=60 * 3,
         mem_mb=get_mem_mb,
+    params:
+        script=os.path.join(WORK_DIR, "scripts/filter_host_reads.py"),
+        min_aligned_fraction=config.get("human_removal", {}).get(
+            "min_aligned_fraction", 0.8
+        ),
+        max_mismatch_rate=config.get("human_removal", {}).get("max_mismatch_rate", 0.05),
     shell:
         """
         (
             date
-            rm -f {output}.tmp*
-            pixi r -e coverm samtools view -@ {threads} -b -f 12 -F 256 {input} | pixi r -e coverm samtools sort -@ {threads} - -o {output}
+            pixi r -e coverm samtools view -h {input} \
+                | pixi r -e coverm python {params.script} --min-aligned-fraction {params.min_aligned_fraction} --max-mismatch-rate {params.max_mismatch_rate} \
+                | pixi r -e coverm samtools view -@ {threads} -b -o {output} -
             date
         ) 2>{log.err} >{log.out}
         """

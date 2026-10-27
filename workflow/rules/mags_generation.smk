@@ -142,12 +142,20 @@ rule mapping:
     resources:
         runtime=60 * 1,
         mem_mb=get_mem_mb,
+    params:
+        # drops strobealign's short soft-clipped hits inside contigs, which
+        # otherwise add spurious coverage to every binner's input
+        script=os.path.join(WORK_DIR, "scripts/filter_partial_alignments.py"),
+        min_aligned_fraction=config.get("binning_mapping", {}).get(
+            "min_aligned_fraction", 0.8
+        ),
     shell:
         """
         (
             date
             rm -f {output.bam}.tmp*
             pixi r -e coverm strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} \
+                | pixi r -e coverm python {params.script} --min-aligned-fraction {params.min_aligned_fraction} \
                 | pixi r -e coverm samtools sort -@ {threads} -o {output.bam}
             pixi r -e coverm samtools index {output.bam}
             touch -r {output.bam} -d '+1 second' {output.bai}
@@ -542,7 +550,7 @@ rule semibin:
         (
             date
             rm -rf $(dirname {output})
-            pixi r -e semibin SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster --minfasta 200000
+            pixi r -e semibin SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster --minfasta-kbs 200
             bins_dir=$(dirname {output})/output_bins
             : >{output}
             if compgen -G "$bins_dir/*.fa.gz" >/dev/null 2>&1; then

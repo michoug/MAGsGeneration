@@ -47,6 +47,22 @@ reads_dir: "/scratch/gmichoud/Nant/reads/"
 memory_per_thread : 7000
 
 ################
+# Human read removal: a pair is removed only if a mate aligns to hg38 over
+# at least min_aligned_fraction of its length, with at most max_mismatch_rate
+# mismatches per aligned base (short soft-clipped strobealign hits are ignored)
+human_removal:
+  min_aligned_fraction: 0.8
+  max_mismatch_rate: 0.05
+
+# Read mapping to assemblies/MAGs (strobealign): binning BAMs drop alignments
+# covering < min_aligned_fraction of the read unless they touch a contig end;
+# MAG abundances (coverm contig) use the identity / aligned-percent filters
+binning_mapping:
+  min_aligned_fraction: 0.8
+  coverm_min_identity: 95
+  coverm_min_aligned_percent: 75
+
+################
 # Databases
 checkm2:
   db: "/work/river/Databases/checkm2/v1.1/CheckM2_database/uniref100.KO.1.dmnd"  ###USER INPUT REQUIRED###

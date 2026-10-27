@@ -67,13 +67,20 @@ rule coverage:
     resources:
         runtime=60 * 2,
         mem_mb=get_mem_mb,
+    params:
+        # coverm make maps with strobealign, whose short soft-clipped hits
+        # would otherwise count towards MAG abundance
+        min_identity=config.get("binning_mapping", {}).get("coverm_min_identity", 95),
+        min_aligned=config.get("binning_mapping", {}).get(
+            "coverm_min_aligned_percent", 75
+        ),
     message:
         "Estimating coverage for concatenated MAGs"
     shell:
         """
         (
             date
-            pixi r -e coverm coverm contig -b {input} -m trimmed_mean -t {threads} -o {output.final}
+            pixi r -e coverm coverm contig -b {input} -m trimmed_mean --min-read-percent-identity {params.min_identity} --min-read-aligned-percent {params.min_aligned} -t {threads} -o {output.final}
             date
         ) 2>{log.err} >{log.out}
         """
