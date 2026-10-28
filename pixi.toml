@@ -60,7 +60,8 @@ checkm2 = ">=1.1,<1.5"
 channels = ["conda-forge", "bioconda"]
 
 [feature.comebin.dependencies]
-comebin = ">=1.0.3, <1.1"
+comebin = ">=1.0.3, <2"
+pytorch-cpu = "*"
 
 [feature.concoct]
 channels = ["conda-forge", "bioconda"]
