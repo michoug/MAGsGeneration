@@ -32,7 +32,7 @@ rule prepare_contig2bin:
         rosella=rules.rosella.output,
         taxvamb=rules.taxvamb.output,
         concoct=rules.concoct.output,
-        comebin=rules.comebin.output,
+        comebin=rules.comebin.output.tsv,
         semibin=rules.semibin.output,
         metacat=rules.metacat_cluster.output.folder,
         metacat_done=rules.metacat_cluster.output.done,
