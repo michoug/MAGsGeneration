@@ -55,6 +55,7 @@ channels = ["conda-forge", "bioconda"]
 
 [feature.checkm2.dependencies]
 checkm2 = ">=1.1,<1.5"
+tensorflow = "2.17.*"
 
 [feature.comebin]
 channels = ["conda-forge", "bioconda"]
@@ -144,6 +145,7 @@ python = ">=3.10"
 checkm2 = "*"
 pip = "*"
 gunc = ">=1.1.1,<2"
+tensorflow = "2.17.*"
 
 [feature.metawrap2.pypi-dependencies]
 metawrap2 = { git = "https://github.com/ursky/MetaWrap2.git", branch = "main" }

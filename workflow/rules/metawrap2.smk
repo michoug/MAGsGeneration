@@ -28,8 +28,7 @@ rule binning_refinement:
 
 
 rule metawrap2_run:
-    # metawrap2 bin_refinement on the selected binners (-A/-B/-C..., max 6);
-    # $CHECKM2DB is exported because metawrap2 ignores --config for CheckM2
+    # metawrap2 bin_refinement on the selected binners (-A/-B/-C..., max 6)
     input:
         bins=expand(
             os.path.join(
@@ -61,7 +60,6 @@ rule metawrap2_run:
         mem_mb=get_mem_mb,
     params:
         db=config["checkm2"]["db"],
-        config=os.path.join(WORK_DIR, "config/metawrap.toml"),
         bins_dir=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/BinnerEval"),
         completeness=METAWRAP2_CFG["completeness"],
         contamination=METAWRAP2_CFG["contamination"],
@@ -84,19 +82,19 @@ rule metawrap2_run:
             fi
             outdir=$(dirname {output.bins})
             mkdir -p $outdir
-            cfg=$outdir/metawrap2.toml
-            cat {params.config} >$cfg
-            printf '\n\n[databases]\nCHECKM2DB = "%s"\n' {params.db} >>$cfg
+            cfg=$(mktemp --suffix=.metawrap2.toml)
+            trap 'rm -f $cfg' EXIT
+            printf '[settings]\nuse_conda_envs = false\n\n' >$cfg
+            printf '[databases]\nCHECKM2DB = "%s"\n' {params.db} >>$cfg
             printf '{params.gunc_db_line}' >>$cfg
-            printf '\n[limits]\nmax_threads = %s\n' {threads} >>$cfg
-            export CHECKM2DB={params.db}
+            cat $cfg
             ARGS=()
             letters=(A B C D E F)
             for i in "${{!B[@]}}"; do
                 ARGS+=(-${{letters[$i]}} {params.bins_dir}/${{B[$i]}}/bins)
             done
             status=0
-            pixi run -e metawrap2 metawrap2 bin_refinement --force --config $cfg {params.gunc_flag} -o $outdir -t {threads} -c {params.completeness} -x {params.contamination} "${{ARGS[@]}}" || status=$?
+            METAWRAP2_CONFIG=$cfg pixi run -e metawrap2 metawrap2 bin_refinement --force --config $cfg {params.gunc_flag} -o $outdir -t {threads} -c {params.completeness} -x {params.contamination} "${{ARGS[@]}}" || status=$?
             if [[ $status -ne 0 ]]; then
                 if grep -q "Consolidation produced no bins" $outdir/metawrap2.log 2>/dev/null; then
                     echo "WARNING: no bin of {wildcards.sample} passed -c {params.completeness} -x {params.contamination}, writing an empty bin set" >&2
