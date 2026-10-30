@@ -65,6 +65,7 @@ rule metawrap2_run:
         contamination=METAWRAP2_CFG["contamination"],
         gunc_db_line='GUNC_DB = "%s"\\n' % GUNC_DB if GUNC_ENABLED else "",
         gunc_flag="" if GUNC_ENABLED else "--skip-gunc",
+        max_disk_fraction=METAWRAP2_CFG.get("max_disk_fraction", 0.95),
     message:
         "Running Metawrap2 bin_refinement on the binners selected by binner_selection"
     shell:
@@ -87,6 +88,8 @@ rule metawrap2_run:
             printf '[settings]\nuse_conda_envs = false\n\n' >$cfg
             printf '[databases]\nCHECKM2DB = "%s"\n' {params.db} >>$cfg
             printf '{params.gunc_db_line}' >>$cfg
+            printf '\n[limits]\nmax_threads = %s\nmax_memory_gb = %s\nmax_disk_fraction = %s\n' \
+                {threads} $(({resources.mem_mb} / 1024)) {params.max_disk_fraction} >>$cfg
             cat $cfg
             ARGS=()
             letters=(A B C D E F)

@@ -48,15 +48,13 @@ memory_per_thread : 7000
 
 ################
 # Remove duplicate read pairs with fastp --dedup after human removal.
-# Off by default: fastp cannot tell PCR duplicates from natural duplicates of
-# abundant genomes, and dropping those distorts binning coverage and MAG
-# abundance. Turn on only for low-input, PCR-amplified libraries.
+# Off by default. Turn on only for low-input, PCR-amplified libraries.
 dedup: false
 
 ################
 # Human read removal: a pair is removed only if a mate aligns to hg38 over
 # at least min_aligned_fraction of its length, with at most max_mismatch_rate
-# mismatches per aligned base (short soft-clipped strobealign hits are ignored)
+# mismatches per aligned base
 human_removal:
   min_aligned_fraction: 0.8
   max_mismatch_rate: 0.05
@@ -82,12 +80,10 @@ gtdbtk:
 metawrap2:
   completeness: 70
   contamination: 10
+  max_disk_fraction: 0.95 
 
-# GUNC chimerism check on metawrap2's final bins (metawrap2 annotates
-# gunc_css / gunc_pass; remove_chimeric drops bins with gunc_pass "no").
-# database: progenomes_3 (GUNC default), progenomes_2.1, gtdb_95 or gtdb_214;
-# downloaded from Zenodo into db_dir by the install_software step (an
-# existing gunc_db_*.dmnd.gz there is reused), then decompressed.
+# GUNC chimerism check on metawrap2's final bin
+# database: progenomes_3, progenomes_2.1, gtdb_95 or gtdb_214;
 gunc:
   enabled: true
   database: "progenomes_3"
