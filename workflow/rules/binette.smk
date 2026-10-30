@@ -20,21 +20,14 @@ rule binning_refinement:
 
 
 rule prepare_dasTool:
-    # Kept byte-for-byte identical to the DAS-Tool-era rule of the same name
-    # (now in legacy_rules/dastool.smk), including its name and the "DasTool"
-    # output folder: workflow/rules/binner_selection.smk hardcodes a literal
-    # path template (BINNER_C2B) pointing at
-    # Bins/intermediate/{sample}/DasTool/{binner}_das.tsv, because it is
-    # included before this file and can't use a `rules.` reference. This
-    # rule is tool-agnostic - it only normalizes each binner's raw output
-    # into contig2bin tables - so Binette reuses it unchanged rather than
-    # duplicating it under a new name.
+    # One contig<TAB>bin table per binner; name and DasTool/ folder kept because
+    # binner_selection.smk (BINNER_C2B) hardcodes DasTool/{binner}_das.tsv
     input:
         metabat=rules.metabat2.output,
         rosella=rules.rosella.output,
         taxvamb=rules.taxvamb.output,
         concoct=rules.concoct.output,
-        comebin=rules.comebin.output,
+        comebin=rules.comebin.output.tsv,
         semibin=rules.semibin.output,
         metacat=rules.metacat_cluster.output.folder,
         metacat_done=rules.metacat_cluster.output.done,
@@ -66,27 +59,28 @@ rule prepare_dasTool:
     localrule: True
     params:
         value="{sample}",
+        script=os.path.join(WORK_DIR, "scripts/Fasta_to_Scaffolds2Bin.sh"),
     message:
-        "Preparing files for DasTool"
+        "Preparing per-binner contig2bin tables for {wildcards.sample}"
     shell:
         r"""
         (
             date
-            pixi r -e dastool Fasta_to_Contig2Bin.sh -e fa -i {input.metabat} >{output.metabatout}
+            bash {params.script} -e fa -i {input.metabat} >{output.metabatout}
             perl -pe 's/^(\S+)[^\t]*(\t.*)$/$1$2/' {output.metabatout} >$(dirname {output.metabatout})/t.txt
             mv $(dirname {output.metabatout})/t.txt {output.metabatout}
             perl -pe 's/metabat./{params.value}_metabat_/g' {output.metabatout} >$(dirname {output.metabatout})/t.txt
             mv $(dirname {output.metabatout})/t.txt {output.metabatout}
-            pixi r -e dastool Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.rosella}) >{output.rosellaout}
+            bash {params.script} -e fna -i $(dirname {input.rosella}) >{output.rosellaout}
             perl -pe 's/rosella_(bin|refined)_/{params.value}_rosella_/g' {output.rosellaout} >$(dirname {output.metabatout})/t2.txt
             mv $(dirname {output.metabatout})/t2.txt {output.rosellaout}
-            pixi r -e dastool Fasta_to_Contig2Bin.sh -e fna -i $(dirname {input.taxvamb})/bins >{output.taxvambout}
+            bash {params.script} -e fna -i $(dirname {input.taxvamb})/bins >{output.taxvambout}
             perl -pe 's/\t/\t{params.value}_taxvamb_/g' {output.taxvambout} >$(dirname {output.metabatout})/t3.txt
             mv $(dirname {output.metabatout})/t3.txt {output.taxvambout}
             perl -pe 's/,/\t{params.value}_concoct_/g' {input.concoct} | tail -n +2 >{output.concoctout}
             perl -pe 's/\tgroup/\t{params.value}_comebin_/g' {input.comebin} >{output.comebinout}
             perl -pe 's/\t/\t{params.value}_semibin_/g' {input.semibin} | tail -n +2 >{output.semibinout}
-            pixi r -e dastool Fasta_to_Contig2Bin.sh -e fasta -i {input.metacat} >{output.metacatout}
+            bash {params.script} -e fasta -i {input.metacat} >{output.metacatout}
             perl -pe 's/_metacat\./_metacat_/g' {output.metacatout} >$(dirname {output.metabatout})/t4.txt
             mv $(dirname {output.metabatout})/t4.txt {output.metacatout}
             date

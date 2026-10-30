@@ -84,6 +84,7 @@ def select(counts_df, catalogue, n=3, one_per_family=True, tier_names=("mq", "nc
     """Returns {"selected": [binner, ...], "report": DataFrame}."""
     all_binners = sorted(counts_df["binner"].unique())
     mq_totals = counts_df.groupby("binner")["mq"].sum()
+    bin_totals = counts_df.groupby("binner")["n_bins"].sum()
     survivors = sorted(mq_totals[mq_totals > 0].index.tolist())
     dropped = sorted(set(all_binners) - set(survivors))
 
@@ -115,7 +116,7 @@ def select(counts_df, catalogue, n=3, one_per_family=True, tier_names=("mq", "nc
                 "binner": binner,
                 "family": family_of(binner),
                 "score": float("nan"),
-                "n_bins": int(mq_totals.get(binner, 0)) if binner in mq_totals else 0,
+                "n_bins": int(bin_totals.get(binner, 0)),
                 **{t: 0 for t in tier_names},
             }
         )

@@ -298,9 +298,9 @@ class TestPixiLockFile:
         try:
             with open(lock_path, "r") as f:
                 content = f.read()
-                assert len(content) > 0, "pixi.lock is empty"
-        except Exception as e:
+        except FileNotFoundError as e:
             pytest.skip(f"Could not read pixi.lock: {e}")
+        assert len(content) > 0, "pixi.lock is empty"
 
     def test_pixi_lock_appears_valid(self):
         """Test that pixi.lock has expected structure."""
@@ -308,14 +308,13 @@ class TestPixiLockFile:
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             "pixi.lock"
         )
+        yaml = pytest.importorskip("yaml")
         try:
-            import yaml
-
             with open(lock_path, "r", encoding="utf-8") as f:
                 lock_data = yaml.safe_load(f)
+        except FileNotFoundError as e:
+            pytest.skip(f"Could not read pixi.lock: {e}")
 
-            assert isinstance(lock_data, dict) and "version" in lock_data and "environments" in lock_data, (
-                "pixi.lock appears invalid or missing expected keys"
-            )
-        except Exception as e:
-            pytest.skip(f"Could not parse pixi.lock as YAML: {e}")
+        assert isinstance(lock_data, dict) and "version" in lock_data and "environments" in lock_data, (
+            "pixi.lock appears invalid or missing expected keys"
+        )

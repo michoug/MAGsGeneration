@@ -379,12 +379,12 @@ rule get_length_for_remag:
         txt=temp(
             os.path.join(
                 RESULTS_DIR,
-                "Bins/intermediate/remag_all_bins/remag_stats_fasta_all.txt",
+                "Bins/intermediate/remag_stats/remag_stats_fasta_all.txt",
             )
         ),
         final=os.path.join(
             RESULTS_DIR,
-            "Bins/intermediate/remag_all_bins/remag_length_filtered_list.txt",
+            "Bins/intermediate/remag_stats/remag_length_filtered_list.txt",
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/get_length_remag.out.log"),
@@ -518,9 +518,16 @@ rule busco_multiqc:
             date
             rm -rf {output.folder}
             mkdir -p {output.folder}/multiqc_data
+            busco_dir=$(dirname {input[0]})/eukaryotic_mags_busco
 
-            pixi r -e multiqc multiqc $(dirname {input[0]})/eukaryotic_mags_busco \
-                --verbose --ignore auto_lineage/ -o {output.folder} --force || true
+            # Only fall back to empty tables when BUSCO produced no summaries;
+            # otherwise a MultiQC failure must fail the job
+            if [ -n "$(find $busco_dir -name 'short_summary*.txt' -print -quit 2>/dev/null)" ]; then
+                pixi r -e multiqc multiqc $busco_dir \
+                    --verbose --ignore auto_lineage/ -o {output.folder} --force
+            else
+                echo "No BUSCO summaries found in $busco_dir; writing empty MultiQC outputs."
+            fi
 
             if [ ! -s {output.html} ]; then
                 printf '%s\\n' \
@@ -576,10 +583,9 @@ rule quality_eukaryotes:
             raise ValueError(
                 f"Missing required columns in sources file: {sorted(missing_src_cols)}"
             )
+        # busco-complete = single copy + duplicated
         busco_total = (
-            df["busco-complete_single_copy"]
-            + df["busco-fragmented"]
-            + df["busco-missing"]
+            df["busco-complete"] + df["busco-fragmented"] + df["busco-missing"]
         )
         if "busco-complete_duplicated" in df.columns:
             duplicated = df["busco-complete_duplicated"]

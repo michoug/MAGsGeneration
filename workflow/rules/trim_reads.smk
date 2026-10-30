@@ -77,15 +77,10 @@ rule mappingHuman:
         fasta=rules.downloadHuman.output,
         index=rules.checkIndexDone.output,
     output:
-        temp(os.path.join(RESULTS_DIR, "intermediate/TrimHuman/{sample}.bam")),
+        temp(os.path.join(RESULTS_DIR, "intermediate/MappedHuman/{sample}.bam")),
     log:
         out=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.out.log"),
         err=os.path.join(RESULTS_DIR, "logs/mappingHuman/{sample}.err.log"),
-    # Without this, {sample} (default regex .+) can absorb "<real_sample>.noHuman"
-    # and produce the exact same output path as removeHuman's
-    # {sample}.noHuman.bam, which Snakemake then reports as an ambiguous rule.
-    wildcard_constraints:
-        sample="[^/.]+",
     priority: 20
     threads: 10
     resources:
@@ -103,6 +98,10 @@ rule mappingHuman:
 
 
 rule removeHuman:
+    # A pair is human only if a mate aligns over most of its length (see
+    # scripts/filter_host_reads.py); `samtools view -f 12` dropped ~50% of
+    # pairs on strobealign's short soft-clipped hits. The BAM stays in
+    # strobealign's read order so mates remain adjacent for samtools fastq.
     input:
         rules.mappingHuman.output,
     output:
@@ -115,12 +114,19 @@ rule removeHuman:
     resources:
         runtime=60 * 3,
         mem_mb=get_mem_mb,
+    params:
+        script=os.path.join(WORK_DIR, "scripts/filter_host_reads.py"),
+        min_aligned_fraction=config.get("human_removal", {}).get(
+            "min_aligned_fraction", 0.8
+        ),
+        max_mismatch_rate=config.get("human_removal", {}).get("max_mismatch_rate", 0.05),
     shell:
         """
         (
             date
-            rm -f {output}.tmp*
-            pixi r -e coverm samtools view -@ {threads} -b -f 12 -F 256 {input} | pixi r -e coverm samtools sort -@ {threads} - -o {output}
+            pixi r -e coverm samtools view -h {input} \
+                | pixi r -e coverm python {params.script} --min-aligned-fraction {params.min_aligned_fraction} --max-mismatch-rate {params.max_mismatch_rate} \
+                | pixi r -e coverm samtools view -@ {threads} -b -o {output} -
             date
         ) 2>{log.err} >{log.out}
         """
@@ -151,6 +157,9 @@ rule getcleanreads:
 
 
 rule getdedupreads:
+    # fastp --dedup is optional (config `dedup`, default off): it cannot tell
+    # PCR duplicates from natural ones in abundant genomes, and removing the
+    # latter compresses the coverage used by binning and MAG abundance.
     input:
         read1=rules.getcleanreads.output.read1,
         read2=rules.getcleanreads.output.read2,
@@ -167,11 +176,13 @@ rule getdedupreads:
     resources:
         runtime=60,
         mem_mb=get_mem_mb,
+    params:
+        dedup="--dedup" if config.get("dedup", False) else "",
     shell:
         """
         (
             date
-            pixi r -e fastp fastp -i {input.read1} -I {input.read2} -h {output.report_html} -j {output.report_json} -o {output.read1} -O {output.read2} --dedup --thread {threads}
+            pixi r -e fastp fastp -i {input.read1} -I {input.read2} -h {output.report_html} -j {output.report_json} -o {output.read1} -O {output.read2} {params.dedup} --thread {threads}
             date
         ) 2>{log.err} >{log.out}
         """

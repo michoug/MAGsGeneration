@@ -42,6 +42,7 @@ channels = ["conda-forge", "bioconda"]
 
 [feature.binette.dependencies]
 binette = ">=1.2.1,<2.0a0"
+tensorflow = "2.17.*"
 
 [feature.dastool]
 channels = ["conda-forge", "bioconda"]
@@ -61,12 +62,14 @@ channels = ["conda-forge", "bioconda"]
 
 [feature.checkm2.dependencies]
 checkm2 = ">=1.1,<1.5"
+tensorflow = "2.17.*"
 
 [feature.comebin]
 channels = ["conda-forge", "bioconda"]
 
 [feature.comebin.dependencies]
-comebin = ">=1.0.3, <1.1"
+comebin = ">=1.1, <2"
+pytorch-cpu = "*"
 
 [feature.concoct]
 channels = ["conda-forge", "bioconda"]
@@ -80,7 +83,7 @@ channels = ["conda-forge", "bioconda"]
 [feature.coverm.dependencies]
 coverm = ">=0.7.0,<1"
 samtools = "1.*"
-strobealign = ">=0.17,<0.20"
+strobealign = ">=0.19,<0.20"
 
 [feature.deepmicroclass]
 channels = ["conda-forge", "bioconda"]
@@ -100,7 +103,7 @@ channels = ["conda-forge", "bioconda"]
 
 [feature.eggnog.dependencies]
 eggnog-mapper = ">2,<3"
-setuptools = "*"
+setuptools = ">=83.0.0"
 
 [feature.fastp]
 channels = ["conda-forge", "bioconda"]
@@ -112,10 +115,8 @@ fastp = "1.*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.galah.dependencies]
-python = "3.8.*"
-galah = "0.4.*"
-gsl = { version = "==2.7", build = "he838d99_0" }
-dashing = "0.4.*"
+python = ">=3.10,<3.12"
+galah = ">=0.6.0,<1"
 
 [feature.gtdbtk]
 channels = ["conda-forge", "bioconda"]
@@ -278,7 +279,7 @@ hmmer = ">=3.4,<4"
 fraggenescan = ">=1.32,<2"
 
 [feature.metacat.pypi-dependencies]
-metacat = { url = "https://github.com/liu-congcong/MetaCAT/releases/download/v1.0.5/metacat-1.0.5-py3-none-any.whl" }
+metacat = { url = "https://github.com/liu-congcong/MetaCAT/releases/download/MetaCAT-1.0.7/metacat-1.0.7-py3-none-any.whl" }
 
 [feature.remag]
 channels = ["conda-forge", "bioconda"]

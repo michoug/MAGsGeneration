@@ -37,7 +37,7 @@ rule checkm2:
         """
         (
             date
-            python3 {params.script} --binette-tsv {input.tsv} --out {output.tsv}
+            pixi r -e binette python {params.script} --binette-tsv {input.tsv} --out {output.tsv}
             date
         ) 2>{log.err} >{log.out}
         """

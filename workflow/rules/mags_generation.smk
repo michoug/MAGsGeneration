@@ -142,12 +142,20 @@ rule mapping:
     resources:
         runtime=60 * 1,
         mem_mb=get_mem_mb,
+    params:
+        # drops strobealign's short soft-clipped hits inside contigs, which
+        # otherwise add spurious coverage to every binner's input
+        script=os.path.join(WORK_DIR, "scripts/filter_partial_alignments.py"),
+        min_aligned_fraction=config.get("binning_mapping", {}).get(
+            "min_aligned_fraction", 0.8
+        ),
     shell:
         """
         (
             date
             rm -f {output.bam}.tmp*
             pixi r -e coverm strobealign -t {threads} --use-index {input.fasta} {input.read1} {input.read2} \
+                | pixi r -e coverm python {params.script} --min-aligned-fraction {params.min_aligned_fraction} \
                 | pixi r -e coverm samtools sort -@ {threads} -o {output.bam}
             pixi r -e coverm samtools index {output.bam}
             touch -r {output.bam} -d '+1 second' {output.bai}
@@ -472,9 +480,15 @@ rule comebin:
         cont=rules.filter_length.output.out,
         check=rules.check_bam_files_for_binning.output,
     output:
-        os.path.join(
+        tsv=os.path.join(
             RESULTS_DIR,
             "Bins/intermediate/{sample}/Comebin/comebin_res/comebin_res.tsv",
+        ),
+        bins=directory(
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/Comebin/comebin_res/comebin_res_bins",
+            )
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/comebin/{sample}.out.log"),
@@ -494,15 +508,20 @@ rule comebin:
             date
             rm -rf {params.folder}
             set +e
-            pixi r -e comebin run_comebin.sh -a {input.cont} -o {params.folder} -t {threads} -p {params.bam}
+            pixi r -e comebin run_comebin.sh -a {input.cont} -o {params.folder} -t {threads} -p {params.bam} -d cpu
             status=$?
             set -e
-            if [[ ! -s {output} ]]; then
-                mkdir -p $(dirname {output})
-                : >{output}
+            mkdir -p {output.bins}
+            if [[ ! -s {output.tsv} ]]; then
+                mkdir -p $(dirname {output.tsv})
+                : >{output.tsv}
                 if [[ $status -ne 0 ]]; then
-                    echo "Comebin produced no bins; created empty output file {output}"
+                    msg="WARNING: COMEBin exited with status $status and produced no output; treating {wildcards.sample} as 0 bins"
+                else
+                    msg="COMEBin produced no bins for {wildcards.sample}; created empty output file {output.tsv}"
                 fi
+                echo "$msg"
+                echo "$msg" >&2
             elif [[ $status -ne 0 ]]; then
                 exit $status
             fi
@@ -538,7 +557,7 @@ rule semibin:
         (
             date
             rm -rf $(dirname {output})
-            pixi r -e semibin SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster --minfasta 200000
+            pixi r -e semibin SemiBin2 single_easy_bin -i {input.cont} -b {input.bam} -o $(dirname {output}) -t {threads} --no-recluster --minfasta-kbs 200
             bins_dir=$(dirname {output})/output_bins
             : >{output}
             if compgen -G "$bins_dir/*.fa.gz" >/dev/null 2>&1; then
