@@ -37,6 +37,13 @@ channels = ["conda-forge", "bioconda"]
 prodigal = "2.6.3.*"
 pyrodigal = ">=3.5,<4"
 
+[feature.binette]
+channels = ["conda-forge", "bioconda"]
+
+[feature.binette.dependencies]
+binette = ">=1.2.1,<2.0a0"
+tensorflow = "2.17.*"
+
 [feature.dastool]
 channels = ["conda-forge", "bioconda"]
 
@@ -288,6 +295,7 @@ mmseqs2 = "18.*"
 
 [environments]
 annotations = { features = ["annotations"], no-default-feature = true }
+binette = { features = ["binette"], no-default-feature = true }
 dastool = { features = ["dastool"], no-default-feature = true }
 busco = { features = ["busco"], no-default-feature = true }
 checkm2 = { features = ["checkm2"], no-default-feature = true }
