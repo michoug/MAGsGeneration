@@ -44,7 +44,7 @@ def collect(bins_dir, stats_path, outdir, table_path, sample, drop_chimeric=True
     rows = read_stats(stats_path)
     kept = dropped = 0
     with open(table_path, "w", newline="") as fh:
-        writer = csv.writer(fh, delimiter="\t")
+        writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(TABLE_COLUMNS)
         for row in rows:
             name = row["bin"]
