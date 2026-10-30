@@ -1,6 +1,7 @@
 rule trim_reads:
     input:
         expand(os.path.join(RESULTS_DIR, "TrimFinal/{sample}_1.fq.gz"), sample=SAMPLES),
+        os.path.join(RESULTS_DIR, "qc/reads/multiqc_report.html"),
     output:
         touch("status/trimming.done"),
 
@@ -183,6 +184,68 @@ rule getdedupreads:
         (
             date
             pixi r -e fastp fastp -i {input.read1} -I {input.read2} -h {output.report_html} -j {output.report_json} -o {output.read1} -O {output.read2} {params.dedup} --thread {threads}
+            date
+        ) 2>{log.err} >{log.out}
+        """
+
+
+rule read_counts_table:
+    # Read pairs kept after trimming, human removal and fastp, per sample
+    input:
+        fastp=expand(rules.getdedupreads.output.report_json, sample=SAMPLES),
+    output:
+        os.path.join(RESULTS_DIR, "qc/reads/read_counts_mqc.tsv"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/qc/read_counts_table.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/qc/read_counts_table.err.log"),
+    localrule: True
+    params:
+        script=os.path.join(WORK_DIR, "scripts/read_counts_mqc.py"),
+        trim_dir=os.path.join(RESULTS_DIR, "intermediate/Trim"),
+    message:
+        "Counting read pairs per processing step"
+    shell:
+        """
+        (
+            date
+            pixi r -e multiqc python {params.script} --fastp {input.fastp} --trim-dir {params.trim_dir} --out {output}
+            date
+        ) 2>{log.err} >{log.out}
+        """
+
+
+rule multiqc_reads:
+    # Trim Galore (v2 JSON) and fastp reports, plus the read-pair table
+    input:
+        fastp=expand(rules.getdedupreads.output.report_json, sample=SAMPLES),
+        table=rules.read_counts_table.output,
+    output:
+        os.path.join(RESULTS_DIR, "qc/reads/multiqc_report.html"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/qc/multiqc_reads.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/qc/multiqc_reads.err.log"),
+    threads: 1
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
+    params:
+        trim=expand(
+            os.path.join(
+                RESULTS_DIR,
+                "intermediate/Trim/{sample}_R{read}_001.fastq.gz_trimming_report.json",
+            ),
+            sample=SAMPLES,
+            read=[1, 2],
+        ),
+    message:
+        "Running MultiQC on the read-processing reports"
+    shell:
+        """
+        (
+            date
+            pixi r -e multiqc multiqc {params.trim} {input.fastp} {input.table} \
+                -m trim_galore -m fastp -m custom_content \
+                -o $(dirname {output}) -n $(basename {output}) --force
             date
         ) 2>{log.err} >{log.out}
         """

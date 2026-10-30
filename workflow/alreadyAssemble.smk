@@ -97,13 +97,6 @@ if "refine_all" in STEPS:
     TARGETS += ["status/refine.done"]
 
 
-if "filter_checkm" in STEPS:
-
-    include: "rules/filter_checkm2.smk"
-
-    TARGETS += ["status/filter_checkm2.done"]
-
-
 # Dereplication
 if "dereplicate" in STEPS:
 

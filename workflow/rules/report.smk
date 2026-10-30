@@ -8,7 +8,6 @@ _STEP_DONE_FILES = {
     "eukaryotes_filter": "status/eukaryotes_filter.done",
     "checkm": "status/checkm2.done",
     "refine_all": "status/refine.done",
-    "filter_checkm": "status/filter_checkm2.done",
     "dereplicate": "status/dereplicate.done",
     "syntracker": "status/syntracker.done",
     "annotations": "status/annotations.done",

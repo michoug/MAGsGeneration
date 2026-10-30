@@ -44,12 +44,6 @@ channels = ["conda-forge", "bioconda"]
 binette = ">=1.2.1,<2.0a0"
 tensorflow = "2.17.*"
 
-[feature.dastool]
-channels = ["conda-forge", "bioconda"]
-
-[feature.dastool.dependencies]
-das_tool = ">=1.1.7,<2"
-
 [feature.busco]
 channels = ["conda-forge", "bioconda"]
 
@@ -84,6 +78,12 @@ channels = ["conda-forge", "bioconda"]
 coverm = ">=0.7.0,<1"
 samtools = "1.*"
 strobealign = ">=0.19,<0.20"
+
+#[feature.dastool]
+#channels = ["conda-forge", "bioconda"]
+
+#[feature.dastool.dependencies]
+#das_tool = ">=1.1.7,<2"
 
 [feature.deepmicroclass]
 channels = ["conda-forge", "bioconda"]
@@ -296,7 +296,7 @@ mmseqs2 = "18.*"
 [environments]
 annotations = { features = ["annotations"], no-default-feature = true }
 binette = { features = ["binette"], no-default-feature = true }
-dastool = { features = ["dastool"], no-default-feature = true }
+# dastool = { features = ["dastool"], no-default-feature = true }
 busco = { features = ["busco"], no-default-feature = true }
 checkm2 = { features = ["checkm2"], no-default-feature = true }
 comebin = { features = ["comebin"], no-default-feature = true }

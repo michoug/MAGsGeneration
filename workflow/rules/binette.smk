@@ -19,9 +19,8 @@ rule binning_refinement:
         touch("status/binning_refinement.done"),
 
 
-rule prepare_dasTool:
-    # One contig<TAB>bin table per binner; name and DasTool/ folder kept because
-    # binner_selection.smk (BINNER_C2B) hardcodes DasTool/{binner}_das.tsv
+rule prepare_Binette:
+    # One contig<TAB>bin table per binner
     input:
         metabat=rules.metabat2.output,
         rosella=rules.rosella.output,
@@ -33,29 +32,29 @@ rule prepare_dasTool:
         metacat_done=rules.metacat_cluster.output.done,
     output:
         metabatout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/metabat_das.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/metabat_binette.tsv"
         ),
         rosellaout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/rosella_das.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/rosella_binette.tsv"
         ),
         taxvambout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/taxvamb_das.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/taxvamb_binette.tsv"
         ),
         concoctout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/concoct_das.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/concoct_binette.tsv"
         ),
         comebinout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/comebin_das.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/comebin_binette.tsv"
         ),
         semibinout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/semibin_das.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/semibin_binette.tsv"
         ),
         metacatout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/DasTool/metacat_das.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/metacat_binette.tsv"
         ),
     log:
-        out=os.path.join(RESULTS_DIR, "logs/prepare_dasTool/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/prepare_dasTool/{sample}.err.log"),
+        out=os.path.join(RESULTS_DIR, "logs/prepare_Binette/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/prepare_Binette/{sample}.err.log"),
     localrule: True
     params:
         value="{sample}",
@@ -90,13 +89,13 @@ rule prepare_dasTool:
 
 rule binette_run:
     input:
-        metabat=rules.prepare_dasTool.output.metabatout,
-        taxvamb=rules.prepare_dasTool.output.taxvambout,
-        rosella=rules.prepare_dasTool.output.rosellaout,
-        concoct=rules.prepare_dasTool.output.concoctout,
-        comebin=rules.prepare_dasTool.output.comebinout,
-        semibin=rules.prepare_dasTool.output.semibinout,
-        metacat=rules.prepare_dasTool.output.metacatout,
+        metabat=rules.prepare_Binette.output.metabatout,
+        taxvamb=rules.prepare_Binette.output.taxvambout,
+        rosella=rules.prepare_Binette.output.rosellaout,
+        concoct=rules.prepare_Binette.output.concoctout,
+        comebin=rules.prepare_Binette.output.comebinout,
+        semibin=rules.prepare_Binette.output.semibinout,
+        metacat=rules.prepare_Binette.output.metacatout,
         cont=rules.filter_length.output.out,
         sel=os.path.join(RESULTS_DIR, "Bins/intermediate/selected_binners.txt"),
     output:
@@ -145,7 +144,7 @@ rule binette_run:
                 PATHS+=("${{C2B[$binner]}}")
             done
             rm -rf $(dirname {output.quality})
-            pixi r -e binette binette -b "${{PATHS[@]}}" -c {input.cont} -o $(dirname {output.quality}) -t {threads} --checkm2_db {params.db} --min_completeness 50 --max_length 20000000 --verbose
+            pixi r -e binette binette -b "${{PATHS[@]}}" -c {input.cont} -o $(dirname {output.quality}) -t {threads} --checkm2_db {params.db} --min_completeness 70 --max_length 50000000 --verbose
             date
         ) 2>{log.err} >{log.out}
         """

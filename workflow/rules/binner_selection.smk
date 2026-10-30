@@ -1,11 +1,11 @@
 # Score the 7 binners from mags_generation.smk with CheckM2 and keep only
 # the best `binners.selection.n` (default 3) to feed DAS Tool.
 #
-# BINNER_C2B mirrors the outputs of `prepare_dasTool` in dastool.smk as
-# literal paths rather than `rules.prepare_dasTool.output.*`: this step is
-# included before dastool.smk in the pipeline order, so the `rules.`
+# BINNER_C2B mirrors the outputs of `prepare_Binette` in Binette.smk as
+# literal paths rather than `rules.prepare_Binette.output.*`: this step is
+# included before Binette.smk in the pipeline order, so the `rules.`
 # attribute is not yet available when this file is parsed. Keep the two in
-# sync if binner names or the DasTool output layout change.
+# sync if binner names or the Binette output layout change.
 
 BINNER_CATALOGUE = config["binners"]["catalogue"]
 BINNERS = list(BINNER_CATALOGUE)
@@ -13,7 +13,9 @@ SELECTION_CFG = config["binners"]["selection"]
 SELECTION_ENABLED = SELECTION_CFG["enabled"]
 
 BINNER_C2B = {
-    b: os.path.join(RESULTS_DIR, f"Bins/intermediate/{{sample}}/DasTool/{b}_das.tsv")
+    b: os.path.join(
+        RESULTS_DIR, f"Bins/intermediate/{{sample}}/Binette/{b}_binette.tsv"
+    )
     for b in BINNERS
 }
 
