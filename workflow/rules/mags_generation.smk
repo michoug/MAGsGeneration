@@ -480,9 +480,15 @@ rule comebin:
         cont=rules.filter_length.output.out,
         check=rules.check_bam_files_for_binning.output,
     output:
-        os.path.join(
+        tsv=os.path.join(
             RESULTS_DIR,
             "Bins/intermediate/{sample}/Comebin/comebin_res/comebin_res.tsv",
+        ),
+        bins=directory(
+            os.path.join(
+                RESULTS_DIR,
+                "Bins/intermediate/{sample}/Comebin/comebin_res/comebin_res_bins",
+            )
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/comebin/{sample}.out.log"),
@@ -502,16 +508,17 @@ rule comebin:
             date
             rm -rf {params.folder}
             set +e
-            pixi r -e comebin run_comebin.sh -a {input.cont} -o {params.folder} -t {threads} -p {params.bam}
+            pixi r -e comebin run_comebin.sh -a {input.cont} -o {params.folder} -t {threads} -p {params.bam} -d cpu
             status=$?
             set -e
-            if [[ ! -s {output} ]]; then
-                mkdir -p $(dirname {output})
-                : >{output}
+            mkdir -p {output.bins}
+            if [[ ! -s {output.tsv} ]]; then
+                mkdir -p $(dirname {output.tsv})
+                : >{output.tsv}
                 if [[ $status -ne 0 ]]; then
                     msg="WARNING: COMEBin exited with status $status and produced no output; treating {wildcards.sample} as 0 bins"
                 else
-                    msg="COMEBin produced no bins for {wildcards.sample}; created empty output file {output}"
+                    msg="COMEBin produced no bins for {wildcards.sample}; created empty output file {output.tsv}"
                 fi
                 echo "$msg"
                 echo "$msg" >&2

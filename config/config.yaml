@@ -101,6 +101,6 @@ binners:
     one_per_family: true   # at most one binner per family, then top-n by score
     min_bin_size: 200000   # bp; applied identically to every binner before scoring
     tiers:                 # CheckM2-only approximation of the MQ / NC / HQ tiers in the paper above
-      mq: { completeness: 50, contamination: 10 }
+      mq: { completeness: 70, contamination: 10 }
       nc: { completeness: 90, contamination: 5 }
       nc_strict: { completeness: 95, contamination: 5 }

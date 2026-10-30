@@ -55,12 +55,14 @@ channels = ["conda-forge", "bioconda"]
 
 [feature.checkm2.dependencies]
 checkm2 = ">=1.1,<1.5"
+tensorflow = "2.17.*"
 
 [feature.comebin]
 channels = ["conda-forge", "bioconda"]
 
 [feature.comebin.dependencies]
-comebin = ">=1.0.3, <1.1"
+comebin = ">=1.1, <2"
+pytorch-cpu = "*"
 
 [feature.concoct]
 channels = ["conda-forge", "bioconda"]
@@ -74,7 +76,7 @@ channels = ["conda-forge", "bioconda"]
 [feature.coverm.dependencies]
 coverm = ">=0.7.0,<1"
 samtools = "1.*"
-strobealign = ">=0.17,<0.20"
+strobealign = ">=0.19,<0.20"
 
 [feature.deepmicroclass]
 channels = ["conda-forge", "bioconda"]

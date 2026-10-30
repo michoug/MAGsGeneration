@@ -16,7 +16,7 @@ rule prepare_binning_refinement:
         rosella=rules.rosella.output,
         taxvamb=rules.taxvamb.output,
         concoct=rules.concoct.output,
-        comebin=rules.comebin.output,
+        comebin=rules.comebin.output.tsv,
         semibin=rules.semibin.output,
     output:
         metabatout=os.path.join(RESULTS_DIR, "Bins/{sample}/BinRef/metabat_das.tsv"),
