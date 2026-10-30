@@ -61,7 +61,7 @@ tensorflow = "2.17.*"
 channels = ["conda-forge", "bioconda"]
 
 [feature.comebin.dependencies]
-comebin = ">=1.0.3, <2"
+comebin = ">=1.1, <2"
 pytorch-cpu = "*"
 
 [feature.concoct]
