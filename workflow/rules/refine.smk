@@ -21,6 +21,7 @@ rule refine_all:
                 RESULTS_DIR, "Bins/intermediate/checkm2_refine/quality_report.tsv"
             )
         ),
+        os.path.join(RESULTS_DIR, "Bins/intermediate/filtered_mags_quality_report.tsv"),
     output:
         touch("status/refine.done"),
 
@@ -55,7 +56,7 @@ rule rosella_ref:
         (
             date
             rm -rf $(dirname {output})/*
-            pixi r -e rosella rosella refine --min-bin-size 200000 --checkm-results {input.check} -d {input.bins} --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output})
+            pixi r -e rosella rosella refine --min-bin-size 200000 --checkm-results {input.check} -d {input.bins} --max-contamination 10 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output})
             touch {output}
             date
         ) 2>{log.err} >{log.out}
@@ -172,6 +173,36 @@ rule checkm2_refine:
             date
             export CHECKM2DB={params.db}
             pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input {input} --output-directory $(dirname {output.tsv}) --force
+            date
+        ) 2>{log.err} >{log.out}
+        """
+
+
+rule filter_refined_mags:
+    # Keeps the refined bins with CheckM2 contamination <= refine.max_contamination
+    input:
+        bins=rules.cp_mags.output,
+        check=rules.checkm2_refine.output.tsv,
+    output:
+        bins=directory(os.path.join(RESULTS_DIR, "Bins/intermediate/filtered_mags")),
+        tsv=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/filtered_mags_quality_report.tsv"
+        ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/filter_refined_mags.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/filter_refined_mags.err.log"),
+    localrule: True
+    params:
+        script=os.path.join(WORK_DIR, "scripts/filter_bins_contamination.py"),
+        max_contamination=config.get("refine", {}).get("max_contamination", 10),
+    message:
+        "Keeping refined bins with contamination <= {params.max_contamination}%"
+    shell:
+        """
+        (
+            date
+            pixi r -e coverm python {params.script} --bins {input.bins} --report {input.check} \
+                --outdir {output.bins} --out-report {output.tsv} --max-contamination {params.max_contamination}
             date
         ) 2>{log.err} >{log.out}
         """

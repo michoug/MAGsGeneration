@@ -7,7 +7,7 @@ rule dereplicate:
 
 rule galah_prepare:
     input:
-        check=rules.checkm2_refine.output.tsv,
+        check=rules.filter_refined_mags.output.tsv,
     output:
         final=os.path.join(RESULTS_DIR, "Bins/intermediate/checkm2BeforeGalah.tsv"),
         temp=temp(os.path.join(RESULTS_DIR, "Bins/intermediate/checkm2_temp.tsv")),
@@ -27,7 +27,7 @@ rule galah_prepare:
 # Dereplicating the genomes
 checkpoint galah:
     input:
-        bins=rules.cp_mags.output,
+        bins=rules.filter_refined_mags.output.bins,
         check=rules.galah_prepare.output.final,
     output:
         final=directory(os.path.join(RESULTS_DIR, "Bins/finalBins")),
