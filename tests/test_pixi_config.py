@@ -87,6 +87,7 @@ class TestPixiTomlStructure:
             "binette",
             "checkm2",
             "galah",
+            "gunc",
             "gtdbtk",
             "eggnog",
             "annotations",

@@ -1,12 +1,10 @@
-# Refine Binette bins with rosella
+# Filter Binette bins with GUNC (chimerism) and contamination
 
 
 rule refine_all:
     input:
         expand(
-            os.path.join(
-                RESULTS_DIR, "Bins/intermediate/{sample}/Refine/rosella.done"
-            ),
+            os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine/gunc.done"),
             sample=ASSEMBLY,
         ),
         expand(
@@ -25,38 +23,79 @@ rule refine_all:
         touch("status/refine.done"),
 
 
-rule rosella_ref:
+rule gunc_run:
+    # GUNC chimerism check on the Binette bins
     input:
-        cont=rules.filter_length.output.out,
-        cov=expand(
-            os.path.join(
-                RESULTS_DIR,
-                "intermediate/BamFiles/{{sample}}/{{sample}}_{sample_2}.bam",
-            ),
-            sample_2=SAMPLES,
-        ),
-        check=rules.checkm2.output,
         bins=rules.binette_run.output.bins,
+        db=GUNC_DB,
     output:
-        os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine/rosella.done"),
+        os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/Refine/gunc/GUNC.maxCSS_level.tsv"
+        ),
     log:
-        out=os.path.join(RESULTS_DIR, "logs/refine/{sample}.out.log"),
-        err=os.path.join(RESULTS_DIR, "logs/refine/{sample}.err.log"),
-    threads: 30
+        out=os.path.join(RESULTS_DIR, "logs/gunc/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/gunc/{sample}.err.log"),
+    threads: 10
     resources:
-        runtime=60 * 48,
+        runtime=60 * 4,
         mem_mb=get_mem_mb,
     params:
-        ext="fa",
+        ext=".fa",
     message:
-        "Refine bins with Rosella"
+        "Running GUNC on the Binette bins of {wildcards.sample}"
     shell:
         """
         (
             date
-            rm -rf $(dirname {output})/*
-            pixi r -e rosella rosella refine --min-bin-size 200000 --checkm-results {input.check} -d {input.bins} --max-contamination 15 -x {params.ext} -b {input.cov} -r {input.cont} --threads {threads} -o $(dirname {output})
-            touch {output}
+            outdir=$(dirname {output})
+            rm -rf $outdir
+            mkdir -p $outdir/tmp
+            if compgen -G "{input.bins}/*{params.ext}" >/dev/null; then
+                pixi r -e gunc gunc run --input_dir {input.bins} --file_suffix {params.ext} --db_file {input.db} --threads {threads} --out_dir $outdir --temp_dir $outdir/tmp
+                cp $outdir/GUNC.*.maxCSS_level.tsv {output}
+            else
+                echo "WARNING: no bins in {input.bins}, writing an empty GUNC table" >&2
+                printf 'genome\tpass.GUNC\n' >{output}
+            fi
+            rm -rf $outdir/tmp
+            date
+        ) 2>{log.err} >{log.out}
+        """
+
+
+rule gunc_filter:
+    # Keeps bins with pass.GUNC not False and contamination <= gunc.max_contamination
+    input:
+        bins=rules.binette_run.output.bins,
+        quality=rules.checkm2.output.tsv,
+        gunc=rules.gunc_run.output,
+    output:
+        bins=directory(
+            os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine/gunc_bins")
+        ),
+        table=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/{sample}/Refine/gunc_filter.tsv"
+        ),
+        done=os.path.join(RESULTS_DIR, "Bins/intermediate/{sample}/Refine/gunc.done"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/gunc_filter/{sample}.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/gunc_filter/{sample}.err.log"),
+    localrule: True
+    params:
+        script=os.path.join(WORK_DIR, "scripts/gunc_filter_bins.py"),
+        max_contamination=GUNC_CFG.get("max_contamination", 10),
+    message:
+        "Filtering the Binette bins of {wildcards.sample} on GUNC and contamination"
+    shell:
+        """
+        (
+            date
+            refine=$(dirname {output.done})
+            # leftovers of the former Rosella refine step would be picked up by rename_refine
+            rm -rf $refine/refined_bins $refine/unchanged_bins $refine/coverage.tsv $refine/kmer_frequencies.tsv $refine/rosella.done
+            pixi r -e gunc python {params.script} --bins {input.bins} --quality {input.quality} --gunc {input.gunc} \
+                --outdir {output.bins} --table {output.table} --max-contamination {params.max_contamination}
+            touch {output.done}
             date
         ) 2>{log.err} >{log.out}
         """
@@ -64,7 +103,7 @@ rule rosella_ref:
 
 rule rename_refine:
     input:
-        ref=rules.rosella_ref.output,
+        ref=rules.gunc_filter.output.done,
     output:
         list=os.path.join(
             RESULTS_DIR, "Bins/intermediate/{sample}/Refine_rename/genomes_list.txt"

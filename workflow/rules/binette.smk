@@ -115,6 +115,8 @@ rule binette_run:
         mem_mb=get_mem_mb,
     params:
         db=config["checkm2"]["db"],
+        # bins up to 20% contamination are kept here; GUNC then filters to gunc.max_contamination
+        max_contamination=config.get("binette", {}).get("max_contamination", 20),
     message:
         "Running Binette on the binners selected by binner_selection"
     shell:
@@ -144,7 +146,7 @@ rule binette_run:
                 PATHS+=("${{C2B[$binner]}}")
             done
             rm -rf $(dirname {output.quality})
-            pixi r -e binette binette -b "${{PATHS[@]}}" -c {input.cont} -o $(dirname {output.quality}) -t {threads} --checkm2_db {params.db} --min_completeness 70 --max_length 50000000 --verbose
+            pixi r -e binette binette -b "${{PATHS[@]}}" -c {input.cont} -o $(dirname {output.quality}) -t {threads} --checkm2_db {params.db} --min_completeness 70 --max_contamination {params.max_contamination} --max_length 50000000 --verbose
             date
         ) 2>{log.err} >{log.out}
         """

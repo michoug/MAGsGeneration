@@ -9,8 +9,72 @@ rule install_software:
         ),
         os.path.join(RESULTS_DIR, "DB/Busco_euk/busco_euk.done"),
         os.path.join(RESULTS_DIR, "DB/SynTracker/syntracker.done"),
+        GUNC_DB,
     output:
         touch("status/install_software.done"),
+
+
+rule gunc_download:
+    # Zenodo download of gunc.database, md5-checked (see GUNC_DOWNLOADS in init.smk)
+    output:
+        GUNC_DB + ".gz",
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/gunc_download.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/gunc_download.err.log"),
+    threads: 1
+    resources:
+        runtime=60 * 4,
+        mem_mb=get_mem_mb,
+    params:
+        url=GUNC_URL,
+        md5=GUNC_GZ_MD5,
+    message:
+        "Downloading the GUNC database"
+    shell:
+        """
+        (
+            date
+            mkdir -p $(dirname {output})
+            wget \
+                --tries=3 \
+                --waitretry=30 \
+                --timeout=120 \
+                -O {output}.tmp \
+                {params.url}
+            echo "{params.md5}  {output}.tmp" | md5sum -c -
+            mv {output}.tmp {output}
+            date
+        ) 2>{log.err} >{log.out}
+        """
+
+
+rule gunc_db:
+    # Decompressed for diamond, md5-checked
+    input:
+        rules.gunc_download.output,
+    output:
+        GUNC_DB,
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/gunc_db.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/gunc_db.err.log"),
+    threads: 1
+    resources:
+        runtime=60 * 3,
+        mem_mb=get_mem_mb,
+    params:
+        md5=GUNC_DMND_MD5,
+    message:
+        "Decompressing the GUNC database"
+    shell:
+        """
+        (
+            date
+            gzip -dc {input} >{output}.tmp
+            echo "{params.md5}  {output}.tmp" | md5sum -c -
+            mv {output}.tmp {output}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule downloadHuman:
