@@ -84,7 +84,6 @@ class TestPixiTomlStructure:
             "concoct",
             "semibin",
             "vamb",
-            "dastool",
             "binette",
             "checkm2",
             "galah",
