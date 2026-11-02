@@ -86,6 +86,17 @@ class TestFilterBins:
         assert main(args) == 0
         assert sorted(os.listdir(out)) == ["binette_bin1.fa", "binette_bin2.fa", "binette_bin4.fa"]
 
+    def test_rerun_removes_stale_bins(self, tmp_path):
+        bins, quality, gunc = setup(tmp_path)
+        out = tmp_path / "gunc_bins"
+        table = tmp_path / "t.tsv"
+        base = ["--bins", str(bins), "--quality", str(quality), "--gunc", str(gunc),
+                "--outdir", str(out), "--table", str(table)]
+        main(base + ["--max-contamination", "20"])
+        assert "binette_bin2.fa" in os.listdir(out)
+        main(base + ["--max-contamination", "10"])
+        assert sorted(os.listdir(out)) == ["binette_bin1.fa", "binette_bin4.fa"]
+
     def test_empty_bins(self, tmp_path):
         bins = tmp_path / "empty"
         bins.mkdir()

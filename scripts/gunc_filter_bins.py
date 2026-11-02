@@ -46,6 +46,10 @@ def filter_bins(bins_dir, quality_path, gunc_path, outdir, table_path, suffix=".
     quality = {r["Name"]: r for r in read_tsv(quality_path)}
     gunc = {r["genome"]: r for r in read_tsv(gunc_path)}
     os.makedirs(outdir, exist_ok=True)
+    # drop bins left by an earlier run, so the folder always matches the table
+    for fn in os.listdir(outdir):
+        if fn.endswith(suffix):
+            os.remove(os.path.join(outdir, fn))
     kept_n = total = 0
     with open(table_path, "w", newline="") as fh:
         w = csv.writer(fh, delimiter="\t", lineterminator="\n")

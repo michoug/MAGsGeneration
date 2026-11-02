@@ -19,6 +19,7 @@ rule refine_all:
                 RESULTS_DIR, "Bins/intermediate/checkm2_refine/quality_report.tsv"
             )
         ),
+        os.path.join(RESULTS_DIR, "Bins/intermediate/filtered_mags_quality_report.tsv"),
     output:
         touch("status/refine.done"),
 
@@ -131,15 +132,17 @@ rule rename_refine:
             : >{output.list_temp}
 
             shopt -s nullglob
-            for f in $(dirname {input.ref})/*bins/*fa; do
+            # gunc_bins/*.fa; .fna (e.g. Rosella refined bins) are renamed to .fa
+            for f in $(dirname {input.ref})/*bins/*.fa $(dirname {input.ref})/*bins/*.fna; do
                 name=$(basename $f)
-                echo cp $f $(dirname {output.list})/{params.sample}_$name >>{output.list_temp}
+                name=${{name%.fna}}
+                echo cp $f $(dirname {output.list})/{params.sample}_${{name%.fa}}.fa >>{output.list_temp}
             done
             shopt -u nullglob
 
             if [ -s {output.list_temp} ]; then
                 perl -pe 's/{params.sample}_{params.sample}/{params.sample}/g' {output.list_temp} \
-                    | perl -pe 's/.*rosella_unbinned.*//g' >{output.bash_temp}
+                    | perl -pe 's/.*unbinned.*//g' >{output.bash_temp}
                 bash {output.bash_temp}
             else
                 echo "WARNING: no bins found for sample {params.sample}" >&2
@@ -211,6 +214,36 @@ rule checkm2_refine:
             date
             export CHECKM2DB={params.db}
             pixi r -e checkm2 checkm2 predict --threads {threads} -x {params.ext} --input {input} --output-directory $(dirname {output.tsv}) --force
+            date
+        ) 2>{log.err} >{log.out}
+        """
+
+
+rule filter_refined_mags:
+    # Keeps the refined bins with CheckM2 contamination <= refine.max_contamination
+    input:
+        bins=rules.cp_mags.output,
+        check=rules.checkm2_refine.output.tsv,
+    output:
+        bins=directory(os.path.join(RESULTS_DIR, "Bins/intermediate/filtered_mags")),
+        tsv=os.path.join(
+            RESULTS_DIR, "Bins/intermediate/filtered_mags_quality_report.tsv"
+        ),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/filter_refined_mags.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/filter_refined_mags.err.log"),
+    localrule: True
+    params:
+        script=os.path.join(WORK_DIR, "scripts/filter_bins_contamination.py"),
+        max_contamination=config.get("refine", {}).get("max_contamination", 10),
+    message:
+        "Keeping refined bins with contamination <= {params.max_contamination}%"
+    shell:
+        """
+        (
+            date
+            pixi r -e coverm python {params.script} --bins {input.bins} --report {input.check} \
+                --outdir {output.bins} --out-report {output.tsv} --max-contamination {params.max_contamination}
             date
         ) 2>{log.err} >{log.out}
         """
