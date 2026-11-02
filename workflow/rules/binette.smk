@@ -32,25 +32,25 @@ rule prepare_Binette:
         metacat_done=rules.metacat_cluster.output.done,
     output:
         metabatout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/metabat_binette.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette_input/metabat_binette.tsv"
         ),
         rosellaout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/rosella_binette.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette_input/rosella_binette.tsv"
         ),
         taxvambout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/taxvamb_binette.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette_input/taxvamb_binette.tsv"
         ),
         concoctout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/concoct_binette.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette_input/concoct_binette.tsv"
         ),
         comebinout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/comebin_binette.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette_input/comebin_binette.tsv"
         ),
         semibinout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/semibin_binette.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette_input/semibin_binette.tsv"
         ),
         metacatout=os.path.join(
-            RESULTS_DIR, "Bins/intermediate/{sample}/Binette/metacat_binette.tsv"
+            RESULTS_DIR, "Bins/intermediate/{sample}/Binette_input/metacat_binette.tsv"
         ),
     log:
         out=os.path.join(RESULTS_DIR, "logs/prepare_Binette/{sample}.out.log"),

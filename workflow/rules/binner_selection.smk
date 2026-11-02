@@ -1,5 +1,5 @@
 # Score the 7 binners from mags_generation.smk with CheckM2 and keep only
-# the best `binners.selection.n` (default 3) to feed DAS Tool.
+# the best `binners.selection.n` (default 3) to feed Binette.
 #
 # BINNER_C2B mirrors the outputs of `prepare_Binette` in Binette.smk as
 # literal paths rather than `rules.prepare_Binette.output.*`: this step is
@@ -14,7 +14,7 @@ SELECTION_ENABLED = SELECTION_CFG["enabled"]
 
 BINNER_C2B = {
     b: os.path.join(
-        RESULTS_DIR, f"Bins/intermediate/{{sample}}/Binette/{b}_binette.tsv"
+        RESULTS_DIR, f"Bins/intermediate/{{sample}}/Binette_input/{b}_binette.tsv"
     )
     for b in BINNERS
 }
