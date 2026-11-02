@@ -115,7 +115,7 @@ rule binette_run:
         mem_mb=get_mem_mb,
     params:
         db=config["checkm2"]["db"],
-        # bins up to 20% contamination are kept here; filtered to refine.max_contamination after Rosella
+        # bins up to 20% contamination are kept here; GUNC then filters to gunc.max_contamination
         max_contamination=config.get("binette", {}).get("max_contamination", 20),
     message:
         "Running Binette on the binners selected by binner_selection"

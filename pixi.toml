@@ -118,6 +118,12 @@ channels = ["conda-forge", "bioconda"]
 python = ">=3.10,<3.12"
 galah = ">=0.6.0,<1"
 
+[feature.gunc]
+channels = ["conda-forge", "bioconda"]
+
+[feature.gunc.dependencies]
+gunc = ">=1.1.1,<2"
+
 [feature.gtdbtk]
 channels = ["conda-forge", "bioconda"]
 
@@ -306,6 +312,7 @@ deepmicroclass = { features = ["deepmicroclass"], no-default-feature = true }
 eggnog = { features = ["eggnog"], no-default-feature = true }
 fastp = { features = ["fastp"], no-default-feature = true }
 galah = { features = ["galah"], no-default-feature = true }
+gunc = { features = ["gunc"], no-default-feature = true }
 gtdbtk = { features = ["gtdbtk"], no-default-feature = true }
 megahit = { features = ["megahit"], no-default-feature = true }
 metabat = { features = ["metabat"], no-default-feature = true }

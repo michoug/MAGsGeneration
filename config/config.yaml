@@ -77,10 +77,20 @@ checkm2:
 gtdbtk:
   path: "/work/river/Databases/GTDBTk/release232/"  ###USER INPUT REQUIRED###
 
-# Binette keeps bins up to max_contamination (CheckM2, %); after Rosella refine
-# and CheckM2, bins above refine.max_contamination are removed before Galah
+# Binette keeps bins up to max_contamination (CheckM2, %); GUNC then removes
+# chimeric bins and bins above gunc.max_contamination (Binette CheckM2), and
+# after CheckM2 on all kept bins, bins above refine.max_contamination are removed
+# before Galah (refine_all step)
 binette:
   max_contamination: 20
+
+# GUNC database: progenomes_3 (GUNC default), progenomes_2.1, gtdb_95 or gtdb_214;
+# downloaded from Zenodo into db_dir by install_software, then decompressed
+gunc:
+  database: "progenomes_3"
+  db_dir: "/scratch/gmichoud/Nant/gunc_db"  ###USER INPUT REQUIRED###
+  max_contamination: 10
+
 refine:
   max_contamination: 10
 
