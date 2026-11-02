@@ -23,6 +23,20 @@ class TestDecide:
     def test_chimeric(self):
         assert decide(q(5), {"pass.GUNC": "False"}, 10) == (False, "gunc_chimeric")
 
+    def test_minor_chimeric_kept(self):
+        g = {"pass.GUNC": "False", "contamination_portion": "0.05"}
+        assert decide(q(5), g, 10) == (True, "pass;gunc_minor_chimeric")
+        g = {"pass.GUNC": "False", "contamination_portion": "0.06"}
+        assert decide(q(5), g, 10) == (False, "gunc_chimeric")
+
+    def test_minor_chimeric_still_needs_low_contamination(self):
+        g = {"pass.GUNC": "False", "contamination_portion": "0.02"}
+        assert decide(q(12), g, 10) == (False, "contamination>10")
+
+    def test_portion_cutoff_zero_is_strict(self):
+        g = {"pass.GUNC": "False", "contamination_portion": "0.02"}
+        assert decide(q(5), g, 10, max_chimeric_portion=0) == (False, "gunc_chimeric")
+
     def test_contamination_ceiling_inclusive(self):
         assert decide(q(10), {"pass.GUNC": "True"}, 10)[0] is True
         assert decide(q(10.01), {"pass.GUNC": "True"}, 10) == (False, "contamination>10")

@@ -65,7 +65,8 @@ rule gunc_run:
 
 
 rule gunc_filter:
-    # Keeps bins with pass.GUNC not False and contamination <= gunc.max_contamination
+    # Keeps bins with contamination <= gunc.max_contamination, unless GUNC flags them
+    # chimeric with a foreign portion above gunc.max_chimeric_portion
     input:
         bins=rules.binette_run.output.bins,
         quality=rules.checkm2.output.tsv,
@@ -85,6 +86,7 @@ rule gunc_filter:
     params:
         script=os.path.join(WORK_DIR, "scripts/gunc_filter_bins.py"),
         max_contamination=GUNC_CFG.get("max_contamination", 10),
+        max_chimeric_portion=GUNC_CFG.get("max_chimeric_portion", 0.05),
     message:
         "Filtering the Binette bins of {wildcards.sample} on GUNC and contamination"
     shell:
@@ -95,7 +97,8 @@ rule gunc_filter:
             # leftovers of the former Rosella refine step would be picked up by rename_refine
             rm -rf $refine/refined_bins $refine/unchanged_bins $refine/coverage.tsv $refine/kmer_frequencies.tsv $refine/rosella.done
             pixi r -e gunc python {params.script} --bins {input.bins} --quality {input.quality} --gunc {input.gunc} \
-                --outdir {output.bins} --table {output.table} --max-contamination {params.max_contamination}
+                --outdir {output.bins} --table {output.table} --max-contamination {params.max_contamination} \
+                --max-chimeric-portion {params.max_chimeric_portion}
             touch {output.done}
             date
         ) 2>{log.err} >{log.out}

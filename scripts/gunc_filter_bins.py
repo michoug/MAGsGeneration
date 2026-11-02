@@ -2,9 +2,12 @@
 
 Reads GUNC's maxCSS_level table and a CheckM2-format quality report
 (Name / Completeness / Contamination) for the bins in --bins, copies the
-bins with pass.GUNC not False (True, or nan when too few genes map for GUNC
-to decide) and Contamination <= --max-contamination to --outdir, and writes
-one row per bin with the decision.
+bins with Contamination <= --max-contamination to --outdir unless GUNC calls
+them chimeric, and writes one row per bin with the decision. A bin counts as
+chimeric when pass.GUNC is False and its GUNC contamination_portion (share of
+genes outside the major clade) is above --max-chimeric-portion; bins flagged by
+GUNC with a smaller foreign portion are kept (reason "pass;gunc_minor_chimeric").
+pass.GUNC nan (too few genes mapped for GUNC to decide) is kept.
 """
 
 import argparse
@@ -30,18 +33,33 @@ def read_tsv(path):
         return list(csv.DictReader(fh, delimiter="\t"))
 
 
-def decide(quality, gunc, max_contamination):
+def portion(gunc):
+    """GUNC contamination_portion as a float, nan if missing."""
+    try:
+        return float(gunc.get("contamination_portion", "nan"))
+    except ValueError:
+        return float("nan")
+
+
+def decide(quality, gunc, max_contamination, max_chimeric_portion=0.05):
     """(kept, reason) for one bin from its quality row and GUNC row (or None)."""
     reasons = []
+    minor = False
     if gunc is not None and gunc.get("pass.GUNC") == "False":
-        reasons.append("gunc_chimeric")
+        # nan portion compares False, so a flagged bin without a portion is removed
+        if portion(gunc) <= max_chimeric_portion:
+            minor = True
+        else:
+            reasons.append("gunc_chimeric")
     if float(quality["Contamination"]) > max_contamination:
         reasons.append(f"contamination>{max_contamination:g}")
-    return not reasons, ";".join(reasons) or "pass"
+    if reasons:
+        return False, ";".join(reasons)
+    return True, "pass;gunc_minor_chimeric" if minor else "pass"
 
 
 def filter_bins(bins_dir, quality_path, gunc_path, outdir, table_path, suffix=".fa",
-                max_contamination=10.0):
+                max_contamination=10.0, max_chimeric_portion=0.05):
     """Copy kept bins to *outdir*, write the decision table; return (kept, total)."""
     quality = {r["Name"]: r for r in read_tsv(quality_path)}
     gunc = {r["genome"]: r for r in read_tsv(gunc_path)}
@@ -60,7 +78,7 @@ def filter_bins(bins_dir, quality_path, gunc_path, outdir, table_path, suffix=".
             name = fn[: -len(suffix)]
             q = quality[name]
             g = gunc.get(name)
-            kept, reason = decide(q, g, max_contamination)
+            kept, reason = decide(q, g, max_contamination, max_chimeric_portion)
             total += 1
             if kept:
                 kept_n += 1
@@ -87,11 +105,15 @@ def main(argv=None):
     parser.add_argument("--table", required=True)
     parser.add_argument("--suffix", default=".fa")
     parser.add_argument("--max-contamination", type=float, default=10.0)
+    parser.add_argument(
+        "--max-chimeric-portion", type=float, default=0.05,
+        help="GUNC-flagged bins with contamination_portion <= this are kept",
+    )
     args = parser.parse_args(argv)
 
     kept, total = filter_bins(
         args.bins, args.quality, args.gunc, args.outdir, args.table,
-        args.suffix, args.max_contamination,
+        args.suffix, args.max_contamination, args.max_chimeric_portion,
     )
     print(f"kept {kept} of {total} bins", file=sys.stderr)
     return 0
