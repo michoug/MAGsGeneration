@@ -93,15 +93,17 @@ rule rename_refine:
             : >{output.list_temp}
 
             shopt -s nullglob
-            for f in $(dirname {input.ref})/*bins/*fa; do
+            # unchanged bins are .fa, Rosella's refined bins .fna (renamed to .fa)
+            for f in $(dirname {input.ref})/*bins/*.fa $(dirname {input.ref})/*bins/*.fna; do
                 name=$(basename $f)
-                echo cp $f $(dirname {output.list})/{params.sample}_$name >>{output.list_temp}
+                name=${{name%.fna}}
+                echo cp $f $(dirname {output.list})/{params.sample}_${{name%.fa}}.fa >>{output.list_temp}
             done
             shopt -u nullglob
 
             if [ -s {output.list_temp} ]; then
                 perl -pe 's/{params.sample}_{params.sample}/{params.sample}/g' {output.list_temp} \
-                    | perl -pe 's/.*rosella_unbinned.*//g' >{output.bash_temp}
+                    | perl -pe 's/.*unbinned.*//g' >{output.bash_temp}
                 bash {output.bash_temp}
             else
                 echo "WARNING: no bins found for sample {params.sample}" >&2
