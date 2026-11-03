@@ -1,0 +1,185 @@
+---
+title: "Bin refinement: method comparison"
+date: today
+format:
+  html:
+    toc: true
+    toc-float: true
+    code-fold: true
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(gt)
+
+read_tab <- function(f) read_tsv(f, show_col_types = FALSE, col_types = cols(.default = "c"))
+
+# Bold the best value of each row; `lower` lists the metrics where lower is better,
+# `skip` the rows left unstyled (e.g. raw bin counts, where more is not better)
+bold_best <- function(tbl, df, cols, lower = character(), skip = character()) {
+  for (i in seq_len(nrow(df))) {
+    if (df$metric[i] %in% skip) next
+    vals <- suppressWarnings(as.numeric(unlist(df[i, cols])))
+    if (all(is.na(vals)) || length(unique(na.omit(vals))) == 1) next
+    best <- if (df$metric[i] %in% lower) min(vals, na.rm = TRUE) else max(vals, na.rm = TRUE)
+    win <- cols[!is.na(vals) & vals == best]
+    tbl <- tab_style(tbl, cell_text(weight = "bold"), cells_body(columns = all_of(win), rows = i))
+  }
+  tbl
+}
+```
+
+# Setup
+
+- **Data:** 29 river metagenomes (anonymised as `S01`–`S29`), assembled per sample with MEGAHIT; contigs ≥1.5 kb.
+- **Binning:** seven binners per sample. Each binner's bins were scored with CheckM2, and the best binner of each family was selected (**COMEBin, MetaCAT, CONCOCT**). The selected binners are the input of every refiner below.
+- **Quality:** standalone `checkm2 predict` on the final bins of each method.
+- **Quality tiers** (completeness / contamination):
+
+  | Tier | Completeness | Contamination |
+  |---|---|---|
+  | MQ50 | ≥50% | <10% |
+  | MQ70 | ≥70% | <10% |
+  | HQ | ≥90% | <5% |
+  | NC | ≥95% | <5% |
+
+# Refiners: metawrap2, DAS Tool and Binette
+
+The refiners were run on the same three binners. Binette used its default contamination ceiling (10%).
+
+```{r refiners}
+ref <- read_tab("data/refiner_comparison.tsv")
+cols <- c("metawrap2", "dastool", "binette")
+labels <- c(
+  final_bins = "Final bins",
+  `mq50_bins (>=50/<10)` = "MQ50 bins",
+  `mq70_bins (>=70/<10)` = "MQ70 bins",
+  `hq90_bins (>=90/<5)` = "HQ bins",
+  `nc95_bins (>=95/<5)` = "NC bins",
+  mq70_mean_contamination = "MQ70: mean contamination (%)",
+  hq90_mean_contamination = "HQ: mean contamination (%)",
+  hq90_binned_Mb = "HQ: total size (Mb)",
+  `samples_best_or_tied_mq70 (of 29)` = "Samples best or tied, MQ70 (of 29)",
+  `samples_best_or_tied_hq90 (of 29)` = "Samples best or tied, HQ (of 29)",
+  `best_single_binner_mq70 (sum of per-sample max)` = "Best single binner, MQ70 (sum of per-sample maxima)"
+)
+ref_tab <- ref |>
+  filter(metric %in% names(labels)) |>
+  mutate(metric = factor(metric, levels = names(labels))) |>
+  arrange(metric) |>
+  mutate(metric = as.character(metric), label = labels[metric]) |>
+  select(metric, label, all_of(cols))
+
+ref_tab |>
+  gt(rowname_col = "label") |>
+  cols_hide(metric) |>
+  cols_label(metawrap2 = "metawrap2", dastool = "DAS Tool", binette = "Binette") |>
+  tab_header(title = "Refined bins, all 29 samples", subtitle = "Best value per row in bold") |>
+  bold_best(ref_tab, cols,
+    lower = c("mq70_mean_contamination", "hq90_mean_contamination"),
+    skip = c("final_bins", "best_single_binner_mq70 (sum of per-sample max)")) |>
+  tab_source_note("metawrap2: bin_refinement -c 70 -x 10 with GUNC; DAS Tool: --score_threshold -42; Binette: --min_completeness 50.")
+```
+
+- **Binette** recovers the most HQ and NC bins. It is best or tied for HQ in 26 of 29 samples.
+- **metawrap2** gives the cleanest bins, but `-c 70` drops all bins between 50% and 70% completeness.
+- **DAS Tool** keeps 3,438 bins, but most of them are below MQ50.
+- **Small gain over a single binner:** all three refiners add only about 4–7% MQ70 bins over the best single binner of each sample (674).
+
+::: {.callout-note collapse="true"}
+## Per-sample counts
+
+```{r refiners-per-sample}
+ps <- read_tsv("data/per_sample_refiners.tsv", show_col_types = FALSE)
+ps |>
+  gt(rowname_col = "sample") |>
+  tab_spanner("metawrap2", starts_with("metawrap2_")) |>
+  tab_spanner("DAS Tool", starts_with("dastool_")) |>
+  tab_spanner("Binette", starts_with("binette_")) |>
+  cols_label_with(fn = \(x) x |> str_remove("^[a-z0-9]+_") |>
+    recode(final_bins = "bins", mq50 = "MQ50", mq70 = "MQ70", hq90 = "HQ", nc95 = "NC")) |>
+  data_color(columns = ends_with("_hq90"), rows = sample != "TOTAL", palette = "Greens") |>
+  tab_style(cell_text(weight = "bold"), cells_body(rows = sample == "TOTAL"))
+```
+:::
+
+# After Binette: Rosella refine vs GUNC
+
+Binette was rerun with contamination allowed up to **20%**, which gave 857 bins in total; 100 of them were above 10%. Two follow-up steps were then compared. Both end with CheckM2 and a ≤10% contamination filter, then dereplication with Galah (70% completeness / 10% contamination).
+
+- **Rosella refine:** reworks the contaminated bins.
+- **GUNC:** removes the bins that GUNC's default verdict flags as chimeric, then the bins above 10% contamination.
+
+```{r rosella-gunc}
+rg <- read_tab("data/refine_comparison.tsv")
+cols2 <- c("binette20_rosella", "binette20_gunc")
+labels2 <- c(
+  bins_after_refine_step = "Bins after the step",
+  new_bins_from_refine_step = "New bins made by the step",
+  `refined_mq70 (>=70/<10)` = "MQ70 bins",
+  `refined_hq90 (>=90/<5)` = "HQ bins",
+  `refined_nc95 (>=95/<5)` = "NC bins",
+  `final_mags (Galah)` = "Dereplicated MAGs",
+  final_hq90 = "Dereplicated HQ",
+  final_nc95 = "Dereplicated NC",
+  final_mean_completeness = "Dereplicated: mean completeness (%)",
+  final_mean_contamination = "Dereplicated: mean contamination (%)",
+  final_Mb = "Dereplicated: total size (Mb)"
+)
+rg_tab <- rg |>
+  filter(metric %in% names(labels2)) |>
+  mutate(metric = factor(metric, levels = names(labels2))) |>
+  arrange(metric) |>
+  mutate(metric = as.character(metric), label = labels2[metric]) |>
+  select(metric, label, all_of(cols2))
+
+rg_tab |>
+  gt(rowname_col = "label") |>
+  cols_hide(metric) |>
+  cols_label(binette20_rosella = "Rosella", binette20_gunc = "GUNC") |>
+  tab_header(title = "Binette (≤20% contamination) followed by Rosella or GUNC",
+             subtitle = "All 29 samples; best value per row in bold") |>
+  tab_row_group("After dereplication (Galah)", rows = startsWith(metric, "final")) |>
+  tab_row_group("Before dereplication", rows = !startsWith(metric, "final")) |>
+  bold_best(rg_tab, cols2,
+    lower = c("final_mean_contamination"),
+    skip = c("bins_after_refine_step", "new_bins_from_refine_step"))
+```
+
+- **Rosella** split 57 contaminated bins into 160 new bins, but these are mostly fragments: mean completeness 24.6%, and only one reaches MQ70. The extra MAGs in the Rosella run mostly come from bins that GUNC calls chimeric.
+- **GUNC** gives 29 fewer dereplicated MAGs (318 against 347), which are a little cleaner and have passed a chimerism check that CheckM2 cannot do. It also runs faster: about 36 min per sample on 10 threads, against about 1.5 h on 30 threads for Rosella.
+
+::: {.callout-note collapse="true"}
+## Per-sample counts
+
+```{r rosella-gunc-per-sample}
+ps2 <- read_tsv("data/per_sample_rosella_vs_gunc.tsv", show_col_types = FALSE)
+ps2 |>
+  gt(rowname_col = "sample") |>
+  tab_spanner("Rosella", starts_with("rosella_")) |>
+  tab_spanner("GUNC", starts_with("gunc_")) |>
+  cols_label_with(fn = \(x) x |> str_remove("^(rosella|gunc)_") |>
+    recode(binette_bins = "Binette bins", refined_bins = "bins", refined_mq70 = "MQ70",
+           refined_hq90 = "HQ", refined_nc95 = "NC", final_mags = "MAGs",
+           final_hq90 = "MAGs HQ", final_nc95 = "MAGs NC")) |>
+  data_color(columns = ends_with("final_hq90"), rows = sample != "TOTAL", palette = "Greens") |>
+  tab_style(cell_text(weight = "bold"), cells_body(rows = sample == "TOTAL"))
+```
+:::
+
+# Conclusions
+
+- **Recommended setup:** Binette with contamination up to 20%, then GUNC, then a final ≤10% CheckM2 contamination filter before dereplication (PR #40).
+- **Rosella refine isn't worth its compute:** it adds a single MAG for about 1.5 h on 30 threads per sample.
+
+# Files
+
+| File | Content |
+|---|---|
+| `data/refiner_comparison.tsv` | Totals for metawrap2, DAS Tool and Binette (all metrics) |
+| `data/refine_comparison.tsv` | Totals for Binette 20% + Rosella and Binette 20% + GUNC |
+| `data/per_sample_refiners.tsv` | Per-sample bins and tiers for the three refiners |
+| `data/per_sample_rosella_vs_gunc.tsv` | Per-sample bins, tiers and dereplicated MAGs for Rosella and GUNC |

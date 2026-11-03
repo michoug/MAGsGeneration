@@ -1,0 +1,18 @@
+metric	binette20_rosella	binette20_gunc
+binette_bins	857	857
+binette_max_contamination	19.94	19.94
+binette_bins_cont_gt10	100	100
+bins_after_refine_step	960	687
+new_bins_from_refine_step	160	0
+refined_mq50 (>=50/<10)	780	683
+refined_mq70 (>=70/<10)	745	677
+refined_hq90 (>=90/<5)	286	273
+refined_nc95 (>=95/<5)	182	173
+refined_mq70_mean_contamination	3.29	3.16
+final_mags (Galah)	347	318
+final_hq90	141	136
+final_nc95	91	86
+final_mean_completeness	86.9	87.5
+final_mean_contamination	3.04	2.91
+final_Mb	1229.4	1132.6
+samples_with_mags	28	28

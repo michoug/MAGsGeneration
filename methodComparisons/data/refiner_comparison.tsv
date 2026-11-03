@@ -1,0 +1,22 @@
+metric	metawrap2	dastool	binette	binette_internal
+binners	comebin,metacat,concoct	comebin,metacat,concoct	comebin,metacat,concoct	comebin,metacat,concoct
+refiner_settings	bin_refinement -c 70 -x 10 + GUNC (progenomes_3)	--score_threshold -42 --search_engine diamond	--min_completeness 50 --max_length 20000000	same run
+quality_source	checkm2 predict on final bins (pipeline checkm2 env)	checkm2 predict on final bins (pipeline checkm2 env)	checkm2 predict on final bins (Nant default env; same CheckM2 1.1.0, TF 2.19)	Binette internal CheckM2 (its selection metric)
+final_bins	699	3438	1291	1291
+gunc_removed	19	-	-	-
+mq50_bins (>=50/<10)	699	1108	1257	1291
+mq70_bins (>=70/<10)	698	671	723	716
+hq90_bins (>=90/<5)	251	250	286	274
+nc95_bins (>=95/<5)	153	151	183	174
+mq50_mean_completeness	85.8	75.9	75.4	74.7
+mq50_mean_contamination	2.75	3.36	3.31	3.31
+mq50_binned_Mb	2139	3164	3479	3617
+mq70_mean_completeness	85.8	86.9	87.3	87.2
+mq70_mean_contamination	2.75	3.40	3.14	3.10
+mq70_binned_Mb	2139	2192	2360	2354
+mq70_median_N50	6766	6826	6263	6297
+hq90_mean_contamination	1.66	2.02	1.95	1.91
+hq90_binned_Mb	797	812	935	912
+samples_best_or_tied_mq70 (of 29)	11	8	23	-
+samples_best_or_tied_hq90 (of 29)	10	11	26	-
+best_single_binner_mq70 (sum of per-sample max)	674	674	674	674
