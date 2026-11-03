@@ -508,7 +508,7 @@ rule busco_multiqc:
         err=os.path.join(RESULTS_DIR, "logs/multiqc_busco.err.log"),
         out=os.path.join(RESULTS_DIR, "logs/multiqc_busco.out.log"),
     resources:
-        runtime=60*4,
+        runtime=60 * 4,
         mem_mb=get_mem_mb,
     message:
         "Running MultiQC on BUSCO results"
@@ -621,13 +621,11 @@ rule quality_eukaryotes:
         # MAGs can have both a generic (eukaryota) and a specific (auto-selected
         # lineage) summary: keep the best one (highest completeness, then
         # lowest contamination)
-        result = (
-            df.sort_values(
-                ["completeness", "contamination"], ascending=[False, True]
-            )
-            .drop_duplicates(subset="genome", keep="first")
-            [["genome", "completeness", "contamination"]]
-        )
+        result = df.sort_values(
+            ["completeness", "contamination"], ascending=[False, True]
+        ).drop_duplicates(subset="genome", keep="first")[
+            ["genome", "completeness", "contamination"]
+        ]
         mags_folder = Path(input.mags_done).parent
         all_genomes = {p.stem for p in mags_folder.glob("*.fa")}
         present_genomes = set(result["genome"].astype(str))

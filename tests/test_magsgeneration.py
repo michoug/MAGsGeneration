@@ -249,7 +249,7 @@ class TestConstants:
             "singlem_all",
             "eggnog",
             "mgthermometer",
-            "eukaryotes_filter",
+            "eukaryotes_mags",
         }
         assert expected.issubset(OPTIONAL_STEPS)
 

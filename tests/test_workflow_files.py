@@ -58,7 +58,7 @@ class TestWorkflowFilesExist:
             "singlem.smk",
             "syntracker.smk",
             "mgthermometer.smk",
-            "eukaryotes_filter.smk",
+            "eukaryotes_mags.smk",
         ]
         for rule_file in expected_rules:
             full_path = os.path.join(RULES_DIR, rule_file)

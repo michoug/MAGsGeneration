@@ -34,11 +34,12 @@ OGT = 937 * F_{IVYWREL} − 335
 ```
 - [SynTracker](https://github.com/leylabmpi/SynTracker) is used to track strains across samples based on synteny
 - [SingleM](https://github.com/wwood/singlem) is a read-based software used to profile the samples based on single copy marker genes (mostly ribosomal) and assess how much of the diversity is captured in the MAGs
-- Eukaryotic MAGs (`eukaryotes_filter`) are recovered in two complementary ways, and the results are combined:
+- Eukaryotic MAGs (`eukaryotes_mags`) are recovered in two complementary ways, and the results are combined:
   - **From the prokaryote-oriented binners:** the raw bins of Metabat2, Rosella, Concoct, Semibin2 and Taxvamb are collected per sample and kept if they total ≥2.5 Mb with a mean contig length ≥2.5 kb ([seqkit](https://github.com/shenwei356/seqkit)). Their contigs are classified with [DeepMicroClass](https://github.com/chengsly/DeepMicroClass), and bins with ≥80% of contigs predicted as eukaryotic (eukaryote or eukaryotic virus) are kept.
   - **With a eukaryote-specific binner:** [REMAG](https://github.com/danielzmbp/remag) bins each assembly (using the Metabat2 contig coverage), and REMAG bins ≥2.5 Mb are kept.
   - The completeness and contamination of all eukaryotic MAGs are estimated with [BUSCO](https://busco.ezlab.org/) (`--auto-lineage-euk`, MetaEuk gene prediction, offline database downloaded by `install_software`) and summarised with [MultiQC](https://github.com/MultiQC/MultiQC). Completeness is the share of complete + fragmented BUSCOs and contamination the share of duplicated BUSCOs; MAGs for which BUSCO finds no genes are kept with 0% completeness.
-  - The eukaryotic MAGs are then dereplicated with [Galah](https://github.com/wwood/galah) using the BUSCO estimates, into `Bins/Eukaryotic_mags_dereplicated`.
+  - When a MAG has both a generic (eukaryota) and a lineage-specific BUSCO summary, the one with the highest completeness (then lowest contamination) is kept.
+  - The eukaryotic MAGs with ≥30% completeness are then dereplicated with [Galah](https://github.com/wwood/galah) using the BUSCO estimates, into `Bins/Eukaryotic_mags_dereplicated`.
 
 ## Setup
 
@@ -138,7 +139,7 @@ pixi r python MAGsGeneration.py -c <results_path>/config_run.yaml --continue --c
 By default, all steps are included. The following **optional steps** can be toggled via `--steps`:
 
 * `eggnog`
-* `eukaryotes_filter`
+* `eukaryotes_mags`
 * `mgthermometer`
 * `singlem_all`
 * `syntracker`
