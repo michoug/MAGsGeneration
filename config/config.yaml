@@ -19,11 +19,11 @@ steps: [
   "refine_all",
   "dereplicate",
   "syntracker",
-  "coverage",
+  # "coverage",
   "annotations",
   "quality",
   "mgthermometer",
-  "eggnog",
+  # "eggnog",
   "singlem_all",
   "report"
  ]  ###USER INPUT REQUIRED###

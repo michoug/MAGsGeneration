@@ -1,4 +1,4 @@
-rule eukaryotes_filter:
+rule eukaryotes_mags:
     input:
         os.path.join(RESULTS_DIR, "Bins/intermediate/remag_all_bins/done"),
         expand(
@@ -15,7 +15,7 @@ rule eukaryotes_filter:
         os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco_done.txt"),
         os.path.join(RESULTS_DIR, "Bins/Eukaryotic_mags_dereplicated/done.txt"),
     output:
-        touch("status/eukaryotes_filter.done"),
+        touch("status/eukaryotes_mags.done"),
 
 
 rule get_all_mags:
@@ -508,7 +508,7 @@ rule busco_multiqc:
         err=os.path.join(RESULTS_DIR, "logs/multiqc_busco.err.log"),
         out=os.path.join(RESULTS_DIR, "logs/multiqc_busco.out.log"),
     resources:
-        runtime=60,
+        runtime=60*4,
         mem_mb=get_mem_mb,
     message:
         "Running MultiQC on BUSCO results"
@@ -520,11 +520,16 @@ rule busco_multiqc:
             mkdir -p {output.folder}/multiqc_data
             busco_dir=$(dirname {input[0]})/eukaryotic_mags_busco
 
+            # Feed MultiQC only the top-level summaries (<mag>/BUSCO_<mag>.fa/short_summary.*.txt):
+            # walking the full BUSCO tree (~3.6k files per MAG) takes hours
+            file_list={output.folder}/busco_summaries.txt
+            find $busco_dir -mindepth 3 -maxdepth 3 -name 'short_summary.*.txt' >$file_list
+
             # Only fall back to empty tables when BUSCO produced no summaries;
             # otherwise a MultiQC failure must fail the job
-            if [ -n "$(find $busco_dir -name 'short_summary*.txt' -print -quit 2>/dev/null)" ]; then
-                pixi r -e multiqc multiqc $busco_dir \
-                    --verbose --ignore auto_lineage/ -o {output.folder} --force
+            if [ -s $file_list ]; then
+                pixi r -e multiqc multiqc --file-list $file_list \
+                    --verbose -o {output.folder} --force
             else
                 echo "No BUSCO summaries found in $busco_dir; writing empty MultiQC outputs."
             fi
@@ -593,40 +598,35 @@ rule quality_eukaryotes:
             duplicated = (
                 df["busco-complete"] - df["busco-complete_single_copy"]
             ).clip(lower=0)
+        # MultiQC sample names look like
+        # short_summary.<generic|specific>.<lineage>.BUSCO_<genome>[.fa]
+        summary_re = (
+            r"short_summary\.(?P<summary>generic|specific)\.[^/]+?\.BUSCO_"
+            r"(?P<genome>[^/]+?)(?:\.fa)?(?:\.txt)?$"
+        )
         src["sample_key"] = src["Sample Name"].str.strip()
-        src["genome"] = (
-            src["Source"]
-            .str.extract(r"/eukaryotic_mags_busco/([^/]+)/", expand=False)
-            .fillna(
-                src["Source"].str.extract(
-                    r"/BUSCO_([^/]+)\.fa(?:/|$)", expand=False
-                )
-            )
-        )
-        sample_to_genome = (
-            src.dropna(subset=["genome"])
-            .drop_duplicates(subset=["sample_key"])
-            .set_index("sample_key")["genome"]
-        )
+        src = src.join(src["Source"].str.extract(summary_re))
+        src = src.dropna(subset=["genome"]).drop_duplicates(subset=["sample_key"])
         df["sample_key"] = df["Sample"].str.strip()
-        df["genome"] = df["sample_key"].map(sample_to_genome)
-        fallback = (
-            df["sample_key"]
-            .str.replace(
-                r"^short_summary\.specific\.eukaryota_odb12\.", "", regex=True
-            )
-            .str.replace(r"^BUSCO_", "", regex=True)
-            .str.replace(r"\.fa(?:\.txt)?$", "", regex=True)
-        )
-        df["genome"] = df["genome"].fillna(fallback)
+        df = df.join(src.set_index("sample_key")["genome"], on="sample_key")
+        fallback = df["sample_key"].str.extract(summary_re)
+        df["genome"] = df["genome"].fillna(fallback["genome"])
+        unmatched = df.loc[df["genome"].isna(), "sample_key"].tolist()
+        if unmatched:
+            raise ValueError(f"Could not map BUSCO samples to genomes: {unmatched}")
         df["completeness"] = (
             (df["busco-complete"] + df["busco-fragmented"]) * 100 / busco_total
         )
         df["contamination"] = duplicated * 100 / busco_total
+        # MAGs can have both a generic (eukaryota) and a specific (auto-selected
+        # lineage) summary: keep the best one (highest completeness, then
+        # lowest contamination)
         result = (
-            df[["genome", "completeness", "contamination"]]
-            .sort_values("completeness", ascending=False)
+            df.sort_values(
+                ["completeness", "contamination"], ascending=[False, True]
+            )
             .drop_duplicates(subset="genome", keep="first")
+            [["genome", "completeness", "contamination"]]
         )
         mags_folder = Path(input.mags_done).parent
         all_genomes = {p.stem for p in mags_folder.glob("*.fa")}
@@ -674,7 +674,7 @@ rule galah_euk:
                 mkdir -p {output.final}
                 : >{output.cluster}
             else
-                pixi r -e galah galah cluster --genome-fasta-directory {input.bins} --genome-info {input.busco} -x fa --output-representative-fasta-directory-copy {output.final} -t {threads} --output-cluster-definition {output.cluster}
+                pixi r -e galah galah cluster --min-completeness 30 --genome-fasta-directory {input.bins} --genome-info {input.busco} -x fa --output-representative-fasta-directory-copy {output.final} -t {threads} --output-cluster-definition {output.cluster}
             fi
             touch {output.done}
             date

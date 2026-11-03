@@ -275,6 +275,7 @@ r-tidyverse = "*"
 r-ggrepel = "*"
 r-knitr = "*"
 r-rmarkdown = "*"
+r-gt = "*"
 
 [feature.metacat]
 channels = ["conda-forge", "bioconda"]

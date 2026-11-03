@@ -240,7 +240,9 @@ gtdbtk_dir <- file.path(results_dir, "Bins", "GDTBTk")
 read_gtdb_summary <- function(dir, pattern) {
   candidates <- list.files(dir, pattern = pattern, full.names = TRUE, recursive = TRUE)
   if (length(candidates) == 0) return(NULL)
-  read_tsv(candidates[1], show_col_types = FALSE)
+  # GTDBTk writes "N/A" for missing values (e.g. msa_percent of genomes
+  # placed by ANI screening); treat them as NA so numeric columns stay numeric
+  read_tsv(candidates[1], na = c("", "NA", "N/A"), show_col_types = FALSE)
 }
 
 gtdb_bac <- NULL

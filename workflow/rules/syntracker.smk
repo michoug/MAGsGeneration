@@ -89,7 +89,7 @@ rule syntracker_run:
     threads: 5
     resources:
         mem_mb=get_mem_mb,
-        runtime=60,
+        runtime=60 * 4,
     shell:
         """
         (

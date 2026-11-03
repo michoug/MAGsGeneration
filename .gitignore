@@ -157,7 +157,6 @@ dmypy.json
 .pyre/
 
 # pixi environments
-.pixi
 *.egg-info
 # pixi environments
 .pixi/*
@@ -180,3 +179,4 @@ conda-pypi-mapping
 diamond-*
 diff.md
 .gitignore
+*.html

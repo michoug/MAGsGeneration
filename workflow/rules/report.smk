@@ -5,7 +5,7 @@ _STEP_DONE_FILES = {
     "check_assembly": "status/checkAssembly.done",
     "mags_generation": "status/mags_generation.done",
     "binning_refinement": "status/binning_refinement.done",
-    "eukaryotes_filter": "status/eukaryotes_filter.done",
+    "eukaryotes_mags": "status/eukaryotes_mags.done",
     "checkm": "status/checkm2.done",
     "refine_all": "status/refine.done",
     "dereplicate": "status/dereplicate.done",
