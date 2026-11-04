@@ -30,6 +30,17 @@ file_exists_msg <- function(path) {
   }
   TRUE
 }
+
+# Summary tables are also written as TSV next to the report
+tables_dir <- file.path(results_dir, "report", "tables")
+dir.create(tables_dir, showWarnings = FALSE, recursive = TRUE)
+
+show_table <- function(df, file, caption, digits = 2) {
+  write_tsv(df, file.path(tables_dir, file))
+  cat(paste0("Table also saved as `", file.path(tables_dir, file), "`.\n\n"))
+  knitr::kable(df, digits = digits, caption = caption,
+               format.args = list(big.mark = ","))
+}
 ```
 
 # Overview
@@ -119,6 +130,49 @@ summary_tbl <- tibble(
 )
 
 knitr::kable(summary_tbl, caption = "Run summary")
+```
+
+## Reads and assemblies per sample
+
+```{r reads-assembly, results='asis'}
+reads_path <- file.path(results_dir, "qc", "reads", "read_counts_mqc.tsv")
+asm_path   <- file.path(results_dir, "qc", "assembly", "seqkit_stats.tsv")
+
+reads_tbl <- NULL
+if (file.exists(reads_path)) {
+  reads_tbl <- read_tsv(reads_path, comment = "#", show_col_types = FALSE) |>
+    transmute(
+      Sample,
+      `Raw read pairs`          = raw_pairs,
+      `Preprocessed read pairs` = final_pairs,
+      `% removed`               = round(100 - pct_retained, 2)
+    )
+}
+
+# seqkit stats lists the raw and the filtered (>=1.5 kb) assembly of each sample
+asm_tbl <- NULL
+if (file.exists(asm_path)) {
+  asm_tbl <- read_tsv(asm_path, show_col_types = FALSE) |>
+    filter(str_detect(file, "_filter\\.fasta$")) |>
+    transmute(
+      Sample                 = str_remove(file, "_filter\\.fasta$"),
+      `Contigs (≥1.5 kb)`    = num_seqs,
+      `Assembly length (bp)` = sum_len,
+      `N50 (bp)`             = N50,
+      `GC (%)`               = `GC(%)`
+    )
+}
+
+if (is.null(reads_tbl) && is.null(asm_tbl)) {
+  cat(paste0("> **Files not found:** `", reads_path, "` and `", asm_path,
+             "` — read processing and assembly QC may not have been run.\n\n"))
+} else {
+  per_sample <- if (is.null(reads_tbl)) asm_tbl
+                else if (is.null(asm_tbl)) reads_tbl
+                else full_join(reads_tbl, asm_tbl, by = "Sample")
+  show_table(arrange(per_sample, Sample), "reads_assembly_per_sample.tsv",
+             "Read pairs before and after preprocessing, and filtered assembly statistics")
+}
 ```
 
 ---
@@ -222,12 +276,55 @@ if (exists("checkm2")) {
 }
 ```
 
-```{r checkm2-table}
+```{r checkm2-table, results='asis'}
 if (exists("checkm2")) {
-  checkm2 |>
-    arrange(desc(Completeness)) |>
-    select(Name, Completeness, Contamination, Quality) |>
-    knitr::kable(digits = 2, caption = "CheckM2 results for all final MAGs")
+  # GTDB-Tk writes its summaries both in classify/ and at the top level
+  gtdb_files <- list.files(file.path(results_dir, "Bins", "GDTBTk"),
+                           pattern = "gtdbtk\\.(bac120|ar53)\\.summary\\.tsv$",
+                           full.names = TRUE, recursive = TRUE)
+  gtdb_tax <- map(gtdb_files, \(f) read_tsv(f, na = c("", "NA", "N/A"),
+                                            show_col_types = FALSE) |>
+                    select(user_genome, classification)) |>
+    bind_rows() |>
+    distinct(user_genome, .keep_all = TRUE)
+
+  prok <- checkm2 |>
+    transmute(
+      MAG           = Name,
+      Contigs       = Total_Contigs,
+      `Length (bp)` = Genome_Size,
+      `N50 (bp)`    = Contig_N50,
+      `GC (%)`      = round(GC_Content * 100, 1),
+      Completeness,
+      Contamination,
+      Quality
+    ) |>
+    left_join(gtdb_tax, by = c("MAG" = "user_genome")) |>
+    rename(Taxonomy = classification) |>
+    left_join(select(checkm2, MAG = Name, CDSs = Total_Coding_Sequences), by = "MAG")
+
+  # Prefer seqkit's assembly statistics: CheckM2 rounds GC to whole percents
+  stats_path <- file.path(results_dir, "qc", "mags", "mag_stats.tsv")
+  if (file.exists(stats_path)) {
+    stats <- read_tsv(stats_path, show_col_types = FALSE) |>
+      transmute(MAG = str_remove(file, "\\.fa$"), Contigs = num_seqs,
+                `Length (bp)` = sum_len, `N50 (bp)` = N50, `GC (%)` = `GC(%)`)
+    prok <- rows_update(prok, stats, by = "MAG", unmatched = "ignore")
+  }
+
+  rna_path <- file.path(results_dir, "qc", "mags", "mag_rna_counts.tsv")
+  if (file.exists(rna_path)) {
+    rna <- read_tsv(rna_path, show_col_types = FALSE) |>
+      rename(MAG = genome, `16S rRNA` = `16S_rRNA`, `23S rRNA` = `23S_rRNA`,
+             `5S rRNA` = `5S_rRNA`, `CRISPR arrays` = CRISPR_arrays)
+    prok <- left_join(prok, rna, by = "MAG")
+  } else {
+    cat(paste0("> rRNA, tRNA and CRISPR counts not found (`", rna_path,
+               "`) — the annotations step may not have been run.\n\n"))
+  }
+
+  show_table(arrange(prok, desc(Completeness)), "prokaryotic_mags.tsv",
+             "Final dereplicated prokaryotic MAGs (CheckM2, GTDB-Tk, annotations)")
 }
 ```
 
@@ -383,6 +480,48 @@ if (file.exists(busco_qc)) {
 } else {
   cat(paste0("> **BUSCO MultiQC report not found** (`", busco_qc,
              "`) — BUSCO step may not have been run.\n"))
+}
+```
+
+```{r eukaryotes-table, results='asis'}
+euk_stats_path <- file.path(results_dir, "qc", "euk_mags_stats.tsv")
+euk_busco_path <- file.path(results_dir, "qc", "busco_euk.csv")
+euk_tax_path   <- file.path(results_dir, "Bins", "Eukaryotic_mags_taxonomy",
+                            "euk_taxonomy.tsv")
+
+if (file_exists_msg(euk_stats_path)) {
+  euk <- read_tsv(euk_stats_path, show_col_types = FALSE) |>
+    transmute(
+      MAG           = str_remove(file, "\\.fa$"),
+      Contigs       = num_seqs,
+      `Length (bp)` = sum_len,
+      `N50 (bp)`    = N50,
+      `GC (%)`      = `GC(%)`
+    )
+  if (file.exists(euk_busco_path)) {
+    euk <- euk |>
+      left_join(read_csv(euk_busco_path, show_col_types = FALSE) |>
+                  rename(MAG = genome,
+                         `Completeness (BUSCO)`  = completeness,
+                         `Contamination (BUSCO)` = contamination),
+                by = "MAG")
+  }
+  if (file.exists(euk_tax_path)) {
+    euk <- euk |>
+      left_join(read_tsv(euk_tax_path, show_col_types = FALSE) |>
+                  select(MAG = genome, Taxonomy = lineage,
+                         `Deepest rank` = deepest_rank,
+                         `Eukaryota fraction` = eukaryota_fraction),
+                by = "MAG")
+  } else {
+    cat(paste0("> Eukaryotic taxonomy not found (`", euk_tax_path,
+               "`) — the eukaryotes_taxonomy step may not have been run.\n\n"))
+  }
+  if (nrow(euk) > 0) {
+    sort_col <- if ("Completeness (BUSCO)" %in% names(euk)) "Completeness (BUSCO)" else "MAG"
+    show_table(arrange(euk, desc(.data[[sort_col]])), "eukaryotic_mags.tsv",
+               "Dereplicated eukaryotic MAGs (seqkit, BUSCO, MMseqs2 taxonomy)")
+  }
 }
 ```
 

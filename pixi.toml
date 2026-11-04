@@ -36,6 +36,9 @@ channels = ["conda-forge", "bioconda"]
 [feature.annotations.dependencies]
 prodigal = "2.6.3.*"
 pyrodigal = ">=3.5,<4"
+barrnap = "1.*"
+trnascan-se = "2.*"
+minced = "0.4.*"
 
 [feature.binette]
 channels = ["conda-forge", "bioconda"]

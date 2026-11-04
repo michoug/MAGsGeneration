@@ -14,6 +14,7 @@ rule eukaryotes_mags:
         ),
         os.path.join(RESULTS_DIR, "Bins/intermediate/eukaryotic_mags_busco_done.txt"),
         os.path.join(RESULTS_DIR, "Bins/Eukaryotic_mags_dereplicated/done.txt"),
+        os.path.join(RESULTS_DIR, "qc/euk_mags_stats.tsv"),
     output:
         touch("status/eukaryotes_mags.done"),
 
@@ -675,6 +676,36 @@ rule galah_euk:
                 pixi r -e galah galah cluster --min-completeness 30 --genome-fasta-directory {input.bins} --genome-info {input.busco} -x fa --output-representative-fasta-directory-copy {output.final} -t {threads} --output-cluster-definition {output.cluster}
             fi
             touch {output.done}
+            date
+        ) 2>{log.err} >{log.out}
+        """
+
+
+rule euk_mag_stats:
+    # Contig number, length, N50 and GC of the dereplicated eukaryotic MAGs
+    input:
+        bins=rules.galah_euk.output.final,
+        done=rules.galah_euk.output.done,
+    output:
+        os.path.join(RESULTS_DIR, "qc/euk_mags_stats.tsv"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/qc/euk_mag_stats.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/qc/euk_mag_stats.err.log"),
+    threads: 4
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
+    message:
+        "Computing statistics of the dereplicated eukaryotic MAGs with seqkit"
+    shell:
+        """
+        (
+            date
+            if compgen -G "{input.bins}/*.fa" >/dev/null; then
+                pixi r -e seqkit seqkit stats -a -T -b -j {threads} {input.bins}/*.fa >{output}
+            else
+                printf 'file\\tnum_seqs\\tsum_len\\tN50\\tGC(%%)\\n' >{output}
+            fi
             date
         ) 2>{log.err} >{log.out}
         """

@@ -4,8 +4,35 @@ rule quality:
         expand(os.path.join(RESULTS_DIR, "Bins/GDTBTk")),
         expand(os.path.join(RESULTS_DIR, "Bins/checkm2/quality_report.tsv")),
         os.path.join(RESULTS_DIR, "qc/mags/multiqc_report.html"),
+        os.path.join(RESULTS_DIR, "qc/mags/mag_stats.tsv"),
     output:
         touch("status/quality.done"),
+
+
+rule mag_stats:
+    # Contig number, length, N50 and GC of the final MAGs (CheckM2 rounds GC
+    # to two decimals of a fraction)
+    input:
+        rules.galah.output.final,
+    output:
+        os.path.join(RESULTS_DIR, "qc/mags/mag_stats.tsv"),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/qc/mag_stats.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/qc/mag_stats.err.log"),
+    threads: 4
+    resources:
+        runtime=60,
+        mem_mb=get_mem_mb,
+    message:
+        "Computing statistics of the final MAGs with seqkit"
+    shell:
+        """
+        (
+            date
+            pixi r -e seqkit seqkit stats -a -T -b -j {threads} {input}/*.fa >{output}
+            date
+        ) 2>{log.err} >{log.out}
+        """
 
 
 rule gtdbtk:
