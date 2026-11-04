@@ -80,6 +80,17 @@ if "eukaryotes_mags" in STEPS:
     TARGETS += ["status/eukaryotes_mags.done"]
 
 
+if "eukaryotes_taxonomy" in STEPS:
+    if "eukaryotes_mags" not in STEPS:
+        raise ValueError(
+            "The eukaryotes_taxonomy step requires the eukaryotes_mags step"
+        )
+
+    include: "rules/eukaryotes_taxonomy.smk"
+
+    TARGETS += ["status/eukaryotes_taxonomy.done"]
+
+
 # CheckM
 if "checkm" in STEPS:
 

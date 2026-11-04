@@ -6,6 +6,7 @@ _STEP_DONE_FILES = {
     "mags_generation": "status/mags_generation.done",
     "binning_refinement": "status/binning_refinement.done",
     "eukaryotes_mags": "status/eukaryotes_mags.done",
+    "eukaryotes_taxonomy": "status/eukaryotes_taxonomy.done",
     "checkm": "status/checkm2.done",
     "refine_all": "status/refine.done",
     "dereplicate": "status/dereplicate.done",

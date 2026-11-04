@@ -40,6 +40,7 @@ OGT = 937 * F_{IVYWREL} − 335
   - The completeness and contamination of all eukaryotic MAGs are estimated with [BUSCO](https://busco.ezlab.org/) (`--auto-lineage-euk`, MetaEuk gene prediction, offline database downloaded by `install_software`) and summarised with [MultiQC](https://github.com/MultiQC/MultiQC). Completeness is the share of complete + fragmented BUSCOs and contamination the share of duplicated BUSCOs; MAGs for which BUSCO finds no genes are kept with 0% completeness.
   - When a MAG has both a generic (eukaryota) and a lineage-specific BUSCO summary, the one with the highest completeness (then lowest contamination) is kept.
   - The eukaryotic MAGs with ≥30% completeness are then dereplicated with [Galah](https://github.com/wwood/galah) using the BUSCO estimates, into `Bins/Eukaryotic_mags_dereplicated`.
+- The dereplicated eukaryotic MAGs are classified with `eukaryotes_taxonomy`: their contigs are assigned a taxonomy with [MMseqs2](https://github.com/soedinglab/MMseqs2) `taxonomy` against UniRef90, and each MAG gets the deepest lineage supported by >50% of its classified contig length. The per-MAG table is `Bins/Eukaryotic_mags_taxonomy/euk_taxonomy.tsv`, which also reports the share of classified length assigned to Eukaryota.
 
 ## Setup
 
@@ -140,6 +141,7 @@ By default, all steps are included. The following **optional steps** can be togg
 
 * `eggnog`
 * `eukaryotes_mags`
+* `eukaryotes_taxonomy` (requires `eukaryotes_mags`)
 * `mgthermometer`
 * `singlem_all`
 * `syntracker`

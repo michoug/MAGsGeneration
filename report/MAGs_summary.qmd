@@ -10,7 +10,7 @@ format:
 params:
   results_dir: "results"
   sample_list: "config/sample_list.txt"
-  steps: "trim_reads,assembly_all,contigs_taxonomy,check_assembly,mags_generation,binning_refinement,eukaryotes_mags,checkm,refine_all,dereplicate,syntracker,coverage,annotations,quality,mgthermometer,eggnog,singlem_all"
+  steps: "trim_reads,assembly_all,contigs_taxonomy,check_assembly,mags_generation,binning_refinement,eukaryotes_mags,eukaryotes_taxonomy,checkm,refine_all,dereplicate,syntracker,coverage,annotations,quality,mgthermometer,eggnog,singlem_all"
 ---
 
 ```{r setup, include=FALSE}
@@ -136,6 +136,7 @@ step_info <- tribble(
   "mags_generation",     "Cross-sample read mapping with **strobealign**; parallel binning with **Metabat2**, **Rosella**, **TaxVAMB**, **CONCOCT**, **COMEBin** and **SemiBin2**.",
   "binning_refinement",  "Per-sample bin consolidation with **DAS_Tool**, quality estimation with **CheckM2**.",
   "eukaryotes_mags",     "Recover eukaryotic MAGs from the prokaryote binners (bins ≥2.5 Mb with ≥80% of contigs classified as eukaryotic by **DeepMicroClass**) and from the eukaryote-specific binner **REMAG**, assess completeness with **BUSCO**, and dereplicate with **Galah**.",
+  "eukaryotes_taxonomy", "Classify the contigs of the dereplicated eukaryotic MAGs with **MMseqs2** taxonomy against UniRef90 and assign each MAG the deepest lineage holding >50% of its classified contig length.",
   "checkm",              "Quality assessment of per-sample DAS_Tool bins with **CheckM2**.",
   "refine_all",          "Bin refinement using **Rosella refine**, rename bins, then re-run **CheckM2** on the refined set.",
   "dereplicate",         "Filter bins (≥70% completeness, ≤10% contamination) and dereplicate across all samples with **Galah**.",

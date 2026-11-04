@@ -15,6 +15,7 @@ steps: [
   "binner_selection",
   "binning_refinement",
   "eukaryotes_mags",
+  "eukaryotes_taxonomy",
   "checkm",
   "refine_all",
   "dereplicate",

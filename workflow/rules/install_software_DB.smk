@@ -1,6 +1,7 @@
 rule install_software:
     input:
         os.path.join(RESULTS_DIR, "DB/GTDB_mmseqs_mapping"),
+        os.path.join(RESULTS_DIR, "DB/UniRef90_mmseqs_mapping"),
         # os.path.join(RESULTS_DIR, "DB/gtdb/database_report.tsv"),
         os.path.join(RESULTS_DIR, "DB/hg38.fa.gz"),
         os.path.join(
@@ -145,6 +146,30 @@ rule download_tax_db:
             name=$(echo $(basename {output.file}) | sed 's/_mapping//g')
             rm -f $(dirname {output.file})/$name*
             pixi r -e mmseqs mmseqs databases GTDB $(dirname {output.file})/$name {output.tmp} --threads {threads}
+            date
+        ) 2>{log.err} >{log.out}
+        """
+
+
+rule download_tax_euk_db:
+    output:
+        file=os.path.join(RESULTS_DIR, "DB/UniRef90_mmseqs_mapping"),
+        look=os.path.join(RESULTS_DIR, "DB/UniRef90_mmseqs.lookup"),
+        tmp=temp(directory(os.path.join(RESULTS_DIR, "tmp_UniRef90"))),
+    log:
+        out=os.path.join(RESULTS_DIR, "logs/download_tax_euk_db.out.log"),
+        err=os.path.join(RESULTS_DIR, "logs/download_tax_euk_db.err.log"),
+    threads: 40
+    resources:
+        mem_mb=get_mem_mb,
+        runtime=6 * 60,
+    shell:
+        """
+        (
+            date
+            name=$(echo $(basename {output.file}) | sed 's/_mapping//g')
+            rm -f $(dirname {output.file})/$name*
+            pixi r -e mmseqs mmseqs databases UniRef90 $(dirname {output.file})/$name {output.tmp} --threads {threads}
             date
         ) 2>{log.err} >{log.out}
         """
